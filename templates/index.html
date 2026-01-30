@@ -1,0 +1,126 @@
+{% extends 'head.html' %}
+{% load static %}
+
+{% block title %}Serviços Urbanos{% endblock %}
+
+{% block content %}
+
+<style>
+    /* Fundo com efeito suave da imagem mostrada */
+    .hero-section {
+        background: linear-gradient(135deg, #f4f8fc, #e9f0f8);
+        padding: 60px 0;
+        min-height: 80vh;
+    }
+
+    .badge-custom {
+        background-color: #eef3fb;
+        color: #275fb4;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .btn-primary-custom {
+        background-color: #0d6efd;
+        border: none;
+        padding: 12px 25px;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+
+    .btn-outline-custom {
+        border: 1px solid #d0d7e3;
+        padding: 12px 25px;
+        font-size: 16px;
+        border-radius: 8px;
+        background: white;
+        color: #333;
+    }
+
+    .info-box {
+        background: #eef3fb;
+        padding: 15px 20px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-box i {
+        font-size: 24px;
+        color: #275fb4;
+    }
+
+    .info-text-title {
+        font-weight: 600;
+        font-size: 15px;
+        margin: 0;
+    }
+
+    .info-text-desc {
+        margin: 0;
+        font-size: 13px;
+        color: #666;
+    }
+</style>
+
+
+<section class="hero-section">
+    <div class="container">
+
+        <!-- Badge -->
+        <div class="mb-4">
+            <span class="badge-custom">
+                Secretaria de Serviços Urbanos
+            </span>
+        </div>
+
+        <!-- Títulos -->
+        <h1 class="fw-bold" style="font-size: 48px; line-height: 1.1;">
+            Serviços Urbanos<br>
+            <span style="color: #1e63b7;">ao seu alcance</span>
+        </h1>
+
+        <p class="mt-3" style="font-size: 18px; max-width: 620px; color: #555;">
+            Solicite serviços urbanos e acompanhe o status da sua Ordem de Serviço 
+            de forma simples e transparente.
+        </p>
+
+        <!-- Botões -->
+        <div class="d-flex gap-3 mt-4">
+            <a href="#" class="btn btn-primary-custom">
+                <i class="bi bi-clipboard-plus"></i> Solicitar serviço
+            </a>
+
+            <a href="#" class="btn btn-outline-custom">
+                <i class="bi bi-search"></i> Acompanhar serviço
+            </a>
+        </div>
+
+        <!-- Caixas de informações -->
+        <div class="d-flex gap-4 mt-5">
+
+            <div class="info-box">
+                <i class="bi bi-clock"></i>
+                <div>
+                    <p class="info-text-title">Prazo médio</p>
+                    <p class="info-text-desc">30 dias</p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <i class="bi bi-speedometer2"></i>
+                <div>
+                    <p class="info-text-title">Acompanhamento</p>
+                    <p class="info-text-desc">Em tempo real</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

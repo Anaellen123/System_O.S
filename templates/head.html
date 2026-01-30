@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Meu Sistema{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+
+    <!-- Seus CSS -->
+    <link rel="stylesheet" href="{% static 'css/style_index.css' %}">
+</head>
+
+<body>
+
+    <!-- HEADER GLOBAL -->
+    {% include 'includes/header.html' %}
+
+    <!-- CONTEÚDO DAS PÁGINAS -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- BOOTSTRAP JS -->
+    <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{% load static %}
+
+<header class="bg-white shadow-sm py-2 fixed-top" style="z-index: 1000;">
+    <div class="container d-flex align-items-center justify-content-between">
+
+        <!-- LOGO + TEXTOS -->
+        <div class="d-flex align-items-center">
+            <img src="{% static 'img/logo-prefeitura.png' %}" 
+                 alt="Logo Prefeitura" 
+                 style="height: 60px; margin-right: 15px;">
+
+            <div>
+                <h4 class="m-0 fw-bold">Portal de Serviços Urbanos</h4>
+                <span style="font-size: 14px; color: #555;">
+                    Prefeitura de Nossa Senhora do Socorro - SE
+                </span>
+            </div>
+        </div>
+
+        <!-- MENU -->
+        <nav>
+            <ul class="nav">
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-semibold" href="#">Início</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-semibold" href="#">Solicitar serviço</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark fw-semibold" href="#">Login administrativo</a>
+                </li>
+            </ul>
+        </nav>
+
+    </div>
+</header>
