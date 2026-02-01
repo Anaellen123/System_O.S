@@ -1,36 +1,196 @@
 {% load static %}
 
-<header class="bg-white shadow-sm py-2 fixed-top" style="z-index: 1000;">
-    <div class="container d-flex align-items-center justify-content-between">
+<header>
+    <div id="yellow">
 
-        <!-- LOGO + TEXTOS -->
-        <div class="d-flex align-items-center">
-            <img src="{% static 'img/logo-prefeitura.png' %}" 
-                 alt="Logo Prefeitura" 
-                 style="height: 60px; margin-right: 15px;">
-
-            <div>
-                <h4 class="m-0 fw-bold">Portal de Serviços Urbanos</h4>
-                <span style="font-size: 14px; color: #555;">
-                    Prefeitura de Nossa Senhora do Socorro - SE
-                </span>
-            </div>
+        <!-- Logo (imagem única com textos embutidos) -->
+        <div id="logo">
+        <img src="{% static 'img/test3.png' %}" alt="Portal de Serviço - Socorro SE">
         </div>
 
-        <!-- MENU -->
-        <nav>
-            <ul class="nav">
+        <!-- Nav (menu) -->
+        <nav id="nav">
+            <ul class="nav-list">
                 <li class="nav-item">
-                    <a class="nav-link text-dark fw-semibold" href="#">Início</a>
+                    <a href="{% url 'index' %}"
+                    class="menu-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+                    Início
+                    </a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link text-dark fw-semibold" href="#">Solicitar serviço</a>
+                    <a href="{% url 'solicitar_servico' %}"
+                    class="menu-link {% if request.resolver_match.url_name == 'solicitar_servico' %}active{% endif %}">
+                    Solicitar serviço
+                    </a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link text-dark fw-semibold" href="#">Login administrativo</a>
+                    <a href="{% url 'login_admin' %}"
+                    class="menu-link {% if request.resolver_match.url_name == 'login_admin' %}active{% endif %}">
+                    Login
+                    </a>
                 </li>
             </ul>
         </nav>
 
     </div>
+
+    <div id="meio">
+        <div id="title">
+            <h1>Serviços Urbanos</h1>
+            <span>ao seu alcance</span>
+        </div>
+        <div id="text-title">
+            <p>Solicite serviços urbanos e acompanhe o status da 
+                sua ordem de forma simples e transparente
+            </p>
+        </div>
+    </div>
+    <div class="hero-actions">
+        <a href="{% url 'solicitar_servico' %}" class="btn-primary">
+            <i class="bi bi-clipboard-check"></i>
+            Solicitar serviço
+        </a>
+
+        <a href="#" id="btnAcompanhar" class="btn-secondary">
+            <i class="bi bi-search"></i>
+            Acompanhar serviço
+        </a>
+    </div>
+    <div class="hero-info">
+        <div class="info-item">
+            <div class="info-ico">
+            <i class="bi bi-calendar3"></i>
+            </div>
+            <div class="info-text">
+            <span class="info-label">Prazo médio</span>
+            <strong class="info-value">30 dias</strong>
+            </div>
+        </div>
+
+        <div class="info-divider"></div>
+
+        <div class="info-item">
+            <div class="info-ico">
+            <i class="bi bi-geo-alt"></i>
+            </div>
+            <div class="info-text">
+            <span class="info-label">Acompanhamento</span>
+            <strong class="info-value">Em tempo real</strong>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL -->
+    <div id="modalAcompanhar" class="modal-overlay" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            
+            <!-- Topo -->
+            <div class="modal-header">
+            <div class="modal-header-left">
+                <div class="modal-icon">
+                <i class="bi bi-search"></i>
+                </div>
+
+                <div class="modal-header-text">
+                <h2 id="modalTitle">Acompanhar OS</h2>
+                <p>Digite o número para consultar o status</p>
+                </div>
+            </div>
+
+            <button type="button" class="modal-close" id="modalClose" aria-label="Fechar modal">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            </div>
+
+            <!-- Corpo -->
+            <div class="modal-body">
+            <label class="modal-label" for="osInput">
+                <i class="bi bi-file-earmark-text"></i>
+                Número da OS
+            </label>
+
+            <div class="modal-form-row">
+                <div class="modal-input-wrap">
+                <span class="modal-prefix">OS-</span>
+                <input
+                    id="osInput"
+                    class="modal-input"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="YYYYMMDD-0000"
+                    autocomplete="off"
+                />
+                </div>
+
+                <button type="button" class="modal-btn" id="btnConsultar">
+                <i class="bi bi-search"></i>
+                Consultar
+                </button>
+            </div>
+
+            <p class="modal-example">
+                Exemplo: <strong>OS-20260130-0001</strong>
+            </p>
+            </div>
+
+        </div>
+    </div>
+
+
 </header>
+<script>
+(function () {
+  const openBtn = document.getElementById("btnAcompanhar");
+  const modal = document.getElementById("modalAcompanhar");
+  const closeBtn = document.getElementById("modalClose");
+  const input = document.getElementById("osInput");
+  const consultarBtn = document.getElementById("btnConsultar");
+
+  function openModal() {
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    setTimeout(() => input && input.focus(), 50);
+    document.body.style.overflow = "hidden"; // trava scroll
+  }
+
+  function closeModal() {
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = ""; // destrava scroll
+  }
+
+  // abrir
+  openBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    openModal();
+  });
+
+  // fechar no X
+  closeBtn?.addEventListener("click", closeModal);
+
+  // fechar clicando fora (overlay)
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  // fechar com ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("is-open")) {
+      closeModal();
+    }
+  });
+
+  // exemplo de ação do Consultar
+  consultarBtn?.addEventListener("click", () => {
+    const val = (input.value || "").trim();
+    // aqui você pode redirecionar ou chamar endpoint
+    // ex: window.location.href = `/acompanhar/?os=OS-${encodeURIComponent(val)}`;
+    alert(val ? `Consultando: OS-${val}` : "Digite o número da OS.");
+  });
+})();
+</script>
+
+

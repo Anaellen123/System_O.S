@@ -1,0 +1,213 @@
+{% extends 'head.html' %}
+{% load static %}
+
+{% block title %}Solicitar serviço{% endblock %}
+
+{% block content %}
+
+<style>
+/* ===== Estrutura ===== */
+.step-content { display: none; }
+.step-content.active { display: block; }
+
+/* ===== Sidebar ===== */
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.steps li {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #6c757d;
+  border-left: 3px solid #e9ecef;
+  margin-bottom: 6px;
+}
+
+.steps li.active {
+  color: #0d6efd;
+  font-weight: 600;
+  border-left-color: #0d6efd;
+}
+
+/* ===== Form ===== */
+.form-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-text {
+  font-size: 12px;
+}
+
+.progress {
+  height: 6px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 6px;
+}
+</style>
+
+<section class="container my-5">
+  <div class="row justify-content-center">
+
+    <!-- SIDEBAR -->
+    <div class="col-lg-3 mb-4">
+
+      <a href="{% url 'index' %}" class="text-decoration-none text-muted small d-block mb-3">
+        ← Voltar para o início
+      </a>
+
+      <div class="card p-3 shadow-sm">
+        <h6 class="fw-semibold mb-3">Etapas</h6>
+
+        <ul class="steps" id="stepsSidebar">
+          <li class="active">Dados do Solicitante</li>
+          <li>Localização do Serviço</li>
+          <li>Fotos e Vídeos</li>
+          <li>Revisão</li>
+        </ul>
+      </div>
+
+      <div class="card p-3 shadow-sm mt-3">
+        <h6 class="fw-semibold mb-2">Dicas para agilizar</h6>
+        <ul class="small text-muted mb-0">
+          <li>Informe endereço completo</li>
+          <li>Use fotos claras do local</li>
+          <li>Descreva bem o problema</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- FORMULÁRIO -->
+    <div class="col-lg-7">
+
+      <div class="card shadow-sm p-4">
+
+        <h5 class="fw-semibold mb-2">Solicitar serviço</h5>
+
+        <!-- Info da etapa -->
+        <div class="progress-info">
+          <span>Etapa 1 de 4</span>
+          <span id="progressPercent">25%</span>
+        </div>
+
+        <div class="progress mb-4">
+          <div id="progressBar" class="progress-bar" style="width:25%"></div>
+        </div>
+
+        <form id="formSolicitacao">
+
+          <!-- ETAPA 1 -->
+          <div class="step-content active">
+
+            <h6 class="fw-semibold mb-1">Dados do Solicitante</h6>
+            <p class="text-muted small mb-3">
+              Preencha os dados de quem está solicitando o serviço
+            </p>
+
+            <!-- Tipo de Pessoa -->
+            <label class="form-label">Tipo de Pessoa *</label>
+
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="tipo_pessoa" checked>
+              <label class="form-check-label">Pessoa Física</label>
+            </div>
+
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="radio" name="tipo_pessoa">
+              <label class="form-check-label">Pessoa Jurídica</label>
+            </div>
+
+            <!-- CPF -->
+            <div class="mb-3">
+              <label class="form-label">CPF *</label>
+              <input type="text" class="form-control" placeholder="000.000.000-00">
+              <div class="form-text">Informe seu CPF (pessoa física)</div>
+            </div>
+
+            <!-- Nome -->
+            <div class="mb-3">
+              <label class="form-label">Nome do Solicitante *</label>
+              <input type="text" class="form-control" placeholder="Seu nome completo">
+            </div>
+
+            <!-- Telefone -->
+            <div class="mb-4">
+              <label class="form-label">Telefone para Contato *</label>
+              <input type="text" class="form-control" placeholder="(79) 99999-9999">
+              <div class="form-text">Telefone com DDD (fixo ou celular)</div>
+            </div>
+
+            <!-- Botões -->
+            <div class="d-flex justify-content-between">
+              <button type="button" class="btn btn-light" disabled>
+                ← Anterior
+              </button>
+
+              <button type="button" class="btn btn-primary" onclick="nextStep()">
+                Próximo →
+              </button>
+            </div>
+
+          </div>
+
+          <!-- ETAPA 2 (placeholder) -->
+          <div class="step-content">
+            <h6>Localização do Serviço</h6>
+
+            <div class="mb-3">
+              <label class="form-label">Endereço *</label>
+              <input type="text" class="form-control">
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <button type="button" class="btn btn-light" onclick="prevStep()">← Anterior</button>
+              <button type="button" class="btn btn-primary" onclick="nextStep()">Próximo →</button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+let currentStep = 0;
+const steps = document.querySelectorAll('.step-content');
+const sidebar = document.querySelectorAll('#stepsSidebar li');
+const progressBar = document.getElementById('progressBar');
+const percentText = document.getElementById('progressPercent');
+
+function updateUI() {
+  steps.forEach((s, i) => s.classList.toggle('active', i === currentStep));
+  sidebar.forEach((s, i) => s.classList.toggle('active', i === currentStep));
+
+  const percent = Math.round(((currentStep + 1) / sidebar.length) * 100);
+  progressBar.style.width = percent + '%';
+  percentText.innerText = percent + '%';
+}
+
+function nextStep() {
+  if (currentStep < steps.length - 1) {
+    currentStep++;
+    updateUI();
+  }
+}
+
+function prevStep() {
+  if (currentStep > 0) {
+    currentStep--;
+    updateUI();
+  }
+}
+</script>
+
+{% endblock %}

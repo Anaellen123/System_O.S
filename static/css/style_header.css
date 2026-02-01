@@ -1,0 +1,453 @@
+/* ===== Banner / Header (fundo) ===== */
+header{
+  width: 100%;
+  min-height: 130vh;
+  background-image: url("../img/banner7.png");
+  background-size: cover;
+  background-position: center;
+}
+
+/* ===== Barra superior ===== */
+#yellow{
+  width: 100%;
+  height: 140px;                 /* altura da barra */
+ 
+
+  display: flex;
+  align-items: center;           /* centraliza verticalmente */
+  justify-content: space-between;/* logo à esquerda e nav à direita */
+  padding: 0 20px;               /* respiro nas laterais */
+  gap: 16px;                     /* espaço entre logo e nav */
+  box-sizing: border-box;
+}
+
+/* ===== Área do logo ===== */
+#logo{
+  height: 100%;                  /* acompanha a altura do #yellow */
+  display: flex;
+  align-items: center;           /* centraliza imagem verticalmente */
+}
+
+/* ===== Imagem do logo (SEM distorcer) ===== */
+#logo img{
+  height: 180px;                 /* <<< ajuste o tamanho aqui (maior/menor) */
+  width: auto;                   /* mantém proporção */
+  max-width: 600px;              /* evita ficar gigante em telas grandes */
+  object-fit: contain;           /* garante que não "estica" */
+  display: block;
+}
+
+/* ===== Área do menu/nav ===== */
+#nav{
+  height: 60px;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;     /* nav à direita no desktop */
+}
+
+/* ===== LISTA ===== */
+.nav-list {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;     /* links à direita */
+  gap: 40px;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== LINKS ===== */
+.menu-link {
+  position: relative;
+  text-decoration: none;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  padding-bottom: 6px;
+  transition: color 0.3s ease;
+}
+
+/* HOVER */
+.menu-link:hover {
+  color: #ffdd57;
+}
+
+/* UNDERLINE ANIMADO */
+.menu-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 3px;
+  background-color: #ffdd57;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+/* ATIVO */
+.menu-link.active::after {
+  width: 24px;
+}
+
+/* HOVER + ATIVO */
+.menu-link:hover::after {
+  width: 24px;
+}
+
+#meio{
+  width: 100%;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;   
+  justify-content: center;
+}
+
+#title{
+  padding-left: 50px;
+ 
+}
+
+#title h1{
+  color: #ffffff;
+  font-size: 62px;
+  line-height: 1.05;
+  margin: 0;
+}
+
+#title span{
+  display: block;           /* <<< força ficar abaixo do h1 */
+  color: #F9E076;
+  font-size: 52px;
+  margin-top: 6px;
+}
+
+#text-title{
+  padding-left: 50px;
+  margin-top: 18px;         /* espaço entre título e texto */
+  max-width: 620px;         /* evita texto muito largo */
+}
+
+#text-title p{
+  color: #ffffff;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+
+/* ===== BOTÕES HERO ===== */
+.hero-actions{
+  margin-top: 28px;
+  padding-left: 50px;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+/* BOTÃO AMARELO (principal) */
+.btn-primary{
+  background-color: #f2c230;
+  color: #1f2a44;
+  padding: 14px 26px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover{
+  background-color: #e6b31f;
+  transform: translateY(-2px);
+}
+
+/* BOTÃO BRANCO (secundário) */
+.btn-secondary{
+  background-color: #ffffff;
+  color: #1f2a44;
+  padding: 14px 26px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover{
+  background-color: #f2f2f2;
+  transform: translateY(-2px);
+}
+
+/* ÍCONES */
+.hero-actions i{
+  font-size: 18px;
+}
+
+/* ===== CARD INFERIOR (glass) ===== */
+.hero-info{
+  margin-top: 120px;
+  margin-left: 135px;           /* acompanha seu layout da esquerda */
+  width: min(820px, 92vw);
+  min-height: 120px;
+
+  display: flex;
+  align-items: center;
+  gap: 28px;
+
+  padding: 26px 28px;
+  border-radius: 22px;
+
+  background: rgba(10, 22, 48, 0.45);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 18px 45px rgba(0,0,0,0.30);
+  backdrop-filter: blur(8px);
+}
+
+/* cada bloco */
+.info-item{
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+/* ícone */
+.info-ico{
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid rgba(249, 224, 118, 0.55);
+  background: rgba(249, 224, 118, 0.08);
+}
+
+.info-ico i{
+  color: #F9E076;
+  font-size: 26px;
+}
+
+/* texto */
+.info-text{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-label{
+  color: rgba(255,255,255,0.85);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.info-value{
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* divisor vertical */
+.info-divider{
+  width: 1px;
+  align-self: stretch;
+  background: rgba(255,255,255,0.14);
+}
+
+
+/* ============================= */
+/* ===== Responsividade ======== */
+/* ============================= */
+
+/* Tablet */
+@media (max-width: 900px){
+  #nav{
+    width: 55%;
+  }
+
+  .nav-list{
+    gap: 22px;
+    flex-wrap: wrap;             /* permite quebrar se precisar */
+    justify-content: flex-end;
+  }
+
+  .menu-link{
+    font-size: 12px;
+  }
+
+  #logo img{
+    height: 80px;                /* logo um pouco menor */
+    max-width: 360px;
+  }
+  #meio{
+    height: auto;          /* deixa crescer */
+    padding: 22px 0;       /* dá respiro */
+  }
+
+  #title,
+  #text-title{
+    padding-left: 24px;
+  }
+
+  #title{
+    padding-left: 24px;
+    height: auto;
+  }
+
+  #title h1{
+    font-size: 44px;
+  }
+
+  #title span{
+    font-size: 36px;
+  }
+
+  #text-title p{
+    font-size: 15px;
+  }
+
+   .hero-actions{
+    padding-left: 24px;
+  }
+
+  .hero-info{
+    margin-left: 24px;
+    padding: 20px 20px;
+  }
+  .info-label{ font-size: 16px; }
+  .info-value{ font-size: 24px; }
+
+}
+
+/* Celular */
+@media (max-width: 600px){
+  #yellow{
+    height: auto;                /* deixa a barra crescer */
+    padding: 12px;
+    flex-wrap: wrap;             /* quebra linha */
+  }
+
+  #logo{
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  #logo img{
+    height: 70px;
+    max-width: 320px;
+  }
+
+  #nav{
+    width: 100%;
+    height: auto;
+    justify-content: flex-start; /* começa na esquerda */
+  }
+
+  .nav-list{
+    width: 100%;
+    justify-content: flex-start;
+    gap: 18px;
+    flex-wrap: nowrap;           /* não quebra */
+    overflow-x: auto;            /* rolagem horizontal */
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;         /* espaço p/ underline */
+  }
+
+  .nav-list::-webkit-scrollbar{
+    height: 6px;
+  }
+
+  .menu-link{
+    white-space: nowrap;         /* não quebra o texto */
+    font-size: 13px;
+    padding: 10px 2px 6px;
+  }
+
+  .menu-link.active::after,
+  .menu-link:hover::after{
+    width: 22px;                 /* underline um pouco menor no mobile */
+  }
+
+  #meio{
+    height: auto;
+    padding: 18px 0;
+  }
+
+  #title,
+  #text-title{
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  #title{
+    padding-left: 14px;
+    padding-right: 14px;   /* evita colar na borda */
+    height: auto;
+  }
+
+  #title h1{
+    font-size: 34px;
+  }
+
+  #title span{
+    font-size: 26px;
+  }
+
+  #title,
+  #text-title{
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .hero-actions{
+    padding-left: 14px;
+    gap: 14px;
+  }
+
+  .btn-primary,
+  .btn-secondary{
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-info{
+    margin-left: 14px;
+    margin-right: 14px;
+    width: auto;
+    flex-direction: column;     /* empilha no mobile */
+    align-items: flex-start;
+    gap: 18px;
+  }
+  .info-divider{
+    width: 100%;
+    height: 1px;
+  }
+  .info-value{ font-size: 22px; }
+}
+
+@media (max-width: 380px){
+  #title h1{
+    font-size: 28px;
+  }
+
+  #title span{
+    font-size: 22px;
+  }
+}
