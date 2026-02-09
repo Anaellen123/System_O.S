@@ -1,12 +1,98 @@
-{% extends 'head.html' %}
+{% extends "head.html" %}
 {% load static %}
 
-{% block title %}Login Administrativo{% endblock %}
+{% block header %}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2>Login Administrativo</h2>
+<main class="login-page"
+      style="--bg:url('{% static 'img/seu-background.png' %}');">
 
-    <!-- Você pode substituir depois pelo login do Django -->
-</div>
+  <section class="login-left">
+    <div class="brand-top">
+      <img class="brand-icon" src="{% static 'img/brasao.png' %}" alt="Governo Municipal">
+      <div class="brand-top-text">
+        <div class="brand-mini">Governo Municipal</div>
+        <div class="brand-name">Portal de Serviços<br>Urbanos</div>
+      </div>
+    </div>
+
+    <h1 class="login-title">
+      Sistema de Gestão<br>
+      de <span>Serviços Urbanos</span>
+    </h1>
+
+    <p class="login-subtitle">
+      Acesse o sistema para gerenciar ordens de serviço
+      e acompanhar demandas urbanas com eficiência.
+    </p>
+
+    <footer class="login-footer">
+      © 2026 Prefeitura de Nossa Senhora do Socorro - SE · Todos os direitos reservados.
+    </footer>
+  </section>
+
+  <section class="login-right">
+    <div class="login-card">
+      <div class="card-header">
+        <img class="card-logo" src="{% static 'img/logo-prefeitura-removebg.png' %}" alt="Socorro">
+      </div>
+
+      <h2 class="card-title">Entrar no sistema</h2>
+      <p class="card-desc">Faça login para acessar o Sistema de Gestão de Serviços Urbanos.</p>
+
+      {% if messages %}
+        <div class="alert-wrap">
+          {% for m in messages %}
+            <div class="alert">{{ m }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" class="login-form">
+        {% csrf_token %}
+
+        <label class="field-label" for="id_username">Email</label>
+        <div class="field">
+          <span class="field-ico">✉</span>
+          <input id="id_username" name="username" type="text" placeholder="seu@email.com" required>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label" for="id_password">Senha</label>
+          <a class="forgot" href="#">Esqueceu sua senha?</a>
+        </div>
+
+        <div class="field" style="position: relative;">
+          <input
+            id="id_password"
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            required
+            style="padding-right: 44px;"
+          >
+
+          <button
+            type="button"
+            id="togglePassword"
+            class="btn btn-link p-0"
+            style="position:absolute; right:12px; top:50%; transform:translateY(-50%);">
+            <i class="bi bi-eye"></i>
+        </button>
+        </div>
+
+
+        <button class="btn-primary" type="submit">Entrar</button>
+      </form>
+
+      <div class="test-box">
+        <div class="test-title">Credenciais de teste</div>
+        <div class="test-text">Email: <b>admin@admin</b> · Senha: <b>SOCORRO-admin2026</b></div>
+      </div>
+
+      <a class="back" href="{% url 'index' %}">← Voltar para a página inicial</a>
+    </div>
+  </section>
+
+</main>
 {% endblock %}

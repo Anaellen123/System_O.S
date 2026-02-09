@@ -1,0 +1,70 @@
+.top-header{
+    width: 100%;
+    padding: 10px 0; 
+    color:#fff;
+    
+}
+
+.header-row{ 
+    display:flex; 
+    align-items:center; 
+    justify-content:space-between; 
+    gap: 16px; 
+}
+
+.brand{ 
+    display:flex; 
+    align-items:center; 
+    gap: 12px; 
+}
+
+.brand-logo{ 
+    height: 200px; 
+}
+
+
+.brand-text{ 
+    line-height:1.05; 
+}
+
+.brand-sub{ 
+    font-size: 12px; 
+    opacity:.8; 
+}
+
+.brand-title{ 
+    font-weight: 900; 
+    font-size: 18px; 
+}
+
+.brand-title span{ 
+    opacity:.9; 
+}
+
+.top-nav{ 
+    display:flex; 
+    gap: 22px; 
+    align-items:center; 
+}
+
+.top-nav a{ 
+    color: rgba(255,255,255,.85); 
+    text-decoration:none; 
+    font-weight:800; 
+}
+
+.top-nav a.active{ 
+    color:#fff; 
+    border-bottom: 2px solid rgba(255,215,120,.95); 
+    padding-bottom: 6px; 
+}
+
+
+
+@media (max-width: 900px){
+
+  .header-row{ 
+    flex-direction:column; 
+    align-items:flex-start; 
+    }   
+}

@@ -1,0 +1,17 @@
+{% load static %}
+
+<header class="top-header">
+  <div class="container header-row">
+    <div class="brand">
+      <img src="{% static 'img/test2.png' %}" alt="Logo" class="brand-logo">
+      
+    </div>
+
+    <nav class="top-nav">
+      <a href="{% url 'index' %}">Início</a>
+      <a class="active" href="{% url 'solicitar_servico' %}">Solicitar serviço</a>
+      <a href="#">Localizar serviço</a>
+    </nav>
+  </div>
+</header>
+

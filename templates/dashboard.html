@@ -1,0 +1,111 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Serviços Concluídos</div>
+      <div class="kpi-value">{{ stats.concluidos }}</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">Serviços em Andamento</div>
+      <div class="kpi-value">{{ stats.andamento }}</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">Serviços Abertos</div>
+      <div class="kpi-value">{{ stats.abertos }}</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi-label">Total de Serviços</div>
+      <div class="kpi-value">{{ stats.total }}</div>
+    </div>
+  </div>
+
+  <div class="cardbox">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Solicitações</h2>
+          <p>Total de solicitações nos últimos 3 meses</p>
+        </div>
+        <div class="segmented">
+          <button class="seg active" data-period="90">Últimos 3 meses</button>
+          <button class="seg" data-period="30">Últimos 30 dias</button>
+          <button class="seg" data-period="7">Últimos 7 dias</button>
+        </div>
+      </div>
+
+      <div class="chart-placeholder">
+        <canvas id="requestsChart" height="120"></canvas>
+      </div>
+
+      {# ✅ Dados do gráfico vindos do backend #}
+      {{ chart_labels|json_script:"chart-labels" }}
+      {{ chart_data|json_script:"chart-data" }}
+
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>Solicitações Recentes</h2>
+        <p>Últimas ordens registradas</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Solicitante</th>
+            <th>Serviço</th>
+            <th>Bairro</th>
+            <th>Data</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for r in recent %}
+            <tr>
+              <td>
+                <a href="{% url 'request_detail' r.id %}" style="text-decoration:none;">
+                  {{ r.os_number }}
+                </a>
+              </td>
+              <td>{{ r.full_name }}</td>
+              <td>{{ r.service_type }}</td>
+              <td>{{ r.neighborhood|default:"-" }}</td>
+              <td>{{ r.created_at|date:"d/m/Y" }}</td>
+              <td>
+                {% if r.status == "OPEN" %}
+                  <span class="pill pendente">Aberto</span>
+                {% elif r.status == "IN_PROGRESS" %}
+                  <span class="pill andamento">Em andamento</span>
+                {% elif r.status == "DONE" %}
+                  <span class="pill concluido">Concluído</span>
+                {% else %}
+                  <span class="pill">{{ r.get_status_display }}</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align:center; padding:16px;">
+                Nenhuma solicitação registrada ainda.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+  </div>
+{% endblock %}

@@ -2,7 +2,28 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.index, name='home'),
-    path('solicitar-servico/', views.solicitar_servico, name='solicitar_servico'),
-    path('login-admin/', views.login_admin, name='login_admin'),
+    # ===== PÁGINAS PÚBLICAS =====
+    path("", views.index, name="index"),
+    path("solicitar-servico/", views.solicitar_servico, name="solicitar_servico"),
+
+    # ===== AUTENTICAÇÃO =====
+    path("login/", views.login_view, name="login_admin"),
+    path("logout/", views.logout_view, name="logout"),
+    path("dashboard/", views.dashboard, name="dashboard"),
+
+
+    # ===== DASHBOARD (ÁREA INTERNA) =====
+    path("dashboard/", views.dashboard, name="dashboard"),
+
+    # ===== SOLICITAÇÕES / O.S =====
+    path("dashboard/solicitacoes/", views.requests_list, name="requests_list"),
+    path(
+        "dashboard/solicitacoes/<int:pk>/",
+        views.request_detail,
+        name="request_detail",
+    ),
+
+    # ======= Nova O.S ===========
+    path("dashboard/os/nova/", views.os_create, name="os_create"),
+
 ]

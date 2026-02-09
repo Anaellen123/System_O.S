@@ -22,9 +22,9 @@
 
         <div class="services-carousel" id="svcCarousel">
             <!-- 1 -->
-            <a class="service-card top-yellow" href="{% url 'solicitar_servico' %}?tipo=entulho">
+            <a class="service-card top-entulho" href="{% url 'solicitar_servico' %}?tipo=entulho">
                 <div class="service-top">
-                    <img src="{% static 'img/coleta_entulho.png' %}" alt="Portal de Serviço - Socorro SE">
+                    
                 </div>
                 <div class="service-body">
                     <h3>Coleta de entulho</h3>
@@ -34,9 +34,9 @@
             </a>
 
         <!-- 2 -->
-            <a class="service-card top-blue" href="{% url 'solicitar_servico' %}?tipo=iluminacao">
+            <a class="service-card top-reparo" href="{% url 'solicitar_servico' %}?tipo=iluminacao">
                 <div class="service-top">
-                    <i class="bi bi-lightbulb"></i>
+                    
                 </div>
                 <div class="service-body">
                     <h3>Reparo de iluminação pública</h3>
@@ -46,9 +46,9 @@
             </a>
 
         <!-- 3 -->
-            <a class="service-card top-gray" href="{% url 'solicitar_servico' %}?tipo=limpeza">
+            <a class="service-card top-limpeza" href="{% url 'solicitar_servico' %}?tipo=limpeza">
                 <div class="service-top">
-                    <i class="bi bi-trash"></i>
+                   
                 </div>
                 <div class="service-body">
                     <h3>Limpeza Urbana</h3>
@@ -58,9 +58,9 @@
             </a>
 
             <!-- 4 -->
-            <a class="service-card top-green" href="{% url 'solicitar_servico' %}?tipo=rocagem">
+            <a class="service-card top-rocagem" href="{% url 'solicitar_servico' %}?tipo=rocagem">
                 <div class="service-top">
-                    <i class="bi bi-tree"></i>
+                    
                 </div>
                 <div class="service-body">
                     <h3>Roçagem e capinação</h3>
@@ -70,9 +70,9 @@
             </a>
 
             <!-- 5 -->
-            <a class="service-card top-blue2" href="{% url 'solicitar_servico' %}?tipo=tapa_buraco">
+            <a class="service-card top-buraco" href="{% url 'solicitar_servico' %}?tipo=tapa_buraco">
                 <div class="service-top">
-                    <i class="bi bi-cone-striped"></i>
+                   
                 </div>
                 <div class="service-body">
                     <h3>Tapa-buraco</h3>
@@ -82,9 +82,9 @@
             </a>
 
             <!-- 6 -->
-            <a class="service-card top-orange" href="{% url 'solicitar_servico' %}?tipo=esgoto">
+            <a class="service-card top-obstrucao" href="{% url 'solicitar_servico' %}?tipo=esgoto">
                 <div class="service-top">
-                    <i class="bi bi-droplet-half"></i>
+                    
                 </div>
                 <div class="service-body">
                     <h3>Obstrução / Esgoto</h3>
@@ -94,9 +94,9 @@
             </a>
 
             <!-- 7 -->
-            <a class="service-card top-purple" href="{% url 'solicitar_servico' %}?tipo=arvore">
+            <a class="service-card top-poda" href="{% url 'solicitar_servico' %}?tipo=arvore">
                 <div class="service-top">
-                    <i class="bi bi-scissors"></i>
+                    
                 </div>
                 <div class="service-body">
                     <h3>Poda de árvore</h3>
@@ -106,9 +106,9 @@
             </a>
 
             <!-- 8 -->
-            <a class="service-card top-cyan" href="{% url 'solicitar_servico' %}?tipo=placas">
+            <a class="service-card top-sinalizacao" href="{% url 'solicitar_servico' %}?tipo=placas">
                 <div class="service-top">
-                    <i class="bi bi-signpost-split"></i>
+                    
                 </div>
                 <div class="service-body">
                     <h3>Sinalização</h3>
@@ -118,9 +118,9 @@
             </a>
 
             <!-- 9 -->
-            <a class="service-card top-red" href="{% url 'solicitar_servico' %}?tipo=iluminacao_praca">
+            <a class="service-card top-iluminacao" href="{% url 'solicitar_servico' %}?tipo=iluminacao_praca">
                 <div class="service-top">
-                    <i class="bi bi-lamp"></i>
+                    
                 </div>
                 <div class="service-body">
                     <h3>Iluminação de praças</h3>
@@ -128,7 +128,23 @@
                     <span class="service-arrow"><i class="bi bi-chevron-right"></i></span>
                 </div>
             </a>
+            <!-- 10 -->
+             <a class="service-card top-reclamacao" href="{% url 'solicitar_servico' %}?tipo=iluminacao_praca">
+                <div class="service-top">
+    
+                </div>
+                <div class="service-body">
+                    <h3>Reclamações/Sugestões</h3>
+                    <p>Envie sua sugestão ou reclamação.</p>
+                    <span class="service-arrow"><i class="bi bi-chevron-right"></i></span>
+                </div>
+            </a>
         </div>
+    </section>
+    <section class="section-info">
+
+        
+
     </section>
 </div>
 <script>

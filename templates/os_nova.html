@@ -1,0 +1,191 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block page_title %}Nova Ordem de Serviço{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/os_nova.css' %}">
+
+<div class="os-top">
+  <a href="{% url 'dashboard' %}" class="os-back">←</a>
+  <div class="os-title">
+    <h1>Nova Ordem de Serviço ✨</h1>
+    <p>Registre uma solicitação de serviço urbano preenchendo os campos abaixo</p>
+  </div>
+  <span class="os-badge">Rascunho</span>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="os-form">
+  {% csrf_token %}
+
+  <div class="os-grid">
+    <!-- SOLICITANTE -->
+    <section class="os-card">
+      <div class="os-card-head">
+        <div class="os-ico">👤</div>
+        <div>
+          <h2>Solicitante</h2>
+          <p>Quem está solicitando o serviço</p>
+        </div>
+      </div>
+
+      <div class="os-card-body">
+        <div class="field">
+          <label>Tipo de Pessoa *</label>
+          <div class="chips" data-target="id_person_type">
+            <button type="button" class="chip is-active" data-value="PF">Pessoa Física</button>
+            <button type="button" class="chip" data-value="PJ">Pessoa Jurídica</button>
+          </div>
+          {{ form.person_type }}
+        </div>
+
+        <div class="field">
+          <label>CPF/CNPJ *</label>
+          {{ form.document }}
+        </div>
+
+        <div class="field">
+          <label>Nome Completo *</label>
+          {{ form.full_name }}
+        </div>
+
+        <div class="field">
+          <label>Telefone *</label>
+          {{ form.phone }}
+        </div>
+      </div>
+    </section>
+
+    <!-- LOCALIZAÇÃO -->
+    <section class="os-card">
+      <div class="os-card-head">
+        <div class="os-ico">📍</div>
+        <div>
+          <h2>Localização</h2>
+          <p>Endereço onde o serviço será realizado</p>
+        </div>
+      </div>
+
+      <div class="os-card-body">
+        <div class="gps-row">
+          <button type="button" class="btn-ghost">Capturar localização GPS</button>
+          <button type="button" class="btn-ghost">Capturar</button>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>CEP</label>
+            {{ form.cep }}
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Rua / Avenida</label>
+          {{ form.street }}
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Número</label>
+            {{ form.number }}
+          </div>
+          <div class="field">
+            <label>Complemento</label>
+            <input type="text" name="complemento" placeholder="Apto, Sala..." />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Bairro</label>
+          {{ form.neighborhood }}
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Cidade</label>
+            {{ form.city }}
+          </div>
+          <div class="field">
+            <label>UF</label>
+            <input type="text" name="uf" placeholder="UF" maxlength="2" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Endereço completo</label>
+          <input type="text" name="endereco_completo" placeholder="Endereço completo para referência" />
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVIÇO -->
+    <section class="os-card">
+      <div class="os-card-head">
+        <div class="os-ico">🧰</div>
+        <div>
+          <h2>Serviço</h2>
+          <p>Tipo de serviço e canal de atendimento</p>
+        </div>
+      </div>
+
+      <div class="os-card-body">
+        <div class="field">
+          <label>Tipo de Serviço *</label>
+          {{ form.service_type }}
+        </div>
+
+        <div class="field">
+          <label>Descrição *</label>
+          {{ form.description }}
+        </div>
+
+        <div class="field">
+          <label>Canal de Atendimento *</label>
+          <div class="chips" data-target="id_channel">
+            <button type="button" class="chip is-active" data-value="WHATS">WhatsApp</button>
+            <button type="button" class="chip" data-value="PRES">Presencial</button>
+          </div>
+          <input type="hidden" id="id_channel" name="channel" value="WHATS">
+        </div>
+      </div>
+    </section>
+
+    <!-- CONFIGURAÇÕES -->
+    <section class="os-card">
+      <div class="os-card-head">
+        <div class="os-ico">⚙️</div>
+        <div>
+          <h2>Configurações</h2>
+          <p>Prioridade e observações internas</p>
+        </div>
+      </div>
+
+      <div class="os-card-body">
+        <div class="field">
+          <label>Prioridade *</label>
+          <div class="chips chips-4" data-target="id_priority">
+            <button type="button" class="chip" data-value="LOW">Baixa</button>
+            <button type="button" class="chip is-active" data-value="MED">Média</button>
+            <button type="button" class="chip" data-value="HIGH">Alta</button>
+            <button type="button" class="chip" data-value="URG">Urgente</button>
+          </div>
+          <input type="hidden" id="id_priority" name="priority" value="MED">
+        </div>
+
+        <div class="field">
+          <label>Observações Internas <span class="muted">(Opcional)</span></label>
+          {{ form.notes }}
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FOOTER FIXO -->
+  <div class="os-footer">
+    <a href="{% url 'dashboard' %}" class="btn-light">Cancelar</a>
+    <button type="submit" class="btn-primary">Criar Ordem de Serviço</button>
+  </div>
+</form>
+
+<script src="{% static 'js/os_nova.js' %}"></script>
+{% endblock %}

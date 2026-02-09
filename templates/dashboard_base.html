@@ -1,0 +1,69 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Dashboard{% endblock %}</title>
+
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="{% static 'img/logo-prefeitura.png' %}" alt="Socorro">
+    </div>
+
+    <a class="btn-create" href="{% url 'os_create' %}">
+      <i class="bi bi-plus-lg"></i> Criar Ordem de Serviço
+    </a>
+
+    <nav class="menu">
+      <a class="menu-item active" href="{% url 'dashboard' %}">
+        <i class="bi bi-grid-1x2"></i> Dashboard
+      </a>
+      <a class="menu-item" href="#"><i class="bi bi-receipt"></i> Ordem de Serviço</a>
+      <a class="menu-item" href="#"><i class="bi bi-gear"></i> Serviços</a>
+      <a class="menu-item" href="#"><i class="bi bi-bar-chart"></i> Relatórios</a>
+      <a class="menu-item" href="#"><i class="bi bi-people"></i> Equipe</a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="userbox">
+        <div class="avatar">{{ request.user.username|slice:":2"|upper }}</div>
+        <div class="userinfo">
+          <div class="role">Administrador</div>
+          <div class="mail">{{ request.user.email|default:"-" }}</div>
+        </div>
+      </div>
+
+      <a class="logout" href="{% url 'logout' %}">
+        <i class="bi bi-box-arrow-right"></i> Sair
+      </a>
+    </div>
+  </aside>
+
+  <!-- CONTEÚDO -->
+  <section class="content">
+    <header class="topbar">
+      <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+      <a class="notif" href="#"><i class="bi bi-bell"></i> Notificações</a>
+    </header>
+
+    <div class="page">
+      {% block content %}{% endblock %}
+    </div>
+  </section>
+</div>
+
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+
+</body>
+</html>

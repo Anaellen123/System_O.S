@@ -1,213 +1,313 @@
-{% extends 'head.html' %}
+{% extends "head.html" %}
 {% load static %}
 
-{% block title %}Solicitar serviço{% endblock %}
+{% block header %}
+{% endblock %}
 
 {% block content %}
 
-<style>
-/* ===== Estrutura ===== */
-.step-content { display: none; }
-.step-content.active { display: block; }
 
-/* ===== Sidebar ===== */
-.steps {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.steps li {
-  padding: 10px 12px;
-  font-size: 14px;
-  color: #6c757d;
-  border-left: 3px solid #e9ecef;
-  margin-bottom: 6px;
-}
-
-.steps li.active {
-  color: #0d6efd;
-  font-weight: 600;
-  border-left-color: #0d6efd;
-}
-
-/* ===== Form ===== */
-.form-label {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.form-text {
-  font-size: 12px;
-}
-
-.progress {
-  height: 6px;
-}
-
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: #6c757d;
-  margin-bottom: 6px;
-}
-</style>
-
-<section class="container my-5">
-  <div class="row justify-content-center">
-
-    <!-- SIDEBAR -->
-    <div class="col-lg-3 mb-4">
-
-      <a href="{% url 'index' %}" class="text-decoration-none text-muted small d-block mb-3">
-        ← Voltar para o início
-      </a>
-
-      <div class="card p-3 shadow-sm">
-        <h6 class="fw-semibold mb-3">Etapas</h6>
-
-        <ul class="steps" id="stepsSidebar">
-          <li class="active">Dados do Solicitante</li>
-          <li>Localização do Serviço</li>
-          <li>Fotos e Vídeos</li>
-          <li>Revisão</li>
-        </ul>
+<main class="solicitar-page">
+  <header class="top-header">
+    <div class="container header-row">
+      <div class="brand">
+        <img src="{% static 'img/test2.png' %}" alt="Logo" class="brand-logo">
+        
       </div>
 
-      <div class="card p-3 shadow-sm mt-3">
-        <h6 class="fw-semibold mb-2">Dicas para agilizar</h6>
-        <ul class="small text-muted mb-0">
-          <li>Informe endereço completo</li>
-          <li>Use fotos claras do local</li>
-          <li>Descreva bem o problema</li>
-        </ul>
-      </div>
+      <nav class="top-nav">
+        <a href="{% url 'index' %}">Início</a>
+        <a class="active" href="{% url 'solicitar_servico' %}">Solicitar serviço</a>
+        <a href="{% url 'login_admin' %}">login</a>
+      </nav>
     </div>
+  </header>
 
-    <!-- FORMULÁRIO -->
-    <div class="col-lg-7">
+  <!-- Título grande -->
+  <section class="page-title container">
+    <h1>Solicitar serviço</h1>
+  </section>
 
-      <div class="card shadow-sm p-4">
+  <!-- Grid principal -->
+  <section class="container layout-grid">
 
-        <h5 class="fw-semibold mb-2">Solicitar serviço</h5>
+    <!-- Sidebar -->
+    <aside class="sidebar">
 
-        <!-- Info da etapa -->
-        <div class="progress-info">
-          <span>Etapa 1 de 4</span>
-          <span id="progressPercent">25%</span>
-        </div>
+      <div class="card steps-card">
+        <div class="card-title">Etapas</div>
 
-        <div class="progress mb-4">
-          <div id="progressBar" class="progress-bar" style="width:25%"></div>
-        </div>
+        <ul class="steps" id="stepsList">
+          <li class="step active" data-step="1">
+            <span class="step-num">1</span>
+            <span class="step-text">Dados do Solicitante</span>
+          </li>
+          <li class="step" data-step="2">
+            <span class="step-num">2</span>
+            <span class="step-text">Localização e Serviço</span>
+          </li>
+          <li class="step" data-step="3">
+            <span class="step-num">3</span>
+            <span class="step-text">Anexos</span>
+          </li>
+          <li class="step" data-step="4">
+            <span class="step-num">4</span>
+            <span class="step-text">Revisar e Enviar</span>
+          </li>
+        </ul>
+      </div>
 
-        <form id="formSolicitacao">
+      <div class="card tips-card">
+        <div class="card-title">Dicas para agilizar</div>
+        <ul class="tips">
+          <li>Separe documentos (ex: CPF e e-mail)</li>
+          <li>Tenha uma cópia dos anexos pronta</li>
+          <li>Anexe formulários no formato imagens</li>
+        </ul>
+        <div class="tip-icon" aria-hidden="true">📝</div>
+      </div>
 
-          <!-- ETAPA 1 -->
-          <div class="step-content active">
+    </aside>
 
-            <h6 class="fw-semibold mb-1">Dados do Solicitante</h6>
-            <p class="text-muted small mb-3">
-              Preencha os dados de quem está solicitando o serviço
-            </p>
+    <!-- Card do formulário -->
+    <section class="form-wrap">
 
-            <!-- Tipo de Pessoa -->
-            <label class="form-label">Tipo de Pessoa *</label>
-
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="tipo_pessoa" checked>
-              <label class="form-check-label">Pessoa Física</label>
+      <div class="form-card">
+        <!-- Topbar do card -->
+        <div class="form-top">
+          <div>
+            <div class="form-top-title">Solicitar serviço</div>
+            <div class="form-top-sub">
+              <span id="stepLabel">Etapa 1 de 4</span>
             </div>
-
-            <div class="form-check mb-3">
-              <input class="form-check-input" type="radio" name="tipo_pessoa">
-              <label class="form-check-label">Pessoa Jurídica</label>
-            </div>
-
-            <!-- CPF -->
-            <div class="mb-3">
-              <label class="form-label">CPF *</label>
-              <input type="text" class="form-control" placeholder="000.000.000-00">
-              <div class="form-text">Informe seu CPF (pessoa física)</div>
-            </div>
-
-            <!-- Nome -->
-            <div class="mb-3">
-              <label class="form-label">Nome do Solicitante *</label>
-              <input type="text" class="form-control" placeholder="Seu nome completo">
-            </div>
-
-            <!-- Telefone -->
-            <div class="mb-4">
-              <label class="form-label">Telefone para Contato *</label>
-              <input type="text" class="form-control" placeholder="(79) 99999-9999">
-              <div class="form-text">Telefone com DDD (fixo ou celular)</div>
-            </div>
-
-            <!-- Botões -->
-            <div class="d-flex justify-content-between">
-              <button type="button" class="btn btn-light" disabled>
-                ← Anterior
-              </button>
-
-              <button type="button" class="btn btn-primary" onclick="nextStep()">
-                Próximo →
-              </button>
-            </div>
-
           </div>
 
-          <!-- ETAPA 2 (placeholder) -->
-          <div class="step-content">
-            <h6>Localização do Serviço</h6>
+          <button class="close-btn" type="button" aria-label="Fechar">✕</button>
+        </div>
 
-            <div class="mb-3">
-              <label class="form-label">Endereço *</label>
-              <input type="text" class="form-control">
+        <!-- Progress -->
+        <div class="progress-row">
+          <div class="progress-track">
+            <div class="progress-bar" id="progressBar" style="width: 25%;"></div>
+          </div>
+          <div class="progress-pct" id="progressPct">25%</div>
+        </div>
+
+        <!-- Conteúdo -->
+        <form
+          id="solicitarForm"
+          class="form-body"
+          method="post"
+          enctype="multipart/form-data"
+          action=""
+          novalidate
+        >
+          {% csrf_token %}
+
+          <!-- STEP 1 -->
+          <div class="step-content active" data-content="1">
+            <h2>Dados do Solicitante</h2>
+            <p class="muted">Preencha os dados de quem está solicitando o serviço</p>
+
+            <div class="field">
+              <label>Tipo de Pessoa <span class="req">*</span></label>
+              <div class="segmented" role="group" aria-label="Tipo de Pessoa">
+                <label class="seg-item">
+                  <input type="radio" name="person_type" value="PF" checked>
+                  <span>✅ Pessoa Física</span>
+                </label>
+                <label class="seg-item">
+                  <input type="radio" name="person_type" value="PJ">
+                  <span>◻️ Pessoa Jurídica</span>
+                </label>
+              </div>
             </div>
 
-            <div class="d-flex justify-content-between">
-              <button type="button" class="btn btn-light" onclick="prevStep()">← Anterior</button>
-              <button type="button" class="btn btn-primary" onclick="nextStep()">Próximo →</button>
+            <div class="field">
+              <label for="cpf">CPF/CNPJ <span class="req">*</span></label>
+              <input
+                id="cpf"
+                name="document"
+                type="text"
+                placeholder="000.000.000-00 (PF) ou 00.000.000/0001-00 (PJ)"
+                required
+              >
             </div>
+
+            <div class="field">
+              <label for="nome">Nome do Solicitante <span class="req">*</span></label>
+              <input
+                id="nome"
+                name="full_name"
+                type="text"
+                placeholder="Seu nome completo"
+                required
+              >
+            </div>
+
+            <div class="field">
+              <label for="tel">Telefone para Contato <span class="req">*</span></label>
+              <input
+                id="tel"
+                name="phone"
+                type="text"
+                placeholder="(00) 00000-0000 (com DDD da cidade)"
+                required
+              >
+              <small class="help">Use o DDD da sua cidade</small>
+            </div>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="step-content" data-content="2">
+            <h2>Localização e Serviço</h2>
+            <p class="muted">Informe onde ocorreu e qual o serviço desejado</p>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="cep">CEP</label>
+                <input id="cep" name="cep" type="text" placeholder="00000-000">
+              </div>
+              <div class="field">
+                <label for="numero">Número</label>
+                <input id="numero" name="number" type="text" placeholder="Ex: 123">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="rua">Rua</label>
+              <input id="rua" name="street" type="text" placeholder="Nome da rua">
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="bairro">Bairro</label>
+                <input id="bairro" name="neighborhood" type="text" placeholder="Bairro">
+              </div>
+              <div class="field">
+                <label for="cidade">Cidade</label>
+                <input id="cidade" name="city" type="text" placeholder="Cidade">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="servico">Tipo de serviço <span class="req">*</span></label>
+              <select id="servico" name="service_type" required>
+                <option value="">Selecione...</option>
+                <option value="Coleta de entulho">Coleta de entulho</option>
+                <option value="Reparo de iluminação">Reparo de iluminação</option>
+                <option value="Limpeza urbana">Limpeza urbana</option>
+                <option value="Roçagem e capinação">Roçagem e capinação</option>
+                <option value="Poda de árvore">Poda de árvore</option>
+                <option value="Sinalização">Sinalização</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="descricao">Descrição <span class="req">*</span></label>
+              <textarea
+                id="descricao"
+                name="description"
+                rows="4"
+                placeholder="Descreva o problema (ponto de referência, detalhes, etc.)"
+                required
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- STEP 3 -->
+          <div class="step-content" data-content="3">
+            <h2>Anexos</h2>
+            <p class="muted">Envie imagens ou documentos que ajudem na análise</p>
+
+            <div class="upload">
+              <input id="anexos" name="attachments" type="file" multiple>
+              <label for="anexos" class="upload-box">
+                <div class="upload-title">Clique para selecionar arquivos</div>
+                <div class="upload-sub">PNG, JPG ou PDF</div>
+              </label>
+            </div>
+
+            <div class="field">
+              <label for="obs">Observações</label>
+              <textarea
+                id="obs"
+                name="notes"
+                rows="4"
+                placeholder="Observações adicionais (opcional)"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- STEP 4 -->
+          <div class="step-content" data-content="4">
+            <h2>Revisar e Enviar</h2>
+            <p class="muted">Confira os dados antes de enviar</p>
+
+            <div class="review" id="reviewBox">
+              <div class="review-row"><b>Nome:</b> <span data-r="full_name">—</span></div>
+              <div class="review-row"><b>CPF/CNPJ:</b> <span data-r="document">—</span></div>
+              <div class="review-row"><b>Telefone:</b> <span data-r="phone">—</span></div>
+              <hr>
+              <div class="review-row"><b>Serviço:</b> <span data-r="service_type">—</span></div>
+              <div class="review-row"><b>Endereço:</b> <span data-r="address">—</span></div>
+              <div class="review-row"><b>Descrição:</b> <span data-r="description">—</span></div>
+              <div class="review-row"><b>Observações:</b> <span data-r="notes">—</span></div>
+            </div>
+
+            <div class="notice">
+              Ao enviar, você confirma que as informações são verdadeiras.
+            </div>
+          </div>
+
+          <!-- Ações -->
+          <div class="form-actions">
+            <button class="btn btn-ghost" type="button" id="btnPrev" disabled>‹ Anterior</button>
+            <button class="btn btn-primary" type="button" id="btnNext">Próximo ›</button>
           </div>
 
         </form>
       </div>
-    </div>
-  </div>
-</section>
 
-<script>
-let currentStep = 0;
-const steps = document.querySelectorAll('.step-content');
-const sidebar = document.querySelectorAll('#stepsSidebar li');
-const progressBar = document.getElementById('progressBar');
-const percentText = document.getElementById('progressPercent');
+    </section>
+  </section>
 
-function updateUI() {
-  steps.forEach((s, i) => s.classList.toggle('active', i === currentStep));
-  sidebar.forEach((s, i) => s.classList.toggle('active', i === currentStep));
+  <!-- Cards inferiores -->
+  <section class="container bottom-cards">
+    <article class="info-card">
+      <div class="info-head">
+        <span class="info-ico">🧹</span>
+        <h3>Serviços Urbanos</h3>
+      </div>
+      <p>Solicite coleta de entulho, reparo em iluminação pública, limpeza urbana e capinação.</p>
+    </article>
 
-  const percent = Math.round(((currentStep + 1) / sidebar.length) * 100);
-  progressBar.style.width = percent + '%';
-  percentText.innerText = percent + '%';
-}
+    <article class="info-card">
+      <div class="info-head">
+        <span class="info-ico">📎</span>
+        <h3>Anexamentos</h3>
+      </div>
+      <p>Envie fotos e documentos para agilizar a análise e execução da solicitação.</p>
+    </article>
 
-function nextStep() {
-  if (currentStep < steps.length - 1) {
-    currentStep++;
-    updateUI();
-  }
-}
+    <article class="info-card">
+      <div class="info-head">
+        <span class="info-ico">🏛️</span>
+        <h3>Prefeitura</h3>
+      </div>
+      <p>Portal oficial para solicitações de serviços urbanos de Socorro-SE.</p>
+    </article>
+  </section>
 
-function prevStep() {
-  if (currentStep > 0) {
-    currentStep--;
-    updateUI();
-  }
-}
-</script>
+  <footer class="container footer">
+    © 2024 Prefeitura de Nossa Senhora do Socorro - SE<br>
+    <span class="muted">Todos os direitos reservados.</span>
+  </footer>
 
+</main>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/solicitar_servico.js' %}"></script>
 {% endblock %}

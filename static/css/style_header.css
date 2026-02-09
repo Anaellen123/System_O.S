@@ -1,5 +1,5 @@
 /* ===== Banner / Header (fundo) ===== */
-header{
+#header_index{
   width: 100%;
   min-height: 130vh;
   background-image: url("../img/banner7.png");
@@ -11,8 +11,6 @@ header{
 #yellow{
   width: 100%;
   height: 140px;                 /* altura da barra */
- 
-
   display: flex;
   align-items: center;           /* centraliza verticalmente */
   justify-content: space-between;/* logo à esquerda e nav à direita */
@@ -148,7 +146,7 @@ header{
 }
 
 /* BOTÃO AMARELO (principal) */
-.btn-primary{
+.solicitar_servico{
   background-color: #f2c230;
   color: #1f2a44;
   padding: 14px 26px;
@@ -165,13 +163,13 @@ header{
   transition: all 0.3s ease;
 }
 
-.btn-primary:hover{
+.solicitar_servico:hover{
   background-color: #e6b31f;
   transform: translateY(-2px);
 }
 
 /* BOTÃO BRANCO (secundário) */
-.btn-secondary{
+.acompanhar_servico{
   background-color: #ffffff;
   color: #1f2a44;
   padding: 14px 26px;
@@ -188,7 +186,7 @@ header{
   transition: all 0.3s ease;
 }
 
-.btn-secondary:hover{
+.acompanhar_servico:hover{
   background-color: #f2f2f2;
   transform: translateY(-2px);
 }

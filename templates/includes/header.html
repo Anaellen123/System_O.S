@@ -1,6 +1,6 @@
 {% load static %}
 
-<header>
+<header id="header_index">
     <div id="yellow">
 
         <!-- Logo (imagem única com textos embutidos) -->
@@ -48,12 +48,12 @@
         </div>
     </div>
     <div class="hero-actions">
-        <a href="{% url 'solicitar_servico' %}" class="btn-primary">
+        <a href="{% url 'solicitar_servico' %}" class="solicitar_servico">
             <i class="bi bi-clipboard-check"></i>
             Solicitar serviço
         </a>
 
-        <a href="#" id="btnAcompanhar" class="btn-secondary">
+        <a href="#" id="btnAcompanhar" class="acompanhar_servico">
             <i class="bi bi-search"></i>
             Acompanhar serviço
         </a>

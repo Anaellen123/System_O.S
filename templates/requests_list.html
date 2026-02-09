@@ -1,0 +1,57 @@
+{% extends "head.html" %}
+{% block header %}{% endblock %}
+{% block content %}
+<main class="container" style="padding:30px 0;">
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <h1 style="margin:0;">Solicitações</h1>
+    <div style="display:flex; gap:10px;">
+      <a href="{% url 'logout' %}">Sair</a>
+    </div>
+  </div>
+
+  <form method="get" style="margin:16px 0; display:flex; gap:10px; flex-wrap:wrap;">
+    <input name="q" value="{{ request.GET.q }}" placeholder="Buscar por nome ou documento"
+           style="padding:10px 12px; border:1px solid #ddd; border-radius:10px; min-width:260px;">
+    <select name="status" style="padding:10px 12px; border:1px solid #ddd; border-radius:10px;">
+      <option value="">Todos</option>
+      <option value="OPEN" {% if request.GET.status == "OPEN" %}selected{% endif %}>Aberto</option>
+      <option value="IN_PROGRESS" {% if request.GET.status == "IN_PROGRESS" %}selected{% endif %}>Em andamento</option>
+      <option value="DONE" {% if request.GET.status == "DONE" %}selected{% endif %}>Concluído</option>
+    </select>
+    <button type="submit" style="padding:10px 14px; border:0; border-radius:10px; background:#1e63b7; color:#fff; font-weight:700;">
+      Filtrar
+    </button>
+  </form>
+
+  <div style="background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 12px 30px rgba(0,0,0,.08);">
+    <table style="width:100%; border-collapse:collapse;">
+      <thead style="background:#f5f7fb;">
+        <tr>
+          <th style="text-align:left; padding:12px;">#</th>
+          <th style="text-align:left; padding:12px;">Nome</th>
+          <th style="text-align:left; padding:12px;">Documento</th>
+          <th style="text-align:left; padding:12px;">Status</th>
+          <th style="text-align:left; padding:12px;">Criado em</th>
+          <th style="text-align:left; padding:12px;">Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in requests %}
+          <tr style="border-top:1px solid #eee;">
+            <td style="padding:12px;">{{ r.id }}</td>
+            <td style="padding:12px;">{{ r.full_name }}</td>
+            <td style="padding:12px;">{{ r.document }}</td>
+            <td style="padding:12px;">{{ r.get_status_display }}</td>
+            <td style="padding:12px;">{{ r.created_at|date:"d/m/Y H:i" }}</td>
+            <td style="padding:12px;">
+              <a href="{% url 'request_detail' r.id %}">Ver</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" style="padding:16px;">Nenhuma solicitação encontrada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

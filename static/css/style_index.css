@@ -103,15 +103,10 @@ html, body{
 
 /* Topo colorido */
 .service-top{
-  height: 88px;
-  display: flex;
-  align-items: center;
-  padding: 0 18px;
-}
-
-.service-top i{
-  font-size: 34px;
-  color: rgba(18, 30, 52, 0.75);
+    height: 120px; /* ajuste conforme quiser */
+    background-size: cover;       /* preenche tudo */
+    background-position: center;  /* centraliza */
+    background-repeat: no-repeat;
 }
 
 /* Corpo */
@@ -146,15 +141,17 @@ html, body{
 }
 
 /* Paletas (topo) */
-.top-yellow .service-top{ background: linear-gradient(135deg, #ffd34f, #f2b91e); }
-.top-blue   .service-top{ background: linear-gradient(135deg, #5fa8ff, #2f6ed5); }
-.top-gray   .service-top{ background: linear-gradient(135deg, #e7eef7, #cfd8e6); }
-.top-green  .service-top{ background: linear-gradient(135deg, #88d6a8, #43b77b); }
-.top-blue2  .service-top{ background: linear-gradient(135deg, #7fb8ff, #3d7be0); }
-.top-orange .service-top{ background: linear-gradient(135deg, #ffd1a6, #ff9b3c); }
-.top-purple .service-top{ background: linear-gradient(135deg, #b8a7ff, #7a5cff); }
-.top-cyan   .service-top{ background: linear-gradient(135deg, #9de7ff, #46bce6); }
-.top-red    .service-top{ background: linear-gradient(135deg, #ffb0b0, #ff5f5f); }
+.top-entulho .service-top{ background-image: url("../img/coleta_entulho.png"); }
+.top-reparo   .service-top{ background-image: url("../img/reparo_iluminacao.png"); }
+.top-limpeza   .service-top{ background-image: url("../img/limpeza_urbana.png"); }
+.top-rocagem  .service-top{ background-image: url("../img/rocagem_capinacao.png"); }
+.top-buraco  .service-top{ background-image: url("../img/tapa_buraco.png"); }
+.top-obstrucao .service-top{ background-image: url("../img/limpeza_canal.png"); }
+.top-poda .service-top{ background-image: url("../img/poda.png"); }
+.top-sinalizacao   .service-top{ background-image: url("../img/sinalizacao.png"); }
+.top-iluminacao    .service-top{ background-image: url("../img/espaco_publico.png"); }
+.top-reclamacao    .service-top{ background-image: url("../img/reclamacao_sugestao.png"); }
+
 
 /* ===== Responsivo ===== */
 @media (max-width: 900px){

@@ -12,14 +12,17 @@
     <link rel="stylesheet" href="{% static 'css/style_solicitar_servico.css' %}">
     <link rel="stylesheet" href="{% static 'css/style_header.css' %}">
     <link rel="stylesheet" href="{% static 'css/style_modal_index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style_header_servicos.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style_login.css' %}">
     
 </head>
 
 <body>
 
     <!-- HEADER GLOBAL -->
-    {% include 'includes/header.html' %}
-
+     {% block header %}
+        {% include 'includes/header.html' %}
+     {% endblock %}
     <!-- CONTEÚDO DAS PÁGINAS -->
     <main>
         {% block content %}
@@ -29,6 +32,11 @@
     <!-- BOOTSTRAP JS -->
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/acompanhar_modal.js' %}"></script>
+    <script src="{% static 'js/login.js' %}"></script>
+    <script src="{% static 'js/solicitar_servico.js' %}"></script>
+    <!-- {% block extra_js %}
+        <script defer src="{% static 'js/solicitar_servico.js' %}"></script>
+    {% endblock %} -->
 
 </body>
 </html>

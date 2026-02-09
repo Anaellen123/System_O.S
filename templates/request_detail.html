@@ -1,0 +1,30 @@
+{% extends "head.html" %}
+{% block header %}{% endblock %}
+{% block content %}
+<main class="container" style="padding:30px 0;">
+  <a href="{% url 'requests_list' %}">← Voltar</a>
+  <h1 style="margin:12px 0;">Solicitação #{{ obj.id }}</h1>
+
+  <div style="background:#fff; padding:18px; border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,.08);">
+    <p><b>Nome:</b> {{ obj.full_name }}</p>
+    <p><b>Documento:</b> {{ obj.document }}</p>
+    <p><b>Telefone:</b> {{ obj.phone }}</p>
+    <p><b>Status:</b> {{ obj.get_status_display }}</p>
+    <p><b>Descrição:</b><br>{{ obj.description|linebreaksbr }}</p>
+
+    <hr>
+    <h3>Anexos</h3>
+    {% if obj.attachments.all %}
+      <ul>
+        {% for a in obj.attachments.all %}
+          <li><a href="{{ a.file.url }}" target="_blank">{{ a.file.name }}</a></li>
+        {% empty %}
+          <li>Sem anexos.</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Sem anexos.</p>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

@@ -1,38 +1,364 @@
-/* ========================= */
-/*        CSS GERAL           */
-/* ========================= */
-
-.step-content {
-  display: none;
+/* ===== Base ===== */
+:root{
+  --bg1:#07142c;
+  --bg2:#0a1a35;
+  --card:#ffffff;
+  --glass: rgba(255,255,255,.10);
+  --glass2: rgba(255,255,255,.16);
+  --stroke: rgba(255,255,255,.18);
+  --text:#0f172a;
+  --muted: rgba(15,23,42,.65);
+  --brand:#1d4ed8;
+  --brand2:#0b3ea6;
+  --shadow: 0 18px 45px rgba(0,0,0,.35);
+  --radius: 18px;
 }
 
-.step-content.active {
-  display: block;
+*{ 
+  box-sizing:border-box; 
 }
 
-/* Sidebar etapas */
-.steps {
-  list-style: none;
-  padding-left: 0;
-  margin: 0;
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-.steps li {
-  padding: 10px 12px;
-  border-left: 3px solid #e9ecef;
-  color: #6c757d;
-  font-size: 14px;
-  margin-bottom: 6px;
+.container{
+  width:min(1180px, 92%);
+  margin-inline:auto;
 }
 
-.steps li.active {
-  border-left-color: #0d6efd;
-  color: #0d6efd;
-  font-weight: 600;
+.solicitar-page{
+  min-height: 100vh;
+  padding: 28px 0 40px;
+  background-image: url("../img/backgroun-two.png");
 }
 
-/* Botões PF / PJ */
-.btn-outline-primary.active {
-  background-color: #0d6efd;
+.page-title h1{
+  margin: 18px 0 18px;
+  font-size: clamp(30px, 3.2vw, 54px);
   color: #fff;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ===== Layout ===== */
+.layout-grid{
+  display:grid;
+  grid-template-columns: 320px 1fr;
+  gap: 26px;
+  align-items:start;
+}
+
+@media (max-width: 980px){
+  .layout-grid{ grid-template-columns: 1fr; }
+}
+
+/* ===== Cards glass ===== */
+.card{
+  position:relative;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.10));
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  backdrop-filter: blur(10px);
+}
+
+.card-title{
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+/* ===== Steps ===== */
+.steps{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+.step{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.12);
+  border: 1px solid rgba(255,255,255,.10);
+  cursor:pointer;
+  user-select:none;
+  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+.step:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.22); }
+.step-num{
+  width: 30px; height: 30px;
+  border-radius: 999px;
+  display:grid; place-items:center;
+  font-weight: 800;
+  background: rgba(255,255,255,.18);
+}
+.step.active{
+  background: rgba(255,255,255,.14);
+  border-color: rgba(255,255,255,.28);
+}
+.step.active .step-num{
+  background: rgba(255,215,120,.95);
+  color: #111827;
+}
+
+.tips{ margin:0; padding-left: 18px; color: rgba(255,255,255,.85); font-size: 13px; }
+.tips li{ margin: 10px 0; }
+.tip-icon{
+  position:absolute;
+  right: 14px;
+  bottom: 10px;
+  opacity: .55;
+  font-size: 34px;
+}
+
+/* ===== Form Card ===== */
+.form-wrap{ width:100%; }
+
+.form-card{
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.10));
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  overflow:hidden;
+}
+
+/* Top */
+.form-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  padding: 18px 18px 12px;
+}
+.form-top-title{
+  font-size: 26px;
+  font-weight: 900;
+  line-height:1.1;
+}
+.form-top-sub{
+  margin-top: 6px;
+  font-weight: 700;
+  color: rgba(255,255,255,.85);
+}
+.close-btn{
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,.85);
+  font-size: 22px;
+  cursor:pointer;
+  padding: 6px 10px;
+  border-radius: 12px;
+}
+.close-btn:hover{ background: rgba(255,255,255,.10); }
+
+/* Progress */
+.progress-row{
+  display:flex;
+  gap: 14px;
+  align-items:center;
+  padding: 0 18px 14px;
+}
+.progress-track{
+  flex:1;
+  height: 10px;
+  background: rgba(255,255,255,.22);
+  border-radius: 999px;
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,.20);
+}
+.progress-bar{
+  height:100%;
+  width:25%;
+  background: linear-gradient(90deg, rgba(255,215,120,.95), rgba(29,78,216,.95));
+  border-radius: 999px;
+}
+.progress-pct{ font-weight: 800; color: rgba(255,255,255,.9); }
+
+/* Body branco (como na imagem) */
+.form-body{
+  background: rgba(255,255,255,.92);
+  color: var(--text);
+  padding: 18px;
+  border-top: 1px solid rgba(255,255,255,.18);
+}
+.form-body h2{
+  margin: 6px 0 4px;
+  font-size: 22px;
+  font-weight: 900;
+}
+.muted{ color: rgba(255,255,255,.75); }
+.form-body .muted{ color: var(--muted); margin-top:0; }
+
+.field{ margin-top: 14px; }
+label{
+  display:block;
+  font-weight: 800;
+  margin-bottom: 7px;
+}
+.req{ color:#c0841a; }
+
+input, select, textarea{
+  width:100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.18);
+  outline: none;
+  background: #fff;
+  font-size: 14px;
+}
+input:focus, select:focus, textarea:focus{
+  border-color: rgba(29,78,216,.6);
+  box-shadow: 0 0 0 4px rgba(29,78,216,.12);
+}
+.help{ display:block; margin-top: 8px; color: rgba(15,23,42,.55); font-size: 12px; }
+
+.grid-2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 640px){
+  .grid-2{ grid-template-columns: 1fr; }
+}
+
+/* Segmented */
+.segmented{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.seg-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.16);
+  background: rgba(255,255,255,.65);
+  cursor:pointer;
+  user-select:none;
+  font-weight: 800;
+}
+.seg-item input{ width:auto; }
+.seg-item:has(input:checked){
+  background: rgba(255,215,120,.85);
+  border-color: rgba(192,132,26,.35);
+}
+
+/* Steps content */
+.step-content{ display:none; }
+.step-content.active{ display:block; }
+
+/* Upload */
+.upload{ margin-top: 14px; }
+.upload input{ display:none; }
+.upload-box{
+  display:block;
+  padding: 18px;
+  border: 2px dashed rgba(15,23,42,.22);
+  border-radius: 14px;
+  background: rgba(255,255,255,.65);
+  cursor:pointer;
+  text-align:center;
+}
+.upload-title{ font-weight: 900; }
+.upload-sub{ margin-top: 4px; color: rgba(15,23,42,.55); }
+
+/* Review */
+.review{
+  border: 1px solid rgba(15,23,42,.12);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(255,255,255,.75);
+}
+.review-row{ margin: 8px 0; }
+.review hr{ border:none; border-top: 1px solid rgba(15,23,42,.12); margin: 12px 0; }
+.notice{
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(29,78,216,.10);
+  border: 1px solid rgba(29,78,216,.18);
+  color: rgba(15,23,42,.85);
+  font-weight: 700;
+}
+
+/* Actions */
+.form-actions{
+  display:flex;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 16px 0 0;
+}
+.btn{
+  border: none;
+  padding: 11px 16px;
+  border-radius: 12px;
+  cursor:pointer;
+  font-weight: 900;
+  font-size: 14px;
+}
+.btn-ghost{
+  background: rgba(15,23,42,.06);
+  color: rgba(15,23,42,.85);
+}
+.btn-ghost:disabled{
+  opacity: .55;
+  cursor:not-allowed;
+}
+.btn-primary{
+  background: linear-gradient(180deg, var(--brand), var(--brand2));
+  color: #fff;
+  box-shadow: 0 12px 22px rgba(29,78,216,.26);
+}
+
+/* ===== Bottom cards ===== */
+.bottom-cards{
+  margin-top: 26px;
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 980px){
+  .bottom-cards{ grid-template-columns: 1fr; }
+}
+.info-card{
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+.info-head{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+.info-ico{
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display:grid;
+  place-items:center;
+  background: rgba(255,215,120,.90);
+  color: #111827;
+}
+.info-card h3{
+  margin:0;
+  font-size: 16px;
+  font-weight: 900;
+}
+.info-card p{
+  margin: 10px 0 0;
+  color: rgba(255,255,255,.85);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Footer */
+.footer{
+  margin-top: 26px;
+  color: rgba(255,255,255,.80);
+  font-size: 13px;
 }

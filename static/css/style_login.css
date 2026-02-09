@@ -1,0 +1,241 @@
+/* Página inteira */
+.login-page{
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  background-image: url("../img/banner5.png");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* um “filtro” azulado por cima do background */
+.login-page::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(90deg, rgba(10,35,90,.78), rgba(10,35,90,.30));
+}
+
+/* garante que o conteúdo fique acima do overlay */
+.login-left, .login-right{
+  position: relative;
+  z-index: 1;
+}
+
+/* COLUNA ESQUERDA */
+.login-left{
+  padding: 56px 56px 28px;
+  color: #fff;
+  display:flex;
+  flex-direction: column;
+}
+
+.brand-top{
+  display:flex;
+  align-items:center;
+  gap: 14px;
+  margin-bottom: 34px;
+}
+
+.brand-icon{
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.brand-mini{
+  font-size: 12px;
+  opacity: .9;
+  letter-spacing: .2px;
+}
+
+.brand-name{
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.login-title{
+  font-size: 56px;
+  line-height: 1.06;
+  margin: 0 0 18px;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+}
+
+.login-title span{
+  color: #f6c04b; /* amarelo */
+}
+
+.login-subtitle{
+  max-width: 560px;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.55;
+  opacity: .92;
+}
+
+.login-footer{
+  margin-top: auto;
+  font-size: 12.5px;
+  opacity: .85;
+}
+
+/* COLUNA DIREITA */
+.login-right{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 40px;
+}
+
+.login-card{
+  width: min(520px, 100%);
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(255,255,255,.65);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.22);
+  padding: 26px 26px 20px;
+  backdrop-filter: blur(8px);
+}
+
+.card-header{
+  display:flex;
+  justify-content:center;
+  margin-bottom: 10px;
+}
+
+.card-logo{
+  height: 150px;
+  object-fit: contain;
+}
+
+.card-title{
+  margin: 14px 0 6px;
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f2f63;
+}
+
+.card-desc{
+  margin: 0 0 18px;
+  color: #5a6a82;
+}
+
+.alert-wrap{ margin-bottom: 14px; }
+.alert{
+  background: #ffe9e9;
+  color: #8a1f1f;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 600;
+}
+
+/* Campos */
+.login-form{ display:flex; flex-direction:column; gap: 10px; }
+
+.field-label{
+  font-weight: 800;
+  color: #203a63;
+  margin-top: 6px;
+}
+
+.field{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #dbe3f1;
+  border-radius: 12px;
+  padding: 12px 12px;
+}
+
+.field-ico{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: #f2f6ff;
+  color: #1e63b7;
+  font-size: 16px;
+  flex: 0 0 34px;
+}
+
+.field input{
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 15px;
+  color: #1c2b44;
+}
+
+.field-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top: 6px;
+}
+
+.forgot{
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e63b7;
+  text-decoration: none;
+}
+.forgot:hover{ text-decoration: underline; }
+
+.btn-primary{
+  margin-top: 6px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #1e63b7, #184f92);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.test-box{
+  margin-top: 14px;
+  border: 1px dashed #c8d7f2;
+  background: #f7fbff;
+  border-radius: 14px;
+  padding: 12px 12px;
+  text-align:center;
+}
+
+.test-title{
+  font-weight: 900;
+  color: #2a3d5f;
+  margin-bottom: 6px;
+}
+
+.test-text{ color:#556a86; }
+
+.back{
+  display:block;
+  text-align:center;
+  margin-top: 12px;
+  font-weight: 800;
+  color: #2a3d5f;
+  text-decoration: none;
+}
+.back:hover{ text-decoration: underline; }
+
+/* Responsivo */
+@media (max-width: 980px){
+  .login-page{
+    grid-template-columns: 1fr;
+  }
+  .login-left{
+    padding: 34px 22px 18px;
+  }
+  .login-title{ font-size: 44px; }
+  .login-right{ padding: 20px; }
+}
