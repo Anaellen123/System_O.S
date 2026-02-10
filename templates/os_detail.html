@@ -1,0 +1,120 @@
+{% extends "dashboard_base.html" %}
+{% block title %}{{ os.os_number }}{% endblock %}
+{% block page_title %}{{ os.os_number }}{% endblock %}
+
+{% block content %}
+<style>
+  .wrap{padding:22px;}
+  .box{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;max-width:1100px;}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+  .meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:#6b7280;font-size:13px;}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid #e5e7eb;background:#f9fafb;}
+  .grid{display:grid;grid-template-columns:repeat(3, minmax(220px, 1fr));gap:12px;}
+  .full{grid-column:1/-1;}
+  label{display:block;font-size:12px;color:#6b7280;margin:2px 0 6px;}
+  input, select, textarea{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;}
+  textarea{min-height:110px;resize:vertical;}
+  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .btn{padding:10px 14px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
+  .btn.primary{background:#0b5fff;border-color:#0b5fff;color:#fff;font-weight:800;}
+  .btn.danger{background:#fff;border-color:#fee2e2;color:#b91c1c;}
+  @media (max-width: 980px){ .grid{grid-template-columns:1fr 1fr;} }
+  @media (max-width: 680px){ .grid{grid-template-columns:1fr;} }
+</style>
+
+<div class="wrap">
+  <div class="box">
+    <div class="top">
+      <div class="meta">
+        <span class="pill">📄 {{ os.os_number }}</span>
+        <span>Criação: <b>{{ os.created_at|date:"d/m/Y H:i" }}</b></span>
+        {% if os.created_by %}<span>Criada por: <b>{{ os.created_by }}</b></span>{% endif %}
+      </div>
+
+      <div class="actions" style="margin-top:0;">
+        <a class="btn" href="{% url 'os_list' %}">⬅ Voltar</a>
+      </div>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="grid">
+        <div>
+          <label>Tipo de pessoa</label>
+          {{ form.person_type }}
+        </div>
+
+        <div>
+          <label>CPF/CNPJ</label>
+          {{ form.document }}
+        </div>
+
+        <div>
+          <label>Status</label>
+          {{ form.status }}
+        </div>
+
+        <div>
+          <label>Nome completo</label>
+          {{ form.full_name }}
+        </div>
+
+        <div>
+          <label>Telefone</label>
+          {{ form.phone }}
+        </div>
+
+        <div>
+          <label>Responsável (Equipe)</label>
+          {{ form.assigned_to }}
+        </div>
+
+        <div>
+          <label>CEP</label>
+          {{ form.cep }}
+        </div>
+
+        <div>
+          <label>Rua</label>
+          {{ form.street }}
+        </div>
+
+        <div>
+          <label>Número</label>
+          {{ form.number }}
+        </div>
+
+        <div>
+          <label>Bairro</label>
+          {{ form.neighborhood }}
+        </div>
+
+        <div>
+          <label>Cidade</label>
+          {{ form.city }}
+        </div>
+
+        <div>
+          <label>Tipo de serviço</label>
+          {{ form.service_type }}
+        </div>
+
+        <div class="full">
+          <label>Descrição</label>
+          {{ form.description }}
+        </div>
+
+        <div class="full">
+          <label>Observações internas</label>
+          {{ form.notes }}
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" type="submit">💾 Salvar alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

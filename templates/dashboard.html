@@ -50,6 +50,24 @@
 
     </div>
   </div>
+  <div class="cardbox">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Bairros com Mais Solicitações</h2>
+          <p>Top bairros com maior número de ordens (Nossa Senhora do Socorro/SE)</p>
+        </div>
+      </div>
+
+      <div class="chart-placeholder">
+        <canvas id="neighborhoodChart" height="120"></canvas>
+      </div>
+
+      {{ bairros_labels|json_script:"bairros-labels" }}
+      {{ bairros_data|json_script:"bairros-data" }}
+    </div>
+  </div>
+
 
   <div class="card">
     <div class="card-head">

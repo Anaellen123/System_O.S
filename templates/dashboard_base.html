@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/os_edit.css' %}">
 </head>
 <body>
 
@@ -23,15 +24,57 @@
       <i class="bi bi-plus-lg"></i> Criar Ordem de Serviço
     </a>
 
-    <nav class="menu">
-      <a class="menu-item active" href="{% url 'dashboard' %}">
+    <nav class="menu" id="sidebarMenu">
+
+      <a class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+        href="{% url 'dashboard' %}">
         <i class="bi bi-grid-1x2"></i> Dashboard
       </a>
-      <a class="menu-item" href="#"><i class="bi bi-receipt"></i> Ordem de Serviço</a>
-      <a class="menu-item" href="#"><i class="bi bi-gear"></i> Serviços</a>
-      <a class="menu-item" href="#"><i class="bi bi-bar-chart"></i> Relatórios</a>
-      <a class="menu-item" href="#"><i class="bi bi-people"></i> Equipe</a>
+
+      <!-- ORDEM DE SERVIÇO (com submenu) -->
+      <div class="menu-accordion {% if request.resolver_match.url_name == 'os_list' or request.resolver_match.url_name == 'os_list_status' or request.resolver_match.url_name == 'os_create' %}is-open{% endif %}">
+        <button class="menu-item menu-toggle" type="button" aria-expanded="false">
+          <span class="menu-left">
+            <i class="bi bi-clipboard-check"></i> Ordem de Serviço
+          </span>
+          <i class="bi bi-chevron-right menu-caret"></i>
+        </button>
+
+        <ul class="submenu">
+          <li><a class="submenu-item" href="{% url 'os_list' %}">Todas</a></li>
+          <li><a class="submenu-item" href="{% url 'os_list_status' 'OPEN' %}">Pendentes</a></li>
+          <li><a class="submenu-item" href="{% url 'os_list_status' 'IN_PROGRESS' %}">Em Andamento</a></li>
+          <li><a class="submenu-item" href="{% url 'os_list_status' 'DONE' %}">Concluídas</a></li>
+        </ul>
+      </div>
+
+      <a class="menu-item" href="#">
+        <i class="bi bi-gear"></i> Serviços
+      </a>
+
+      <!-- RELATÓRIOS (com submenu) -->
+      <div class="menu-accordion">
+        <button class="menu-item menu-toggle" type="button" aria-expanded="false">
+          <span class="menu-left">
+            <i class="bi bi-bar-chart"></i> Relatórios
+          </span>
+          <i class="bi bi-chevron-right menu-caret"></i>
+        </button>
+
+        <ul class="submenu">
+          <li><a class="submenu-item" href="#">Por Período</a></li>
+          <li><a class="submenu-item" href="#">Por Serviço</a></li>
+          <li><a class="submenu-item" href="#">Por Equipe</a></li>
+        </ul>
+      </div>
+
+      <a class="menu-item" href="#">
+        <i class="bi bi-people"></i> Equipe
+      </a>
+
     </nav>
+
+
 
     <div class="sidebar-bottom">
       <div class="userbox">

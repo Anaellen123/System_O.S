@@ -126,12 +126,15 @@
             <div class="field">
               <label for="cpf">CPF/CNPJ <span class="req">*</span></label>
               <input
-                id="cpf"
-                name="document"
-                type="text"
-                placeholder="000.000.000-00 (PF) ou 00.000.000/0001-00 (PJ)"
-                required
-              >
+              id="cpf"
+              name="document"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="18"
+              placeholder="000.000.000-00 (PF) ou 00.000.000/0001-00 (PJ)"
+              required
+            >
             </div>
 
             <div class="field">

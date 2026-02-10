@@ -82,62 +82,67 @@
         </div>
     </div>
 
-
     <!-- MODAL -->
     <div id="modalAcompanhar" class="modal-overlay" aria-hidden="true">
         <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-            
+
             <!-- Topo -->
             <div class="modal-header">
-            <div class="modal-header-left">
-                <div class="modal-icon">
-                <i class="bi bi-search"></i>
+                <div class="modal-header-left">
+                    <div class="modal-icon">
+                    <i class="bi bi-search"></i>
+                    </div>
+
+                    <div class="modal-header-text">
+                    <h2 id="modalTitle">Acompanhar OS</h2>
+                    <p>Digite o número completo da OS para consultar o status</p>
+                    </div>
                 </div>
 
-                <div class="modal-header-text">
-                <h2 id="modalTitle">Acompanhar OS</h2>
-                <p>Digite o número para consultar o status</p>
-                </div>
-            </div>
-
-            <button type="button" class="modal-close" id="modalClose" aria-label="Fechar modal">
-                <i class="bi bi-x-lg"></i>
-            </button>
+                <button type="button" class="modal-close" id="modalClose" aria-label="Fechar modal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
 
             <!-- Corpo -->
             <div class="modal-body">
-            <label class="modal-label" for="osInput">
-                <i class="bi bi-file-earmark-text"></i>
-                Número da OS
-            </label>
+                <label class="modal-label" for="osInput">
+                    <i class="bi bi-file-earmark-text"></i>
+                    Número da OS
+                </label>
 
-            <div class="modal-form-row">
-                <div class="modal-input-wrap">
-                <span class="modal-prefix">OS-</span>
-                <input
-                    id="osInput"
-                    class="modal-input"
-                    type="text"
-                    inputmode="numeric"
-                    placeholder="YYYYMMDD-0000"
-                    autocomplete="off"
-                />
+                <div class="modal-form-row">
+                    <div class="modal-input-wrap">
+                    <input
+                        id="osInput"
+                        name="os_number"
+                        class="modal-input"
+                        type="text"
+                        inputmode="text"
+                        placeholder="OS-20260130-0001"
+                        autocomplete="off"
+                        autocapitalize="characters"
+                        spellcheck="false"
+                    />
+                    </div>
+
+                    <button type="button" class="modal-btn" id="btnConsultar">
+                    <i class="bi bi-search"></i>
+                    Consultar
+                    </button>
                 </div>
 
-                <button type="button" class="modal-btn" id="btnConsultar">
-                <i class="bi bi-search"></i>
-                Consultar
-                </button>
-            </div>
+                <p class="modal-example">
+                    Exemplo: <strong>OS-20260130-0001</strong>
+                </p>
 
-            <p class="modal-example">
-                Exemplo: <strong>OS-20260130-0001</strong>
-            </p>
+                <!-- onde você pode mostrar mensagens -->
+                <p id="osMsg" style="margin:8px 0 0; font-size:13px; color:#6d7a90;"></p>
             </div>
 
         </div>
     </div>
+
 
 
 </header>
