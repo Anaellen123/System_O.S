@@ -2,13 +2,9 @@
 
 <header id="header_index">
     <div id="yellow">
-
-        <!-- Logo (imagem única com textos embutidos) -->
         <div id="logo">
         <img src="{% static 'img/test3.png' %}" alt="Portal de Serviço - Socorro SE">
         </div>
-
-        <!-- Nav (menu) -->
         <nav id="nav">
             <ul class="nav-list">
                 <li class="nav-item">
@@ -81,12 +77,8 @@
             </div>
         </div>
     </div>
-
-    <!-- MODAL -->
     <div id="modalAcompanhar" class="modal-overlay" aria-hidden="true">
         <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-
-            <!-- Topo -->
             <div class="modal-header">
                 <div class="modal-header-left">
                     <div class="modal-icon">
@@ -103,8 +95,6 @@
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-
-            <!-- Corpo -->
             <div class="modal-body">
                 <label class="modal-label" for="osInput">
                     <i class="bi bi-file-earmark-text"></i>
@@ -153,18 +143,60 @@
   const closeBtn = document.getElementById("modalClose");
   const input = document.getElementById("osInput");
   const consultarBtn = document.getElementById("btnConsultar");
+  const msg = document.getElementById("osMsg");
 
   function openModal() {
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
+    if (msg) msg.textContent = "";
     setTimeout(() => input && input.focus(), 50);
-    document.body.style.overflow = "hidden"; // trava scroll
+    document.body.style.overflow = "hidden";
   }
 
   function closeModal() {
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = ""; // destrava scroll
+    document.body.style.overflow = "";
+  }
+
+  function setMsg(text, type = "info") {
+    if (!msg) return;
+    msg.textContent = text;
+
+    // cores simples
+    if (type === "ok") msg.style.color = "#15803d";       // verde
+    else if (type === "warn") msg.style.color = "#b45309"; // laranja
+    else if (type === "err") msg.style.color = "#b91c1c";  // vermelho
+    else msg.style.color = "#6d7a90";                     // cinza
+  }
+
+  function statusEmoji(status) {
+    if (status === "OPEN") return "🟡";
+    if (status === "IN_PROGRESS") return "🔵";
+    if (status === "DONE") return "🟢";
+    return "ℹ️";
+  }
+
+  async function consultarStatus(osNumber) {
+    // garante padrão
+    const clean = (osNumber || "").trim().toUpperCase();
+
+    // encode pra não quebrar URL
+    const url = `/api/os-status/${encodeURIComponent(clean)}/`;
+
+    const res = await fetch(url, { headers: { "Accept": "application/json" } });
+
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) {
+      const txt = await res.text();
+      throw new Error("Resposta inválida do servidor (não é JSON). " + txt.slice(0, 80));
+    }
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      throw new Error(data.message || "Não foi possível consultar a OS.");
+    }
+    return data;
   }
 
   // abrir
@@ -176,26 +208,52 @@
   // fechar no X
   closeBtn?.addEventListener("click", closeModal);
 
-  // fechar clicando fora (overlay)
+  // fechar clicando fora
   modal?.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
   });
 
-  // fechar com ESC
+  // ESC
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modal.classList.contains("is-open")) {
-      closeModal();
+    if (e.key === "Escape" && modal.classList.contains("is-open")) closeModal();
+  });
+
+  // Enter no input
+  input?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      consultarBtn?.click();
     }
   });
 
-  // exemplo de ação do Consultar
-  consultarBtn?.addEventListener("click", () => {
-    const val = (input.value || "").trim();
-    // aqui você pode redirecionar ou chamar endpoint
-    // ex: window.location.href = `/acompanhar/?os=OS-${encodeURIComponent(val)}`;
-    alert(val ? `Consultando: OS-${val}` : "Digite o número da OS.");
+  // consultar
+  consultarBtn?.addEventListener("click", async () => {
+    const val = (input?.value || "").trim().toUpperCase();
+
+    if (!val) {
+      setMsg("Digite o número completo da OS (ex: OS-20260130-0001).", "warn");
+      return;
+    }
+
+    setMsg("Consultando... ⏳", "info");
+
+    try {
+      const data = await consultarStatus(val);
+
+      const emoji = statusEmoji(data.status);
+      setMsg(
+        `${emoji} ${data.os_number} — Status: ${data.status_label} · Serviço: ${data.service_type} · Criada em: ${data.created_at}`,
+        "ok"
+      );
+    } catch (err) {
+      console.error(err);
+      setMsg(`❌ ${err.message}`, "err");
+    }
   });
 })();
+input.addEventListener("input", () => input.value = input.value.toUpperCase());
+
 </script>
+
 
 

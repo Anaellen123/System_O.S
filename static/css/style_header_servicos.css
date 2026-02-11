@@ -19,7 +19,8 @@
 }
 
 .brand-logo{ 
-    height: 200px; 
+    height: 200px;
+    width: 200px; 
 }
 
 
@@ -53,12 +54,44 @@
     font-weight:800; 
 }
 
-.top-nav a.active{ 
-    color:#fff; 
-    border-bottom: 2px solid rgba(255,215,120,.95); 
-    padding-bottom: 6px; 
+
+/* ===== Hover/Active do menu do topo (funciona em todas as páginas) ===== */
+.top-nav a{
+  position: relative;
+  text-decoration: none;
+  color: rgba(255,255,255,.92);
+  font-weight: 600;
+  padding: 6px 2px;
 }
 
+/* linha embaixo (underline) */
+.top-nav a::after{
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  width: 0%;
+  height: 3px;
+  background: #ffd43b;
+  border-radius: 999px;
+  transition: width .22s ease;
+}
+
+/* hover */
+.top-nav a:hover{
+  color: #ffd43b;
+}
+.top-nav a:hover::after{
+  width: 100%;
+}
+
+/* ativo (o seu .active) */
+.top-nav a.active{
+  color: #ffd43b;
+}
+.top-nav a.active::after{
+  width: 100%;
+}
 
 
 @media (max-width: 900px){

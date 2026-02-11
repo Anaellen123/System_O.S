@@ -6,110 +6,441 @@
 
 {% block content %}
 <style>
-  .page { padding: 22px; }
-  .page-sub { margin: 4px 0 18px; color: #6b7280; font-size: 13px; }
 
-  .toolbar {
-    display:flex; gap:12px; align-items:center; justify-content:space-between;
-    margin: 12px 0 14px;
+
+  .page { padding: 6px 2px; }
+  .page-sub{
+    margin: 4px 0 18px;
+    color: var(--muted);
+    font-size: 13px;
   }
 
-  .search {
-    flex:1;
-    display:flex; gap:10px; align-items:center;
-    background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px;
-    max-width: 520px;
+  .toolbar{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    margin: 10px 0 14px;
   }
-  .search input { border:none; outline:none; width:100%; font-size:14px; }
 
-  .filters { display:flex; gap:10px; align-items:center; }
-  .select, .btn {
-    border:1px solid #e5e7eb; background:#fff; border-radius:10px; padding:10px 12px;
-    font-size:14px; cursor:pointer;
+  .search{
+    flex: 1;
+    display:flex;
+    gap:10px;
+    align-items:center;
+
+    max-width: 560px;
+    padding: 10px 12px;
+    border-radius: 14px;
+
+    background: var(--card);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-sm);
+
+    transition: box-shadow .15s ease, transform .15s ease, background .15s ease;
   }
-  .btn.primary { background:#0b5fff; border-color:#0b5fff; color:#fff; font-weight:700; text-decoration:none; }
-
-  .cards { display:grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap:14px; margin: 14px 0 18px; }
-  .card {
-    background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:14px;
-    display:flex; justify-content:space-between; align-items:flex-start;
+  .search:hover{ box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .search input{
+    border:none;
+    outline:none;
+    width:100%;
+    font-size:14px;
+    background: transparent;
+    color: var(--text);
   }
-  .card small { color:#6b7280; display:block; margin-bottom:6px; }
-  .card .num { font-size:22px; font-weight:900; }
-  .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb; background:#f9fafb; }
+  .search input::placeholder{ color: rgba(109,122,144,.9); }
+  body.theme-dark .search input::placeholder{ color: rgba(226,232,240,.55); }
 
-  .table-wrap { background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; }
-  table { width:100%; border-collapse:collapse; }
-  thead th {
-    text-align:left; font-size:12px; color:#6b7280; font-weight:700;
-    padding: 12px 14px; background:#fafafa; border-bottom:1px solid #eee;
+  .filters{
+    display:flex;
+    gap:10px;
+    align-items:center;
   }
-  tbody td { padding: 14px; border-bottom:1px solid #f1f5f9; font-size:14px; vertical-align:top; }
 
-  /* 👇 LINHA CLICÁVEL */
-  .tr-click { cursor:pointer; }
-  .tr-click:hover { background:#fcfcfd; }
+  .select{
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
 
-  .who { display:flex; flex-direction:column; }
-  .who b { font-size:14px; }
-  .who span { font-size:12px; color:#6b7280; }
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-size: 14px;
+    cursor:pointer;
 
-  .tag { font-size:12px; padding:6px 10px; border-radius:999px; display:inline-block; border:1px solid #e5e7eb; background:#f8fafc; }
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-sm);
 
-  .status { font-size:12px; padding:6px 10px; border-radius:999px; display:inline-block; font-weight:700; }
-  .s-open { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; }
-  .s-progress { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
-  .s-done { background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; }
+    transition: box-shadow .15s ease, transform .15s ease;
+  }
+  .select:hover{ box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+  .btnx{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-size:14px;
+    font-weight: 900;
+    text-decoration:none;
+
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+
+    box-shadow: var(--shadow-sm);
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    white-space: nowrap;
+  }
+  .btnx:hover{ transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .btnx.primary{
+    border-color: rgba(255,255,255,.18);
+    background: linear-gradient(135deg, var(--blue), var(--blue-2));
+    color:#fff;
+    box-shadow: 0 14px 26px rgba(37,99,235,.22);
+  }
+  .btnx.primary:hover{ box-shadow: 0 18px 34px rgba(37,99,235,.28); }
+
+
+  .cards{
+    display:grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap:14px;
+    margin: 6px 0 16px;
+  }
+
+  .sumcard{
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 14px;
+
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-sm);
+
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    overflow:hidden;
+
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+
+  .sumcard::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(420px 180px at 15% 0%, rgba(37,99,235,.12), transparent 55%),
+      radial-gradient(420px 180px at 85% 10%, rgba(11,94,215,.10), transparent 55%);
+    opacity: .9;
+    pointer-events:none;
+  }
+
+  .sumcard:hover{
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    background: rgba(255,255,255,0.96);
+  }
+  body.theme-dark .sumcard:hover{
+    background: rgba(15,23,42,.72) !important;
+  }
+
+  .sumcard small{
+    position:relative;
+    color: var(--muted);
+    display:block;
+    margin-bottom:6px;
+    font-weight: 800;
+    font-size: 12.5px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+  }
+
+  .sumcard .num{
+    position:relative;
+    font-size: 26px;
+    font-weight: 1000;
+    letter-spacing: -0.02em;
+  }
+
+  .table-wrap{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow:hidden;
+
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing: 0;
+  }
+
+  thead th{
+    text-align:left;
+    font-size:12px;
+    color: rgba(15,23,42,.70);
+    font-weight:900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+
+    padding: 12px 14px;
+
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  tbody td{
+    padding: 14px;
+    border-bottom: 1px solid rgba(148,163,184,.14);
+    font-size:14px;
+    vertical-align:top;
+    color: var(--text);
+  }
+
+  .tr-click{ cursor:pointer; }
+  .tr-click:hover{ background: rgba(37,99,235,.06); }
+
+  .who{
+    display:flex;
+    flex-direction:column;
+    gap: 2px;
+  }
+  .who b{ font-size:14px; }
+  .who span{ font-size:12px; color: var(--muted); }
+
+  .tag{
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    gap: 6px;
+
+    border:1px solid var(--line);
+    background: rgba(255,255,255,.65);
+    color: rgba(15,23,42,.82);
+    font-weight: 900;
+  }
+
+  body.theme-dark .tag{
+    background: rgba(2,6,23,.22);
+    color: rgba(226,232,240,.86);
+  }
+
+  .status{
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    gap: 8px;
+    font-weight: 1000;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.75);
+  }
+  .status::before{
+    content:"";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(2,6,23,.25);
+  }
+
+  .s-open{
+    background: rgba(255,243,205,.85);
+    color: #7a5c00;
+    border-color: rgba(122,92,0,.18);
+  }
+  .s-open::before{ background:#eab308; }
+
+  .s-progress{
+    background: rgba(231,241,255,.90);
+    color: #0b4db3;
+    border-color: rgba(11,77,179,.18);
+  }
+  .s-progress::before{ background:#2563eb; }
+
+  .s-done{
+    background: rgba(220,252,231,.90);
+    color: #166534;
+    border-color: rgba(22,101,52,.18);
+  }
+  .s-done::before{ background:#22c55e; }
+
+  /* Dark */
+  body.theme-dark .table-wrap{
+    background: rgba(15,23,42,.60);
+    border-color: rgba(148,163,184,.16);
+    box-shadow: 0 12px 28px rgba(0,0,0,.22);
+  }
+  body.theme-dark thead th{
+    background: rgba(15,23,42,.92);
+    color: rgba(226,232,240,.72);
+    border-bottom-color: rgba(148,163,184,.16);
+  }
+  body.theme-dark tbody td{
+    border-bottom-color: rgba(148,163,184,.12);
+    color: rgba(226,232,240,.92);
+  }
+  body.theme-dark .tr-click:hover{
+    background: rgba(37,99,235,.10);
+  }
+  body.theme-dark .status{
+    background: rgba(2,6,23,.35);
+    border-color: rgba(148,163,184,.16);
+  }
 
   @media (max-width: 1100px){
-    .cards { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
-    .toolbar { flex-direction:column; align-items:stretch; }
-    .search { max-width:none; }
-    .filters { justify-content:flex-end; }
+    .cards{ grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+    .toolbar{ flex-direction:column; align-items:stretch; }
+    .search{ max-width:none; }
+    .filters{ justify-content:flex-end; flex-wrap: wrap; }
+  }
+
+  @media (max-width: 720px){
+    .cards{ grid-template-columns: 1fr; }
+    .filters{ justify-content:stretch; }
+    .select, .btnx{ width: 100%; }
+  }
+
+  @media (max-width: 620px){
+
+    .table-wrap{ overflow: visible; }
+
+    table, thead, tbody, th, td, tr{
+      display: block;
+      width: 100%;
+    }
+
+    thead{ display: none; }
+
+    tbody tr{
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(17,24,39,.14);
+      border-radius: 18px;
+      box-shadow: var(--shadow-sm);
+      padding: 10px 10px;
+      margin: 0 0 14px 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    tbody tr::before{
+      content:"";
+      position:absolute;
+      left:0; right:0; top:0;
+      height: 4px;
+      background: rgba(37,99,235,.55);
+    }
+
+    tbody td{
+      display:flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+
+      padding: 11px 8px;
+      border-bottom: 1px solid rgba(148,163,184,.14);
+    }
+    tbody td:last-child{ border-bottom: 0; }
+
+    
+    tbody td::before{
+      content: attr(data-label);
+      min-width: 96px;
+      font-size: 11px;
+      font-weight: 1000;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding-top: 2px;
+      flex: 0 0 auto;
+    }
+
+   
+    tbody td[data-label="Número"] b{
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+
+    
+    tbody td[data-label="Status"]{
+      align-items: center;
+    }
+    tbody td[data-label="Status"] .status{
+      margin-left: auto;
+    }
+
+   
+    tbody td[data-label="Serviço"] .tag{
+      white-space: nowrap;
+    }
+
+   
+    body.theme-dark tbody tr{
+      background: rgba(15,23,42,.62);
+      border-color: rgba(148,163,184,.20);
+      box-shadow: 0 12px 26px rgba(0,0,0,.28);
+    }
+    body.theme-dark tbody tr::before{
+      background: rgba(147,197,253,.45);
+    }
+    body.theme-dark tbody td{
+      border-bottom-color: rgba(148,163,184,.12);
+    }
   }
 </style>
 
 <p class="page-sub">Gerencie todas as ordens de serviço do sistema</p>
 
 <div class="cards">
-  <div class="card">
+  <div class="sumcard">
     <div>
       <small>Total de OS</small>
       <div class="num">{{ total }}</div>
     </div>
-    <span class="pill">📄</span>
   </div>
 
-  <div class="card">
+  <div class="sumcard">
     <div>
       <small>OS ativas</small>
       <div class="num">{{ ativas }}</div>
     </div>
-    <span class="pill">🟦</span>
   </div>
 
-  <div class="card">
+  <div class="sumcard">
     <div>
       <small>Vencidas*</small>
       <div class="num">{{ vencidas }}</div>
     </div>
-    <span class="pill">⚠️</span>
   </div>
 
-  <div class="card">
+  <div class="sumcard">
     <div>
       <small>Status atual</small>
-      <div class="num" style="font-size:16px; font-weight:800; margin-top:6px;">
+      <div class="num" style="font-size:16px; font-weight:900; margin-top:6px;">
         {{ status_atual|upper }}
       </div>
     </div>
-    <span class="pill">🎯</span>
   </div>
 </div>
 
 <div class="toolbar">
   <form class="search" method="get">
-    🔎
     <input name="q" placeholder="Buscar por nome, CPF/CNPJ, telefone..." value="{{ request.GET.q|default:'' }}">
   </form>
 
@@ -126,7 +457,7 @@
       </select>
     </form>
 
-    <a class="btn primary" href="{% url 'os_create' %}">+ Nova OS</a>
+    <a class="btnx primary" href="{% url 'os_create' %}">+ Nova OS</a>
   </div>
 </div>
 
@@ -142,24 +473,26 @@
         <th>Criação</th>
       </tr>
     </thead>
+
     <tbody>
       {% for os in os_list %}
         <tr class="tr-click"
             onclick="window.open('{% url 'os_detail' os.pk %}', '_blank')">
-          <td><b>{{ os.os_number }}</b></td>
 
-          <td>
+          <td data-label="Número"><b>{{ os.os_number }}</b></td>
+
+          <td data-label="Solicitante">
             <div class="who">
               <b>{{ os.full_name }}</b>
               <span>{{ os.phone }}</span>
             </div>
           </td>
 
-          <td><span class="tag">{{ os.service_type }}</span></td>
+          <td data-label="Serviço"><span class="tag">{{ os.service_type }}</span></td>
 
-          <td>{{ os.neighborhood|default:"-" }}</td>
+          <td data-label="Bairro">{{ os.neighborhood|default:"-" }}</td>
 
-          <td>
+          <td data-label="Status">
             {% if os.status == "OPEN" %}
               <span class="status s-open">Pendente</span>
             {% elif os.status == "IN_PROGRESS" %}
@@ -169,18 +502,14 @@
             {% endif %}
           </td>
 
-          <td>{{ os.created_at|date:"d/m/Y" }}</td>
+          <td data-label="Criação">{{ os.created_at|date:"d/m/Y" }}</td>
         </tr>
       {% empty %}
         <tr>
-          <td colspan="6" style="padding:20px; color:#6b7280;">Nenhuma OS encontrada.</td>
+          <td colspan="6" style="padding:20px; color: var(--muted);">Nenhuma OS encontrada.</td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
-
-<p style="margin-top:10px; font-size:12px; color:#6b7280;">
-  * “Vencidas” está como exemplo (mais de 30 dias) porque seu model não tem campo de prazo.
-</p>
 {% endblock %}

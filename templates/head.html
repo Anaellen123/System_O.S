@@ -5,38 +5,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Meu Sistema{% endblock %}</title>
+
     <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
     <link rel="stylesheet" href="{% static 'css/style_index.css' %}">
     <link rel="stylesheet" href="{% static 'css/style_solicitar_servico.css' %}">
     <link rel="stylesheet" href="{% static 'css/style_header.css' %}">
     <link rel="stylesheet" href="{% static 'css/style_modal_index.css' %}">
     <link rel="stylesheet" href="{% static 'css/style_header_servicos.css' %}">
     <link rel="stylesheet" href="{% static 'css/style_login.css' %}">
-    
 </head>
 
 <body>
 
     <!-- HEADER GLOBAL -->
-     {% block header %}
+    {% block header %}
         {% include 'includes/header.html' %}
-     {% endblock %}
-    <!-- CONTEÚDO DAS PÁGINAS -->
+    {% endblock %}
+
+    <!-- CONTEÚDO -->
     <main>
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
 
-    <!-- BOOTSTRAP JS -->
+    <!-- JS GLOBAL (apenas o que é comum a todas as páginas) -->
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/acompanhar_modal.js' %}"></script>
     <script src="{% static 'js/login.js' %}"></script>
-    <script src="{% static 'js/solicitar_servico.js' %}"></script>
-    <script src="{% static 'js/cep-api.js' %}"></script>
-    <script src="{% static 'js/CPF-CNPJ-api.js' %}"></script>
-    
+
+    <!-- BLOCO PARA JS ESPECÍFICO DE CADA PÁGINA -->
+    {% block extra_js %}{% endblock %}
 
 </body>
 </html>

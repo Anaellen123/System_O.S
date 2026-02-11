@@ -4,22 +4,391 @@
 
 {% block content %}
 <style>
-  .wrap{padding:22px;}
-  .box{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;max-width:1100px;}
-  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
-  .meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:#6b7280;font-size:13px;}
-  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid #e5e7eb;background:#f9fafb;}
-  .grid{display:grid;grid-template-columns:repeat(3, minmax(220px, 1fr));gap:12px;}
-  .full{grid-column:1/-1;}
-  label{display:block;font-size:12px;color:#6b7280;margin:2px 0 6px;}
-  input, select, textarea{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;}
-  textarea{min-height:110px;resize:vertical;}
-  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
-  .btn{padding:10px 14px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
-  .btn.primary{background:#0b5fff;border-color:#0b5fff;color:#fff;font-weight:800;}
-  .btn.danger{background:#fff;border-color:#fee2e2;color:#b91c1c;}
-  @media (max-width: 980px){ .grid{grid-template-columns:1fr 1fr;} }
-  @media (max-width: 680px){ .grid{grid-template-columns:1fr;} }
+  /* =========================
+     OS DETAIL - sofisticado + dark mode
+     (usa as variáveis do dashboard.css)
+     ========================= */
+
+  .wrap{ padding: 22px; }
+
+  .box{
+    max-width: 1120px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+  }
+
+  /* topo */
+  .top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+
+  /* brilho sutil */
+  .top::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(520px 220px at 10% 0%, rgba(37,99,235,.12), transparent 55%),
+      radial-gradient(520px 220px at 90% 10%, rgba(11,94,215,.10), transparent 55%);
+    opacity: .85;
+    pointer-events:none;
+  }
+
+  .meta{
+    position: relative;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 1000;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.70);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(8px);
+    color: rgba(15,23,42,.86);
+  }
+
+  .actions{
+    position: relative;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top: 0;
+    align-items:center;
+  }
+
+  .btn{
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,.75);
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-weight: 900;
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn:hover{
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    background: rgba(255,255,255,.92);
+  }
+
+  .btn.primary{
+    border: 1px solid rgba(255,255,255,.18);
+    background: linear-gradient(135deg, var(--blue), var(--blue-2));
+    color:#fff;
+    font-weight: 1000;
+    box-shadow: 0 16px 34px rgba(37,99,235,.22);
+  }
+  .btn.primary:hover{
+    box-shadow: 0 22px 44px rgba(37,99,235,.26);
+  }
+
+  /* corpo */
+  .content-pad{ padding: 14px 16px 16px; }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .full{ grid-column: 1 / -1; }
+
+  label{
+    display:block;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 900;
+    letter-spacing: .02em;
+    margin: 2px 0 6px;
+  }
+
+  /* campos mais destacados */
+  input, select, textarea{
+    width:100%;
+    padding: 12px 12px;
+    border-radius: 14px;
+    outline:none;
+    font-size: 14px;
+
+    border: 1.6px solid rgba(17,24,39,.22);
+    background: rgba(255,255,255,.82);
+    color: var(--text);
+
+    box-shadow:
+      0 1px 2px rgba(2,6,23,.06),
+      0 0 0 3px rgba(37,99,235,.08);
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  textarea{ min-height: 120px; resize: vertical; }
+
+  input:hover, select:hover, textarea:hover{
+    border-color: rgba(37,99,235,.32);
+    box-shadow:
+      0 1px 2px rgba(2,6,23,.08),
+      0 0 0 4px rgba(37,99,235,.10);
+  }
+
+  input:focus, select:focus, textarea:focus{
+    border-color: rgba(37,99,235,.55);
+    background: rgba(255,255,255,.94);
+    box-shadow:
+      0 0 0 5px rgba(37,99,235,.18),
+      0 10px 22px rgba(2,6,23,.10);
+  }
+
+  /* ===== ANEXOS ===== */
+  .section{
+    padding: 0 16px 16px;
+  }
+  .section-title{
+    margin: 16px 0 8px;
+    font-size: 14px;
+    font-weight: 1000;
+    color: var(--text);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    letter-spacing: -0.01em;
+  }
+  .section-sub{
+    margin: -2px 0 12px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .attachments-grid{
+    display:grid;
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+    gap: 10px;
+  }
+
+  .att-card{
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow:hidden;
+    background: rgba(255,255,255,.70);
+    cursor:pointer;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(8px);
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .att-card:hover{
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(37,99,235,.22);
+    background: rgba(255,255,255,.88);
+  }
+
+  .att-thumb{
+    width:100%;
+    height: 124px;
+    object-fit: cover;
+    display:block;
+    background: rgba(2,6,23,.06);
+  }
+
+  .att-meta{
+    padding: 9px 10px;
+    font-size: 12px;
+    color: var(--muted);
+    display:flex;
+    justify-content:space-between;
+    gap: 8px;
+  }
+
+  .empty{
+    border: 1px dashed rgba(17,24,39,.18);
+    border-radius: 14px;
+    padding: 14px;
+    color: var(--muted);
+    font-size: 13px;
+    background: rgba(255,255,255,.55);
+  }
+
+  /* ===== MODAL DE IMAGEM ===== */
+  .img-modal-overlay{
+    position:fixed;
+    inset:0;
+    background: rgba(2,6,23,.60);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+    z-index: 99999;
+    backdrop-filter: blur(2px);
+  }
+  .img-modal-overlay.open{ display:flex; }
+
+  .img-modal{
+    width: min(980px, 100%);
+    background: rgba(255,255,255,.92);
+    border-radius: 18px;
+    overflow:hidden;
+    border: 1px solid rgba(17,24,39,.12);
+    box-shadow: 0 24px 70px rgba(0,0,0,.30);
+  }
+
+  .img-modal-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(17,24,39,.10);
+    background: rgba(255,255,255,.80);
+    backdrop-filter: blur(10px);
+  }
+
+  .img-modal-title{
+    font-weight: 1000;
+    font-size: 13px;
+    color: rgba(15,23,42,.90);
+  }
+
+  .img-modal-close{
+    border: 1px solid rgba(17,24,39,.14);
+    background: rgba(255,255,255,.85);
+    border-radius: 14px;
+    width: 40px;
+    height: 40px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight: 1000;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  .img-modal-close:hover{
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    background: rgba(255,255,255,.96);
+  }
+
+  .img-modal-body{ background: #0b1220; }
+  .img-modal-img{
+    width:100%;
+    max-height: 78vh;
+    object-fit: contain;
+    display:block;
+    margin: 0 auto;
+  }
+
+  /* responsivo */
+  @media (max-width: 980px){
+    .grid{ grid-template-columns: 1fr 1fr; }
+    .attachments-grid{ grid-template-columns: repeat(4, minmax(120px, 1fr)); }
+  }
+  @media (max-width: 680px){
+    .grid{ grid-template-columns: 1fr; }
+    .attachments-grid{ grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+    .wrap{ padding: 16px; }
+  }
+
+  /* =========================
+     DARK MODE (body.theme-dark)
+     ========================= */
+  body.theme-dark .pill{
+    background: rgba(15,23,42,.55);
+    color: rgba(226,232,240,.88);
+    border-color: rgba(148,163,184,.14);
+  }
+
+  body.theme-dark input,
+  body.theme-dark select,
+  body.theme-dark textarea{
+    background: rgba(2,6,23,.36);
+    border: 1.6px solid rgba(148,163,184,.28);
+    color: rgba(226,232,240,.92);
+    box-shadow:
+      0 1px 2px rgba(0,0,0,.22),
+      0 0 0 3px rgba(147,197,253,.10);
+  }
+  body.theme-dark input:hover,
+  body.theme-dark select:hover,
+  body.theme-dark textarea:hover{
+    border-color: rgba(147,197,253,.38);
+    box-shadow:
+      0 1px 2px rgba(0,0,0,.26),
+      0 0 0 4px rgba(147,197,253,.12);
+  }
+  body.theme-dark input:focus,
+  body.theme-dark select:focus,
+  body.theme-dark textarea:focus{
+    background: rgba(2,6,23,.48);
+    border-color: rgba(147,197,253,.55);
+    box-shadow:
+      0 0 0 5px rgba(37,99,235,.22),
+      0 12px 28px rgba(0,0,0,.35);
+  }
+
+  body.theme-dark .btn{
+    background: rgba(15,23,42,.55);
+    border-color: rgba(148,163,184,.16);
+    color: rgba(226,232,240,.92);
+  }
+  body.theme-dark .btn:hover{
+    background: rgba(15,23,42,.72);
+  }
+
+  body.theme-dark .att-card{
+    background: rgba(15,23,42,.55);
+    border-color: rgba(148,163,184,.16);
+  }
+  body.theme-dark .att-card:hover{
+    background: rgba(15,23,42,.72);
+    border-color: rgba(147,197,253,.20);
+  }
+
+  body.theme-dark .empty{
+    background: rgba(15,23,42,.45);
+    border-color: rgba(148,163,184,.16);
+  }
+
+  body.theme-dark .img-modal{
+    background: rgba(15,23,42,.92);
+    border-color: rgba(148,163,184,.16);
+  }
+  body.theme-dark .img-modal-top{
+    background: rgba(15,23,42,.75);
+    border-bottom-color: rgba(148,163,184,.14);
+  }
+  body.theme-dark .img-modal-title{
+    color: rgba(226,232,240,.88);
+  }
+  body.theme-dark .img-modal-close{
+    background: rgba(2,6,23,.30);
+    border-color: rgba(148,163,184,.18);
+    color: rgba(226,232,240,.92);
+  }
 </style>
 
 <div class="wrap">
@@ -31,90 +400,171 @@
         {% if os.created_by %}<span>Criada por: <b>{{ os.created_by }}</b></span>{% endif %}
       </div>
 
-      <div class="actions" style="margin-top:0;">
+      <div class="actions">
         <a class="btn" href="{% url 'os_list' %}">⬅ Voltar</a>
       </div>
     </div>
 
-    <form method="post">
-      {% csrf_token %}
+    <div class="content-pad">
+      <form method="post">
+        {% csrf_token %}
 
-      <div class="grid">
-        <div>
-          <label>Tipo de pessoa</label>
-          {{ form.person_type }}
+        <div class="grid">
+          <div>
+            <label>Tipo de pessoa</label>
+            {{ form.person_type }}
+          </div>
+
+          <div>
+            <label>CPF/CNPJ</label>
+            {{ form.document }}
+          </div>
+
+          <div>
+            <label>Status</label>
+            {{ form.status }}
+          </div>
+
+          <div>
+            <label>Nome completo</label>
+            {{ form.full_name }}
+          </div>
+
+          <div>
+            <label>Telefone</label>
+            {{ form.phone }}
+          </div>
+
+          <div>
+            <label>Responsável (Equipe)</label>
+            {{ form.assigned_to }}
+          </div>
+
+          <div>
+            <label>CEP</label>
+            {{ form.cep }}
+          </div>
+
+          <div>
+            <label>Rua</label>
+            {{ form.street }}
+          </div>
+
+          <div>
+            <label>Número</label>
+            {{ form.number }}
+          </div>
+
+          <div>
+            <label>Bairro</label>
+            {{ form.neighborhood }}
+          </div>
+
+          <div>
+            <label>Cidade</label>
+            {{ form.city }}
+          </div>
+
+          <div>
+            <label>Tipo de serviço</label>
+            {{ form.service_type }}
+          </div>
+
+          <div class="full">
+            <label>Descrição</label>
+            {{ form.description }}
+          </div>
+
+          <div class="full">
+            <label>Observações internas</label>
+            {{ form.notes }}
+          </div>
         </div>
 
-        <div>
-          <label>CPF/CNPJ</label>
-          {{ form.document }}
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn primary" type="submit">💾 Salvar alterações</button>
         </div>
+      </form>
+    </div>
 
-        <div>
-          <label>Status</label>
-          {{ form.status }}
-        </div>
+    <!-- ===== ANEXOS DA OS ===== -->
+    <div class="section">
+      <div class="section-title">📎 Anexos</div>
+      <div class="section-sub">Imagens enviadas nesta OS (clique para visualizar).</div>
 
-        <div>
-          <label>Nome completo</label>
-          {{ form.full_name }}
-        </div>
-
-        <div>
-          <label>Telefone</label>
-          {{ form.phone }}
-        </div>
-
-        <div>
-          <label>Responsável (Equipe)</label>
-          {{ form.assigned_to }}
-        </div>
-
-        <div>
-          <label>CEP</label>
-          {{ form.cep }}
-        </div>
-
-        <div>
-          <label>Rua</label>
-          {{ form.street }}
-        </div>
-
-        <div>
-          <label>Número</label>
-          {{ form.number }}
-        </div>
-
-        <div>
-          <label>Bairro</label>
-          {{ form.neighborhood }}
-        </div>
-
-        <div>
-          <label>Cidade</label>
-          {{ form.city }}
-        </div>
-
-        <div>
-          <label>Tipo de serviço</label>
-          {{ form.service_type }}
-        </div>
-
-        <div class="full">
-          <label>Descrição</label>
-          {{ form.description }}
-        </div>
-
-        <div class="full">
-          <label>Observações internas</label>
-          {{ form.notes }}
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="btn primary" type="submit">💾 Salvar alterações</button>
-      </div>
-    </form>
+      {% with att_list=os.attachments.all %}
+        {% if att_list %}
+          <div class="attachments-grid">
+            {% for att in att_list %}
+              <div class="att-card js-open-img"
+                   data-src="{{ att.file.url }}"
+                   data-title="{{ os.os_number }} · #{{ att.id }}">
+                <img class="att-thumb" src="{{ att.file.url }}" alt="Anexo da OS {{ os.os_number }}">
+                <div class="att-meta">
+                  <span>{{ att.uploaded_at|date:"d/m/Y" }}</span>
+                  <span>#{{ att.id }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty">Nenhum anexo foi enviado para esta OS.</div>
+        {% endif %}
+      {% endwith %}
+    </div>
   </div>
 </div>
+
+<!-- Modal de imagem (sem usar .modal do bootstrap) -->
+<div class="img-modal-overlay" id="imgModal" aria-hidden="true">
+  <div class="img-modal" role="dialog" aria-modal="true" aria-label="Visualizar anexo">
+    <div class="img-modal-top">
+      <div class="img-modal-title" id="imgModalTitle">Anexo</div>
+      <button type="button" class="img-modal-close" id="imgModalClose" aria-label="Fechar">✕</button>
+    </div>
+    <div class="img-modal-body">
+      <img id="imgModalImg" class="img-modal-img" src="" alt="Imagem anexada">
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const overlay = document.getElementById("imgModal");
+    const modalImg = document.getElementById("imgModalImg");
+    const modalTitle = document.getElementById("imgModalTitle");
+    const btnClose = document.getElementById("imgModalClose");
+
+    function openModal(src, title) {
+      modalImg.src = src;
+      modalTitle.textContent = title || "Anexo";
+      overlay.classList.add("open");
+      overlay.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+      overlay.classList.remove("open");
+      overlay.setAttribute("aria-hidden", "true");
+      modalImg.src = "";
+      document.body.style.overflow = "";
+    }
+
+    document.querySelectorAll(".js-open-img").forEach((card) => {
+      card.addEventListener("click", () => {
+        openModal(card.dataset.src, card.dataset.title);
+      });
+    });
+
+    btnClose.addEventListener("click", closeModal);
+
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
+    });
+  })();
+</script>
 {% endblock %}

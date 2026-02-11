@@ -11,7 +11,7 @@ html, body{
 
 #main{
   background-image: url("../img/background-one.png");
-  height: 700px;
+  
   width: 100%;
 }
 
@@ -139,6 +139,261 @@ html, body{
   font-size: 22px;
   opacity: 0.7;
 }
+
+/* ======= SECTION INFO (Como Funciona + Footer) ======= */
+.section-info{
+  width: 100%;
+  padding: 28px 0 0;
+  background: transparent;
+}
+
+.how-wrap{
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px 26px;
+}
+
+.how-title{
+  color: #0b1220;
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 14px;
+}
+
+/* Card grande com sombra, igual a imagem */
+.how-steps{
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(15,23,42,0.10);
+  box-shadow: 0 18px 50px rgba(2, 8, 23, 0.18);
+  backdrop-filter: blur(10px);
+}
+
+/* Cada card */
+.how-card{
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  padding: 18px 18px 18px 18px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(2, 8, 23, 0.08);
+  box-shadow: 0 14px 26px rgba(2, 8, 23, 0.12);
+  overflow: hidden;
+}
+
+.how-card h3{
+  margin: 0 0 8px;
+  margin-top: 22px;
+  padding-left: 52px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0b1220;
+}
+
+.how-card p{
+  margin: 0;
+  padding-left: 52px;
+  color: rgba(15, 23, 42, 0.70);
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+
+/* Badge número */
+.how-badge{
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 18px;
+  color: #0b1220;
+  box-shadow: 0 10px 18px rgba(2, 8, 23, 0.18);
+  border: 1px solid rgba(2, 8, 23, 0.10);
+}
+
+/* Top colorido de cada card (como na imagem) */
+.how-card::before{
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 62px;
+  opacity: 0.95;
+}
+
+.how-yellow::before{ background: linear-gradient(90deg, #f6c64b, #f4d36f); }
+.how-blue::before{ background: linear-gradient(90deg, #5b85ff, #7da2ff); }
+.how-green::before{ background: linear-gradient(90deg, #56c39a, #7dd7b8); }
+
+.how-yellow .how-badge{ background: #ffd45a; }
+.how-blue .how-badge{ background: #6f96ff; color: #0b1220; }
+.how-green .how-badge{ background: #6bd0ad; }
+
+/* Setas entre cards */
+.how-arrow{
+  display: grid;
+  place-items: center;
+  width: 44px;
+  flex: 0 0 44px;
+  color: rgba(15, 23, 42, 0.55);
+  font-size: 22px;
+}
+
+/* ======= FOOTER ======= */
+.site-footer{
+  margin-top: 26px;
+  width: 100%;
+  background: rgba(2, 8, 23, 0.65);
+  border-top: 1px solid rgba(255,255,255,0.10);
+  padding: 18px 0 14px;
+}
+
+.footer-inner{
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.footer-title{
+  color: rgba(255,255,255,0.92);
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.footer-links{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: rgba(255,255,255,0.70);
+}
+.footer-links a{
+  color: rgba(255,255,255,0.70);
+  text-decoration: none;
+}
+.footer-links a:hover{ color: #fff; }
+.footer-links .dot{ opacity: 0.6; }
+
+.footer-mid{
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.footer-nav{
+  color: rgba(255,255,255,0.80);
+  text-decoration: none;
+  font-size: 13px;
+}
+.footer-nav:hover{ color: #fff; }
+
+.footer-right{
+  display: flex;
+  gap: 10px;
+}
+.social{
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  color: rgba(255,255,255,0.90);
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.08);
+}
+.social:hover{
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+}
+
+.footer-bottom{
+  max-width: 1120px;
+  margin: 12px auto 0;
+  padding: 10px 24px 0;
+  border-top: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.70);
+  font-size: 11.5px;
+}
+
+/* ======= RESPONSIVO ======= */
+@media (max-width: 980px){
+  .how-steps{
+    flex-direction: column;
+  }
+  .how-arrow{
+    width: 100%;
+    flex: 0 0 auto;
+    height: 34px;
+  }
+  .how-arrow i{
+    transform: rotate(90deg);
+  }
+
+  .footer-inner{
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .footer-mid{
+    justify-content: flex-start;
+  }
+}
+
+/* ===== PATCH: corrigir texto apagado (camadas do ::before) ===== */
+.how-card{
+  position: relative;
+  overflow: hidden;
+}
+
+.how-card::before{
+  z-index: 0;          /* fica atrás */
+  opacity: 1;          /* pode deixar 1, pois agora não cobre o texto */
+}
+
+.how-badge{
+  position: absolute;
+  z-index: 2;          /* acima da faixa */
+}
+
+/* coloca TODO o conteúdo acima da faixa */
+.how-card h3,
+.how-card p{
+  position: relative;
+  z-index: 2;
+}
+
+/* opcional: deixa os títulos mais legíveis */
+.how-card h3{
+  color: #0b1220;
+}
+.how-card p{
+  color: rgba(15, 23, 42, 0.75);
+}
+
+/* se o "Como Funciona" estiver escuro demais no fundo azul, deixa branco */
+.how-title{
+  color: #ffffff;
+}
+
+/* opcional: aumenta um pouco o fundo do bloco para ficar igual ao layout */
+.how-steps{
+  background: rgba(255,255,255,0.85);
+}
+
 
 /* Paletas (topo) */
 .top-entulho .service-top{ background-image: url("../img/coleta_entulho.png"); }

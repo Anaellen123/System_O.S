@@ -21,6 +21,12 @@ def index(request):
 
 
 def solicitar_servico(request):
+    """
+    Página pública para criar solicitação.
+    Correção aplicada:
+    - REMOVIDO messages.success() para não "vazar" e aparecer no login_admin.html
+      (você já mostra o modal via created=True + os_created)
+    """
     if request.method == "POST":
         form = ServiceRequestForm(request.POST, request.FILES)
 
@@ -32,17 +38,55 @@ def solicitar_servico(request):
 
             obj.save()
 
+            # Salvar anexos
             for f in request.FILES.getlist("attachments"):
                 ServiceRequestAttachment.objects.create(request=obj, file=f)
 
-            messages.success(request, "Solicitação enviada com sucesso!")
-            return redirect("solicitar_servico")
-        else:
-            messages.error(request, "Revise os campos obrigatórios.")
-    else:
-        form = ServiceRequestForm()
+            # ✅ REMOVIDO: isso fazia a mensagem aparecer no login depois
+            # messages.success(request, "Solicitação enviada com sucesso!")
 
-    return render(request, "solicitar_servico.html", {"form": form})
+            # Renderiza o mesmo template com flags de sucesso
+            # para abrir o modal e gerar/baixar o comprovante (JS)
+            return render(request, "solicitar_servico.html", {
+                "form": ServiceRequestForm(),  # formulário limpo
+                "created": True,               # o JS usa isso (window.OS_CREATED)
+                "os_created": obj,             # dados da OS para preencher o comprovante
+            })
+
+        # Mantém erro só na própria página do formulário
+        messages.error(request, "Revise os campos obrigatórios.")
+        return render(request, "solicitar_servico.html", {
+            "form": form,
+            "created": False,
+        })
+
+    # GET
+    form = ServiceRequestForm()
+    return render(request, "solicitar_servico.html", {
+        "form": form,
+        "created": False,
+    })
+
+
+@require_GET
+def api_os_status(request, os_number):
+    os_number = (os_number or "").strip().upper()
+
+    obj = ServiceRequest.objects.filter(os_number=os_number).first()
+    if not obj:
+        return JsonResponse({"ok": False, "message": "OS não encontrada."}, status=404)
+
+    # label amigável do status (Aberto/Em andamento/Concluído)
+    status_label = dict(ServiceRequest.STATUS_CHOICES).get(obj.status, obj.status)
+
+    return JsonResponse({
+        "ok": True,
+        "os_number": obj.os_number,
+        "status": obj.status,              # OPEN / IN_PROGRESS / DONE
+        "status_label": status_label,      # Aberto / Em andamento / Concluído
+        "service_type": obj.service_type,
+        "created_at": obj.created_at.strftime("%d/%m/%Y %H:%M"),
+    })
 
 
 # -----------------------------
@@ -50,6 +94,15 @@ def solicitar_servico(request):
 # -----------------------------
 @require_http_methods(["GET", "POST"])
 def login_view(request):
+    """
+    Correção aplicada:
+    - Limpamos mensagens antigas ao abrir o login (ex: sucesso do formulário público),
+      e assim elas não aparecem no login_admin.html.
+    - Mantém as mensagens de erro quando o usuário erra senha.
+    """
+    # ✅ limpa mensagens antigas "penduradas" na sessão
+    list(messages.get_messages(request))
+
     if request.user.is_authenticated:
         return redirect("dashboard")
 
@@ -108,16 +161,16 @@ def dashboard(request):
         data.append(counts_by_day.get(day, 0))
 
     # =========================
-    # ✅ NOVO GRÁFICO: OS por BAIRRO (Nossa Senhora do Socorro/SE)
+    # ✅ OS por BAIRRO (Socorro/SE)
     # =========================
     bairros_qs = (
         ServiceRequest.objects
-        .filter(city__icontains="socorro")  # pega "Nossa Senhora do Socorro" e variações
+        .filter(city__icontains="socorro")
         .exclude(neighborhood__isnull=True)
         .exclude(neighborhood__exact="")
         .values("neighborhood")
         .annotate(total=Count("id"))
-        .order_by("-total")[:10]  # Top 10 bairros (mude se quiser)
+        .order_by("-total")[:10]
     )
 
     bairros_labels = [row["neighborhood"] for row in bairros_qs]
@@ -128,8 +181,6 @@ def dashboard(request):
         "recent": recent,
         "chart_labels": labels,
         "chart_data": data,
-
-        # ✅ NOVOS parâmetros pro template
         "bairros_labels": bairros_labels,
         "bairros_data": bairros_data,
     })

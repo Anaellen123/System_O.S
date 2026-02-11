@@ -40,21 +40,21 @@
       <h2 class="card-title">Entrar no sistema</h2>
       <p class="card-desc">Faça login para acessar o Sistema de Gestão de Serviços Urbanos.</p>
 
-      {% if messages %}
-        <div class="alert-wrap">
-          {% for m in messages %}
-            <div class="alert">{{ m }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-
       <form method="post" class="login-form">
         {% csrf_token %}
 
         <label class="field-label" for="id_username">Email</label>
         <div class="field">
-          <span class="field-ico">✉</span>
-          <input id="id_username" name="username" type="text" placeholder="seu@email.com" required>
+          <span class="field-ico" aria-hidden="true">✉</span>
+          <input
+            id="id_username"
+            name="username"
+            type="email"
+            show="email"
+            placeholder="seu@email.com"
+            autocomplete="username"
+            required
+          >
         </div>
 
         <div class="field-row">
@@ -62,25 +62,26 @@
           <a class="forgot" href="#">Esqueceu sua senha?</a>
         </div>
 
-        <div class="field" style="position: relative;">
+        <div class="field field-password">
+
           <input
             id="id_password"
             name="password"
             type="password"
             placeholder="••••••••"
+            autocomplete="current-password"
             required
-            style="padding-right: 44px;"
           >
 
           <button
             type="button"
             id="togglePassword"
-            class="btn btn-link p-0"
-            style="position:absolute; right:12px; top:50%; transform:translateY(-50%);">
+            class="toggle-pass"
+            aria-label="Mostrar/ocultar senha"
+          >
             <i class="bi bi-eye"></i>
-        </button>
+          </button>
         </div>
-
 
         <button class="btn-primary" type="submit">Entrar</button>
       </form>

@@ -15,6 +15,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.getElementById("solicitarForm");
 
+  // === UPLOAD UI (Etapa 3) ===
+  const anexosInput = document.getElementById("anexos");
+  const uploadTitle = document.getElementById("uploadTitle");
+  const uploadSub = document.getElementById("uploadSub");
+  const uploadFeedback = document.getElementById("uploadFeedback");
+  const uploadPreviews = document.getElementById("uploadPreviews");
+
   // Se algo essencial estiver faltando, o JS não roda (evita travar silencioso)
   if (!form || !btnPrev || !btnNext || !stepsList || !progressBar || !progressPct || !stepLabel) {
     console.error("Algum elemento essencial do formulário não foi encontrado. Verifique os IDs no HTML.");
@@ -44,7 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btnPrev.disabled = step === 1;
     btnNext.textContent = step === totalSteps ? "Enviar ✓" : "Próximo ›";
 
-    // Preencher revisão
     if (step === 4) fillReview();
   }
 
@@ -56,7 +62,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const checked = form.querySelector(`[name="${name}"]:checked`);
       return checked ? checked.value : "";
     }
-
     return (el.value || "").trim();
   }
 
@@ -96,23 +101,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function validateStep(currentStep) {
-    // Etapa 1: obrigatórios
     if (currentStep === 1) {
       if (!getValue("document") || !getValue("full_name") || !getValue("phone")) return false;
     }
-
-    // Etapa 2: obrigatórios
     if (currentStep === 2) {
       if (!getValue("service_type") || !getValue("description")) return false;
     }
-
     return true;
   }
 
   btnPrev.addEventListener("click", () => setActiveStep(step - 1));
 
   btnNext.addEventListener("click", () => {
-    // Indo para próxima etapa
     if (step < totalSteps) {
       if (!validateStep(step)) {
         alert("Preencha os campos obrigatórios desta etapa para continuar.");
@@ -122,13 +122,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Etapa 4: enviar
     if (!validateStep(1) || !validateStep(2)) {
       alert("Há campos obrigatórios não preenchidos.");
       return;
     }
 
-    // Melhor forma (respeita validações/handlers), fallback para submit direto
     if (form.requestSubmit) form.requestSubmit();
     else form.submit();
   });
@@ -139,16 +137,181 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const target = Number(li.dataset.step);
 
-    // Impedir pular pra frente sem preencher a etapa atual
     if (target > step && !validateStep(step)) {
       alert("Preencha os campos obrigatórios desta etapa para continuar.");
       return;
     }
-
     setActiveStep(target);
   });
+
+  // =========================
+  // UPLOAD: mostrar selecionados + miniaturas + validar JPG/PNG
+  // =========================
+  function resetUploadUI() {
+    if (uploadTitle) uploadTitle.textContent = "Clique para selecionar arquivos";
+    if (uploadSub) uploadSub.textContent = "PNG ou JPG";
+    if (uploadFeedback) uploadFeedback.textContent = "";
+    if (uploadPreviews) uploadPreviews.innerHTML = "";
+  }
+
+  function showUpload(files) {
+    if (uploadTitle) uploadTitle.textContent = `${files.length} arquivo(s) selecionado(s)`;
+    if (uploadSub) uploadSub.textContent = files.map((f) => f.name).join(", ");
+    if (uploadFeedback) uploadFeedback.textContent = "Arquivos prontos para envio ✅";
+
+    if (!uploadPreviews) return;
+    uploadPreviews.innerHTML = "";
+
+    files.forEach((file) => {
+      const okTypes = ["image/png", "image/jpeg"];
+      if (!okTypes.includes(file.type)) return;
+
+      const img = document.createElement("img");
+      img.className = "upload-thumb";
+      img.alt = file.name;
+
+      const url = URL.createObjectURL(file);
+      img.src = url;
+      img.onload = () => URL.revokeObjectURL(url);
+
+      uploadPreviews.appendChild(img);
+    });
+  }
+
+  function setFileList(input, files) {
+    const dt = new DataTransfer();
+    files.forEach((f) => dt.items.add(f));
+    input.files = dt.files;
+  }
+
+  if (anexosInput) {
+    resetUploadUI();
+
+    anexosInput.addEventListener("change", () => {
+      const files = Array.from(anexosInput.files || []);
+
+      if (!files.length) {
+        resetUploadUI();
+        return;
+      }
+
+      const allowed = ["image/png", "image/jpeg"];
+      const validFiles = [];
+      const invalidFiles = [];
+
+      files.forEach((f) => {
+        if (allowed.includes(f.type)) validFiles.push(f);
+        else invalidFiles.push(f.name);
+      });
+
+      if (invalidFiles.length) {
+        alert(`Apenas JPG ou PNG são permitidos.\nRemovidos: ${invalidFiles.join(", ")}`);
+        setFileList(anexosInput, validFiles);
+      }
+
+      if (!validFiles.length) {
+        resetUploadUI();
+        return;
+      }
+
+      showUpload(validFiles);
+    });
+  }
 
   // Inicial
   setActiveStep(1);
 });
 
+/* =========================================================
+   SUCESSO + DOWNLOAD DO COMPROVANTE
+   (usa variáveis globais do HTML: window.OS_CREATED, window.OS_TARGET_WIDTH)
+   ========================================================= */
+(function () {
+  const created = Boolean(window.OS_CREATED); // vem do HTML
+  const targetWidth = Number(window.OS_TARGET_WIDTH || 900); // opcional
+
+  const overlay = document.getElementById("successOverlay");
+  const btnClose = document.getElementById("successClose");
+
+  const receipt = document.getElementById("receiptCard");
+  const btnDownload = document.getElementById("btnDownload");
+  const btnCopyOs = document.getElementById("btnCopyOs");
+  const osNumberEl = document.getElementById("receiptOsNumber");
+
+  // Se essa página não tem modal, não faz nada
+  if (!overlay || !receipt) return;
+
+  function open() {
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function close() {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  async function downloadReceipt(auto = false) {
+    if (!window.html2canvas) {
+      alert("Biblioteca html2canvas não carregou. Verifique o <script> no HTML.");
+      return;
+    }
+
+    const canvas = await window.html2canvas(receipt, {
+      backgroundColor: null,
+      scale: 2,
+      useCORS: true,
+    });
+
+    const ratio = canvas.height / canvas.width;
+    const outW = targetWidth;
+    const outH = Math.round(targetWidth * ratio);
+
+    const out = document.createElement("canvas");
+    out.width = outW;
+    out.height = outH;
+
+    const ctx = out.getContext("2d");
+    ctx.drawImage(canvas, 0, 0, outW, outH);
+
+    const dataUrl = out.toDataURL("image/png", 1.0);
+
+    const a = document.createElement("a");
+    const osText = (osNumberEl?.textContent || "OS").trim().replace(/\s+/g, "");
+    a.download = `ordem-servico-${osText}.png`;
+    a.href = dataUrl;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    if (auto && btnDownload) btnDownload.textContent = "Baixado ✓";
+  }
+
+  btnClose?.addEventListener("click", close);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && overlay.classList.contains("open")) close();
+  });
+
+  btnDownload?.addEventListener("click", () => downloadReceipt(false));
+
+  btnCopyOs?.addEventListener("click", async () => {
+    const osText = (osNumberEl?.textContent || "").trim();
+    if (!osText) return;
+
+    try {
+      await navigator.clipboard.writeText(osText);
+      btnCopyOs.textContent = "Copiado ✓";
+      setTimeout(() => (btnCopyOs.textContent = "Copiar OS"), 1200);
+    } catch (err) {
+      alert("Não foi possível copiar automaticamente. Copie manualmente: " + osText);
+    }
+  });
+
+  if (created) {
+    open();
+    setTimeout(() => downloadReceipt(true), 350);
+  }
+})();

@@ -38,4 +38,7 @@ urlpatterns = [
 
     # ====== EDIÇÃO DE O.S ====
      path("dashboard/os/<int:pk>/", views.os_detail, name="os_detail"),
+
+    # ==== status de O.S =====
+     path("api/os-status/<str:os_number>/", views.api_os_status, name="api_os_status"),
 ]

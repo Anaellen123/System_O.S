@@ -219,3 +219,79 @@ document.addEventListener("DOMContentLoaded", function () {
     if (cep.length === 8) preencherEndereco();
   });
 })();
+
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebar = document.querySelector(".sidebar");
+  const btnMenu = document.getElementById("btnMenu");
+  const overlay = document.getElementById("sidebarOverlay");
+
+  if (!sidebar || !btnMenu || !overlay) return;
+
+  function openSidebar() {
+    sidebar.classList.add("is-open");
+    overlay.classList.add("is-open");
+    overlay.setAttribute("aria-hidden", "false");
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove("is-open");
+    overlay.classList.remove("is-open");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
+  btnMenu.addEventListener("click", () => {
+    const isOpen = sidebar.classList.contains("is-open");
+    if (isOpen) closeSidebar();
+    else openSidebar();
+  });
+
+  overlay.addEventListener("click", closeSidebar);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSidebar();
+  });
+
+  // Se aumentar a tela (sair do mobile), garante que não fica “travado aberto”
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 820) closeSidebar();
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  const btnMenu = document.getElementById("btnMenu");
+
+  if (!sidebar || !overlay || !btnMenu) return;
+
+  function openSidebar() {
+    sidebar.classList.add("is-open");
+    overlay.classList.add("is-open");
+    btnMenu.setAttribute("aria-label", "Fechar menu");
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove("is-open");
+    overlay.classList.remove("is-open");
+    btnMenu.setAttribute("aria-label", "Abrir menu");
+  }
+
+  function toggleSidebar() {
+    const isOpen = sidebar.classList.contains("is-open");
+    isOpen ? closeSidebar() : openSidebar();
+  }
+
+  btnMenu.addEventListener("click", toggleSidebar);
+  overlay.addEventListener("click", closeSidebar);
+
+  // fecha com ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSidebar();
+  });
+
+  // se trocar de mobile->desktop, garante que não fica preso aberto
+  window.addEventListener("resize", () => {
+    if (window.innerWidth >= 821) closeSidebar();
+  });
+});
+

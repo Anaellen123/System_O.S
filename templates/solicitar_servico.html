@@ -12,7 +12,6 @@
     <div class="container header-row">
       <div class="brand">
         <img src="{% static 'img/test2.png' %}" alt="Logo" class="brand-logo">
-        
       </div>
 
       <nav class="top-nav">
@@ -22,18 +21,11 @@
       </nav>
     </div>
   </header>
-
-  <!-- Título grande -->
   <section class="page-title container">
     <h1>Solicitar serviço</h1>
   </section>
-
-  <!-- Grid principal -->
   <section class="container layout-grid">
-
-    <!-- Sidebar -->
     <aside class="sidebar">
-
       <div class="card steps-card">
         <div class="card-title">Etapas</div>
 
@@ -66,14 +58,11 @@
         </ul>
         <div class="tip-icon" aria-hidden="true">📝</div>
       </div>
-
     </aside>
 
-    <!-- Card do formulário -->
     <section class="form-wrap">
-
       <div class="form-card">
-        <!-- Topbar do card -->
+
         <div class="form-top">
           <div>
             <div class="form-top-title">Solicitar serviço</div>
@@ -81,11 +70,9 @@
               <span id="stepLabel">Etapa 1 de 4</span>
             </div>
           </div>
-
           <button class="close-btn" type="button" aria-label="Fechar">✕</button>
         </div>
 
-        <!-- Progress -->
         <div class="progress-row">
           <div class="progress-track">
             <div class="progress-bar" id="progressBar" style="width: 25%;"></div>
@@ -93,7 +80,6 @@
           <div class="progress-pct" id="progressPct">25%</div>
         </div>
 
-        <!-- Conteúdo -->
         <form
           id="solicitarForm"
           class="form-body"
@@ -126,15 +112,15 @@
             <div class="field">
               <label for="cpf">CPF/CNPJ <span class="req">*</span></label>
               <input
-              id="cpf"
-              name="document"
-              type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              maxlength="18"
-              placeholder="000.000.000-00 (PF) ou 00.000.000/0001-00 (PJ)"
-              required
-            >
+                id="cpf"
+                name="document"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                maxlength="18"
+                placeholder="000.000.000-00 (PF) ou 00.000.000/0001-00 (PJ)"
+                required
+              >
             </div>
 
             <div class="field">
@@ -221,14 +207,24 @@
           <!-- STEP 3 -->
           <div class="step-content" data-content="3">
             <h2>Anexos</h2>
-            <p class="muted">Envie imagens ou documentos que ajudem na análise</p>
+            <p class="muted">Envie imagens que ajudem na análise</p>
 
             <div class="upload">
-              <input id="anexos" name="attachments" type="file" multiple>
-              <label for="anexos" class="upload-box">
-                <div class="upload-title">Clique para selecionar arquivos</div>
-                <div class="upload-sub">PNG, JPG ou PDF</div>
+              <input
+                id="anexos"
+                name="attachments"
+                type="file"
+                multiple
+                accept="image/png,image/jpeg"
+              >
+
+              <label for="anexos" class="upload-box" id="uploadBox">
+                <div class="upload-title" id="uploadTitle">Clique para selecionar arquivos</div>
+                <div class="upload-sub" id="uploadSub">PNG ou JPG</div>
               </label>
+
+              <div class="upload-feedback" id="uploadFeedback" aria-live="polite"></div>
+              <div class="upload-previews" id="uploadPreviews"></div>
             </div>
 
             <div class="field">
@@ -263,7 +259,6 @@
             </div>
           </div>
 
-          <!-- Ações -->
           <div class="form-actions">
             <button class="btn btn-ghost" type="button" id="btnPrev" disabled>‹ Anterior</button>
             <button class="btn btn-primary" type="button" id="btnNext">Próximo ›</button>
@@ -271,11 +266,9 @@
 
         </form>
       </div>
-
     </section>
   </section>
 
-  <!-- Cards inferiores -->
   <section class="container bottom-cards">
     <article class="info-card">
       <div class="info-head">
@@ -309,8 +302,89 @@
 
 </main>
 
+<div class="success-overlay" id="successOverlay" aria-hidden="true">
+  <div class="success-modal" role="dialog" aria-modal="true" aria-label="Solicitação criada">
+    <div class="success-top">
+      <div style="font-weight:900;color:#111827;font-size:13px;">Solicitação criada</div>
+      <button type="button" class="success-close" id="successClose" aria-label="Fechar">✕</button>
+    </div>
+
+    <div class="success-body">
+      <div class="success-icon">✓</div>
+      <div class="success-title">Solicitação Criada!</div>
+      <p class="success-sub">
+        Sua ordem de serviço foi registrada com sucesso. Guarde o comprovante para acompanhamento.
+      </p>
+      <div class="receipt" id="receiptCard">
+        <div class="receipt-top">
+          <div class="receipt-kicker">ORDEM DE SERVIÇO</div>
+          <div class="receipt-os" id="receiptOsNumber">
+            {% if os_created %}{{ os_created.os_number }}{% else %}OS-00000000-0000{% endif %}
+          </div>
+        </div>
+
+        <div class="receipt-line"></div>
+
+        <div class="receipt-row">
+          <div class="receipt-label">Serviço:</div>
+          <div class="receipt-value" id="receiptService">
+            {% if os_created %}{{ os_created.service_type }}{% else %}—{% endif %}
+          </div>
+        </div>
+
+        <div class="receipt-row">
+          <div class="receipt-label">Local:</div>
+          <div class="receipt-value" id="receiptLocal">
+            {% if os_created %}
+              {{ os_created.street }}{% if os_created.number %}, {{ os_created.number }}{% endif %}
+              {% if os_created.neighborhood %}, {{ os_created.neighborhood }}{% endif %}
+              {% if os_created.city %}, {{ os_created.city }}{% endif %}
+              {% if os_created.cep %}, {{ os_created.cep }}{% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="receipt-row">
+          <div class="receipt-label">Data:</div>
+          <div class="receipt-value" id="receiptDate">
+            {% if os_created %}{{ os_created.created_at|date:"d/m/Y" }}{% else %}—{% endif %}
+          </div>
+        </div>
+
+        <div class="receipt-line"></div>
+
+        <div class="receipt-foot">
+          Guarde este comprovante para acompanhamento<br>
+          <b>Serviços Urbanos - Prefeitura</b>
+        </div>
+      </div>
+
+      <div class="success-actions">
+        <button type="button" class="sbtn ghost" id="btnCopyOs">Copiar OS</button>
+        <button type="button" class="sbtn" id="btnDownload">Baixar</button>
+        <a class="sbtn primary" href="{% url 'index' %}" style="text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center;">
+          Voltar para Home
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  window.OS_CREATED = {{ created|yesno:"true,false" }};
+  window.OS_TARGET_WIDTH = 900;
+  window.CEP_API_BASE = "/api/cep/";
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 <script src="{% static 'js/solicitar_servico.js' %}"></script>
+<script src="{% static 'js/cep-api.js' %}"></script>
+<script src="{% static 'js/CPF-CNPJ-api.js' %}"></script>
 {% endblock %}
+

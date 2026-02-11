@@ -14,49 +14,67 @@
 <body>
 
 <div class="app">
+  
+  <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
   <!-- SIDEBAR -->
   <aside class="sidebar">
+    <!-- Brand -->
     <div class="brand">
-      <img src="{% static 'img/logo-prefeitura.png' %}" alt="Socorro">
+      <img src="{% static 'img/logo-prefeitura-removebg.png' %}" alt="Socorro">
     </div>
 
+    <!-- CTA -->
     <a class="btn-create" href="{% url 'os_create' %}">
       <i class="bi bi-plus-lg"></i> Criar Ordem de Serviço
     </a>
 
+    <!-- MENU -->
     <nav class="menu" id="sidebarMenu">
 
       <a class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
         href="{% url 'dashboard' %}">
-        <i class="bi bi-grid-1x2"></i> Dashboard
+        <i class="bi bi-grid-1x2"></i>
+        <span>Dashboard</span>
       </a>
 
-      <!-- ORDEM DE SERVIÇO (com submenu) -->
-      <div class="menu-accordion {% if request.resolver_match.url_name == 'os_list' or request.resolver_match.url_name == 'os_list_status' or request.resolver_match.url_name == 'os_create' %}is-open{% endif %}">
+      <!-- ORDEM DE SERVIÇO (submenu) -->
+      <div class="menu-accordion
+        {% if request.resolver_match.url_name == 'os_list' or request.resolver_match.url_name == 'os_list_status' or request.resolver_match.url_name == 'os_create' %}
+          is-open
+        {% endif %}">
         <button class="menu-item menu-toggle" type="button" aria-expanded="false">
           <span class="menu-left">
-            <i class="bi bi-clipboard-check"></i> Ordem de Serviço
+            <i class="bi bi-clipboard-check"></i>
+            <span>Ordem de Serviço</span>
           </span>
           <i class="bi bi-chevron-right menu-caret"></i>
         </button>
 
         <ul class="submenu">
-          <li><a class="submenu-item" href="{% url 'os_list' %}">Todas</a></li>
-          <li><a class="submenu-item" href="{% url 'os_list_status' 'OPEN' %}">Pendentes</a></li>
-          <li><a class="submenu-item" href="{% url 'os_list_status' 'IN_PROGRESS' %}">Em Andamento</a></li>
-          <li><a class="submenu-item" href="{% url 'os_list_status' 'DONE' %}">Concluídas</a></li>
+          <li><a class="submenu-item {% if request.resolver_match.url_name == 'os_list' %}active{% endif %}"
+                href="{% url 'os_list' %}">Todas</a></li>
+          <li><a class="submenu-item"
+                href="{% url 'os_list_status' 'OPEN' %}">Pendentes</a></li>
+          <li><a class="submenu-item"
+                href="{% url 'os_list_status' 'IN_PROGRESS' %}">Em Andamento</a></li>
+          <li><a class="submenu-item"
+                href="{% url 'os_list_status' 'DONE' %}">Concluídas</a></li>
         </ul>
       </div>
 
       <a class="menu-item" href="#">
-        <i class="bi bi-gear"></i> Serviços
+        <span class="menu-left">
+          <i class="bi bi-gear"></i>
+          <span>Serviços</span>
+        </span>
       </a>
-
-      <!-- RELATÓRIOS (com submenu) -->
+      <!-- RELATÓRIOS (submenu) -->
       <div class="menu-accordion">
         <button class="menu-item menu-toggle" type="button" aria-expanded="false">
           <span class="menu-left">
-            <i class="bi bi-bar-chart"></i> Relatórios
+            <i class="bi bi-bar-chart"></i>
+            <span>Relatórios</span>
           </span>
           <i class="bi bi-chevron-right menu-caret"></i>
         </button>
@@ -69,31 +87,53 @@
       </div>
 
       <a class="menu-item" href="#">
-        <i class="bi bi-people"></i> Equipe
+        <i class="bi bi-people"></i>
+        <span>Equipe</span>
       </a>
+
+      <!-- DIVISÓRIA (igual ao modelo) -->
+      <div class="menu-divider"></div>
+
+      <a class="menu-item" href="#">
+        <i class="bi bi-gear-wide-connected"></i>
+        <span>Configurações</span>
+      </a>
+
+      <a class="menu-item" href="#">
+        <i class="bi bi-question-circle"></i>
+        <span>Ajuda</span>
+      </a>
+
+      <!-- Tema -->
+      <button class="menu-item menu-theme" id="themeToggle" type="button" aria-pressed="false">
+        <span class="menu-left">
+          <i class="bi bi-sun"></i>
+          <span id="themeText">Tema: Claro</span>
+        </span>
+      </button>
 
     </nav>
 
-
-
+    <!-- FOOTER -->
     <div class="sidebar-bottom">
-      <div class="userbox">
-        <div class="avatar">{{ request.user.username|slice:":2"|upper }}</div>
-        <div class="userinfo">
-          <div class="role">Administrador</div>
-          <div class="mail">{{ request.user.email|default:"-" }}</div>
-        </div>
-      </div>
 
       <a class="logout" href="{% url 'logout' %}">
         <i class="bi bi-box-arrow-right"></i> Sair
       </a>
+
+      <div class="sidebar-footnote">
+        ©2026 · Desenvolvido por Wendell Sales
+      </div>
     </div>
   </aside>
+
 
   <!-- CONTEÚDO -->
   <section class="content">
     <header class="topbar">
+      <button class="btn-menu" id="btnMenu" type="button" aria-label="Abrir menu">
+        <i class="bi bi-list"></i>
+      </button>
       <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
       <a class="notif" href="#"><i class="bi bi-bell"></i> Notificações</a>
     </header>
@@ -107,6 +147,9 @@
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{% static 'js/dashboard.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
+<script src="{% static 'js/os_nova_integracoes.js' %}"></script>
+
 
 </body>
 </html>

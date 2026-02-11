@@ -7,11 +7,30 @@
       
     </div>
 
-    <nav class="top-nav">
+    <nav class="top-nav js-hover-menu">
       <a href="{% url 'index' %}">Início</a>
       <a class="active" href="{% url 'solicitar_servico' %}">Solicitar serviço</a>
       <a href="#">Localizar serviço</a>
     </nav>
+
   </div>
 </header>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const menu = document.querySelector(".js-hover-menu");
+  if (!menu) return;
+
+  const links = menu.querySelectorAll("a");
+
+  links.forEach(link => {
+    link.addEventListener("mouseenter", () => {
+      link.classList.add("hovered");
+    });
+
+    link.addEventListener("mouseleave", () => {
+      link.classList.remove("hovered");
+    });
+  });
+});
+</script>
 

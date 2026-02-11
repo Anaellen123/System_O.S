@@ -1,16 +1,16 @@
-/* Página inteira */
 .login-page{
   min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
-  background-image: url("../img/banner5.png");
+  background-image: var(--bg, url("../img/banner5.png"));
   background-size: cover;
   background-position: center;
   position: relative;
   overflow: hidden;
 }
 
-/* um “filtro” azulado por cima do background */
 .login-page::before{
   content:"";
   position:absolute;
@@ -18,13 +18,11 @@
   background: linear-gradient(90deg, rgba(10,35,90,.78), rgba(10,35,90,.30));
 }
 
-/* garante que o conteúdo fique acima do overlay */
 .login-left, .login-right{
   position: relative;
   z-index: 1;
 }
 
-/* COLUNA ESQUERDA */
 .login-left{
   padding: 56px 56px 28px;
   color: #fff;
@@ -67,7 +65,7 @@
 }
 
 .login-title span{
-  color: #f6c04b; /* amarelo */
+  color: #f6c04b;
 }
 
 .login-subtitle{
@@ -84,12 +82,14 @@
   opacity: .85;
 }
 
-/* COLUNA DIREITA */
 .login-right{
   display:flex;
   align-items:center;
   justify-content:center;
   padding: 40px;
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
 }
 
 .login-card{
@@ -125,17 +125,11 @@
   color: #5a6a82;
 }
 
-.alert-wrap{ margin-bottom: 14px; }
-.alert{
-  background: #ffe9e9;
-  color: #8a1f1f;
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-weight: 600;
+.login-form{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
 }
-
-/* Campos */
-.login-form{ display:flex; flex-direction:column; gap: 10px; }
 
 .field-label{
   font-weight: 800;
@@ -151,6 +145,7 @@
   border: 1px solid #dbe3f1;
   border-radius: 12px;
   padding: 12px 12px;
+  position: relative;
 }
 
 .field-ico{
@@ -172,6 +167,9 @@
   width: 100%;
   font-size: 15px;
   color: #1c2b44;
+  background: transparent;
+  min-height: 22px;
+  padding-right: 38px;
 }
 
 .field-row{
@@ -179,6 +177,7 @@
   align-items:center;
   justify-content:space-between;
   margin-top: 6px;
+  gap: 10px;
 }
 
 .forgot{
@@ -186,6 +185,7 @@
   font-weight: 700;
   color: #1e63b7;
   text-decoration: none;
+  white-space: nowrap;
 }
 .forgot:hover{ text-decoration: underline; }
 
@@ -228,14 +228,94 @@
 }
 .back:hover{ text-decoration: underline; }
 
-/* Responsivo */
+/* ====== OLHINHO (igual envelope) ====== */
+#togglePassword{
+  position:absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: #1e63b7;
+  font-size: 18px;
+  line-height: 1;
+}
+#togglePassword:hover{
+  opacity: .8;
+}
+#togglePassword:active{
+  opacity: .6;
+}
+
+/* ====== RESPONSIVO ====== */
 @media (max-width: 980px){
   .login-page{
     grid-template-columns: 1fr;
+    overflow: visible;
   }
+
   .login-left{
-    padding: 34px 22px 18px;
+    display: none;
   }
-  .login-title{ font-size: 44px; }
-  .login-right{ padding: 20px; }
+
+  .login-right{
+    padding: 18px 14px;
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+    align-items: center;
+  }
+
+  .login-card{
+    width: 100%;
+    max-width: 440px;
+    padding: 22px 18px 18px;
+    border-radius: 16px;
+  }
+
+  .card-logo{
+    height: 120px;
+  }
+
+  .card-title{
+    font-size: 24px;
+  }
+
+  .card-desc{
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 420px){
+  .login-right{
+    padding: 14px 12px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .login-card{
+    padding: 18px 14px 14px;
+  }
+
+  .field{
+    padding: 11px 11px;
+  }
+
+  .field-ico{
+    width: 32px;
+    height: 32px;
+  }
+
+  .btn-primary{
+    padding: 12px 12px;
+  }
+}
+
+@supports (-webkit-touch-callout: none){
+  .login-page,
+  .login-right{
+    min-height: -webkit-fill-available;
+  }
 }

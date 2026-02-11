@@ -1,6 +1,44 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+
+import os
+import uuid
+
+
+def validate_image_type(file):
+    """
+    Validação no backend (não confie só no HTML accept="").
+    Aceita somente JPG/JPEG e PNG.
+    """
+    allowed = ["image/jpeg", "image/png"]
+    content_type = getattr(file, "content_type", None)
+
+    # Em alguns casos content_type pode vir vazio (ex: testes). Ainda assim tentamos validar por extensão.
+    ext = os.path.splitext(file.name)[1].lower()
+
+    if content_type and content_type not in allowed:
+        raise ValidationError("Envie apenas imagens JPG ou PNG.")
+
+    if ext not in [".jpg", ".jpeg", ".png"]:
+        raise ValidationError("Envie apenas imagens JPG ou PNG.")
+
+
+def attachment_upload_to(instance, filename):
+    """
+    Salva em: media/service_requests/<OS_NUMBER>/<uuid>.<ext>
+    Ex: media/service_requests/OS-20260210-0001/ab12cd34ef56....jpg
+    """
+    os_number = instance.request.os_number  # precisa existir antes de salvar anexo
+    ext = os.path.splitext(filename)[1].lower()
+
+    # normaliza jpeg
+    if ext == ".jpeg":
+        ext = ".jpg"
+
+    new_name = f"{uuid.uuid4().hex}{ext}"
+    return f"service_requests/{os_number}/{new_name}"
 
 
 class ServiceRequest(models.Model):
@@ -16,7 +54,7 @@ class ServiceRequest(models.Model):
     ]
 
     # =========================
-    # IDENTIFICAÇÃO DA OS (FASE FINAL - SEM NULL)
+    # IDENTIFICAÇÃO DA OS
     # =========================
     os_number = models.CharField(
         max_length=20,
@@ -102,8 +140,14 @@ class ServiceRequestAttachment(models.Model):
         on_delete=models.CASCADE,
         related_name="attachments"
     )
-    file = models.FileField(upload_to="service_requests/")
+
+    # Salva dentro de: media/service_requests/<OS_NUMBER>/
+    file = models.FileField(
+        upload_to=attachment_upload_to,
+        validators=[validate_image_type],
+    )
+
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Attachment #{self.id} - Request #{self.request_id}"
+        return f"Anexo {self.id} - {self.request.os_number}"

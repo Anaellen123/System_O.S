@@ -9,17 +9,16 @@
 <div class="os-top">
   <a href="{% url 'dashboard' %}" class="os-back">←</a>
   <div class="os-title">
-    <h1>Nova Ordem de Serviço ✨</h1>
+    <h1>Nova Ordem de Serviço</h1>
     <p>Registre uma solicitação de serviço urbano preenchendo os campos abaixo</p>
   </div>
-  <span class="os-badge">Rascunho</span>
+  
 </div>
 
 <form method="post" enctype="multipart/form-data" class="os-form">
   {% csrf_token %}
 
   <div class="os-grid">
-    <!-- SOLICITANTE -->
     <section class="os-card">
       <div class="os-card-head">
         <div class="os-ico">👤</div>
@@ -55,8 +54,6 @@
         </div>
       </div>
     </section>
-
-    <!-- LOCALIZAÇÃO -->
     <section class="os-card">
       <div class="os-card-head">
         <div class="os-ico">📍</div>
@@ -67,11 +64,6 @@
       </div>
 
       <div class="os-card-body">
-        <div class="gps-row">
-          <button type="button" class="btn-ghost">Capturar localização GPS</button>
-          <button type="button" class="btn-ghost">Capturar</button>
-        </div>
-
         <div class="grid-2">
           <div class="field">
             <label>CEP</label>
@@ -149,8 +141,6 @@
         </div>
       </div>
     </section>
-
-    <!-- CONFIGURAÇÕES -->
     <section class="os-card">
       <div class="os-card-head">
         <div class="os-ico">⚙️</div>
@@ -179,8 +169,6 @@
       </div>
     </section>
   </div>
-
-  <!-- FOOTER FIXO -->
   <div class="os-footer">
     <a href="{% url 'dashboard' %}" class="btn-light">Cancelar</a>
     <button type="submit" class="btn-primary">Criar Ordem de Serviço</button>
