@@ -3,13 +3,13 @@ services:
     image: mysql:8.0
     container_name: mysql8_prefeitura
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      MYSQL_DATABASE: banco_socorro
-      MYSQL_USER: django_user
-      MYSQL_PASSWORD: Pam-2804%GSE
-      MYSQL_ROOT_PASSWORD: root123
-    ports:
-      - "3307:3306"
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
     command: >
@@ -24,13 +24,14 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+    env_file:
+      - .env
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
-      PMA_ARBITRARY: 0
       UPLOAD_LIMIT: 256M
     ports:
-      - "8081:80"
+      - "127.0.0.1:8081:80"
 
 volumes:
   mysql_data:

@@ -1,20 +1,35 @@
 from pathlib import Path
 import os
 
+# ==================================================
+# BASE
+# ==================================================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Segurança
-SECRET_KEY = "django-insecure-jh$^g)tq^zgs@t4kaqi5iah5y24_zyp&n-yyg46-1u^zo(&srp"
-DEBUG = True
+# ==================================================
+# SEGURANÇA
+# ==================================================
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-dev-chave-apenas-para-desenvolvimento"
+)
 
-# Hosts (NÃO duplique)
+DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
+
+# ==================================================
+# HOSTS
+# ==================================================
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "delfina-unprognosticated-javon.ngrok-free.dev",
+    # quando subir na VPS, pode adicionar o IP aqui
+    # "SEU_IP_DA_VPS",
 ]
 
-# Apps
+# ==================================================
+# APLICAÇÕES
+# ==================================================
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -25,6 +40,9 @@ INSTALLED_APPS = [
     "core",
 ]
 
+# ==================================================
+# MIDDLEWARE
+# ==================================================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -35,8 +53,16 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# ==================================================
+# URLS / WSGI
+# ==================================================
 ROOT_URLCONF = "config.urls"
 
+WSGI_APPLICATION = "config.wsgi.application"
+
+# ==================================================
+# TEMPLATES
+# ==================================================
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -53,22 +79,26 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "config.wsgi.application"
-
-# Banco MySQL
+# ==================================================
+# BANCO DE DADOS (MYSQL + DOCKER)
+# ==================================================
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "banco_socorro",
-        "USER": "django_user",
-        "PASSWORD": "Pam-2804%GSE",
-        "HOST": "127.0.0.1",
-        "PORT": "3307",
-        "OPTIONS": {"charset": "utf8mb4"},
+        "NAME": os.getenv("MYSQL_DATABASE", "banco_socorro"),
+        "USER": os.getenv("MYSQL_USER", "django_user"),
+        "PASSWORD": os.getenv("MYSQL_PASSWORD", "Pam-2804$GSE"),
+        "HOST": os.getenv("DB_HOST", "db"),
+        "PORT": os.getenv("DB_PORT", "3306"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+        },
     }
 }
 
-# Password validation
+# ==================================================
+# VALIDAÇÃO DE SENHAS
+# ==================================================
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -76,32 +106,47 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Idioma/tempo
+# ==================================================
+# IDIOMA / FUSO
+# ==================================================
 LANGUAGE_CODE = "pt-br"
 TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
 
-# Static
+# ==================================================
+# STATIC FILES
+# ==================================================
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Media
+# ==================================================
+# MEDIA FILES
+# ==================================================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Login redirects (para seu dashboard)
+# ==================================================
+# LOGIN / LOGOUT
+# ==================================================
 LOGIN_URL = "login_admin"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login_admin"
 
-# Ngrok / HTTPS reverso (bom para ngrok)
+# ==================================================
+# HTTPS / NGROK / PROXY REVERSO
+# ==================================================
 CSRF_TRUSTED_ORIGINS = [
     "https://delfina-unprognosticated-javon.ngrok-free.dev",
 ]
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
+
+# ==================================================
+# PADRÃO
+# ==================================================
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
