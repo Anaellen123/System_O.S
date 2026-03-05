@@ -1,0 +1,71 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Meu Painel{% endblock %}
+{% block page_title %}Meu Painel{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-stats">
+  <div class="stat-card total">
+    <span>Total</span>
+    <strong>{{ stats.total }}</strong>
+  </div>
+
+  <div class="stat-card abertas">
+    <span>Abertas</span>
+    <strong>{{ stats.abertos }}</strong>
+  </div>
+
+  <div class="stat-card andamento">
+    <span>Em andamento</span>
+    <strong>{{ stats.andamento }}</strong>
+  </div>
+
+  <div class="stat-card concluidas">
+    <span>Concluídas</span>
+    <strong>{{ stats.concluidos }}</strong>
+  </div>
+</div>
+
+<div class="dashboard-table">
+  <div class="table-header">
+    <h3>Minhas solicitações recentes</h3>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>OS</th>
+          <th>Serviço</th>
+          <th>Status</th>
+          <th>Criada em</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for os in recent %}
+        <tr>
+          <td class="os-number" data-label="OS">{{ os.os_number }}</td>
+          <td data-label="Serviço">{{ os.service_type }}</td>
+          <td data-label="Status">
+            <span class="status-badge status-{{ os.status|lower }}">
+              {{ os.get_status_display }}
+            </span>
+          </td>
+          <td class="date" data-label="Criada em">
+            {{ os.created_at|date:"d/m/Y H:i" }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="empty">
+            Você ainda não tem solicitações cadastradas.
+          </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

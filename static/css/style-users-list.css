@@ -1,0 +1,201 @@
+/* =========================
+   USERS LIST (LIGHT DEFAULT)
+   ========================= */
+.users-toolbar{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  margin:12px 0 14px;
+}
+
+.users-search-form{
+  flex:1;
+  max-width:520px;
+}
+
+.users-search{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  padding:10px 12px;
+}
+
+.users-search-ico{ color:#6b7280; }
+
+.users-search-input{
+  border:none;
+  outline:none;
+  width:100%;
+  font-size:14px;
+  background:transparent;
+  color:#0f172a;
+}
+
+.users-search-input::placeholder{ color:#94a3b8; }
+
+.users-search-clear{
+  text-decoration:none;
+  color:#6b7280;
+  font-weight:700;
+}
+.users-search-clear:hover{ text-decoration: underline; }
+
+.users-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.users-card-head{
+  padding:12px 14px;
+  border-bottom:1px solid #e5e7eb;
+  font-weight:800;
+  color:#0f172a;
+}
+
+.users-table-wrap{ overflow:auto; }
+
+.users-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+
+.users-table thead tr{
+  background:#f9fafb;
+  text-align:left;
+}
+
+.users-table th{
+  padding:10px 12px;
+  border-bottom:1px solid #e5e7eb;
+  color:#334155;
+  font-weight:800;
+}
+
+.users-table td{
+  padding:10px 12px;
+  border-bottom:1px solid #f1f5f9;
+  color:#0f172a;
+  vertical-align:middle;
+}
+
+.users-name{ font-weight:800; }
+
+.users-actions{ white-space:nowrap; }
+
+.users-empty{
+  padding:16px;
+  color:#6b7280;
+}
+
+.users-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  margin-right:6px;
+  border:1px solid transparent;
+}
+
+.users-badge--ok{
+  background:#ecfdf5;
+  color:#065f46;
+  border-color:#bbf7d0;
+}
+
+.users-badge--bad{
+  background:#fef2f2;
+  color:#991b1b;
+  border-color:#fecaca;
+}
+
+.users-badge--info{
+  background:#eff6ff;
+  color:#1d4ed8;
+  border-color:#bfdbfe;
+}
+
+/* =========================
+   DARK MODE (via .theme-dark)
+   ========================= */
+body.theme-dark .users-search{
+  background: rgba(15, 23, 42, .55);
+  border-color: rgba(148, 163, 184, .18);
+}
+
+body.theme-dark .users-search-ico{
+  color: rgba(226, 232, 240, .70);
+}
+
+body.theme-dark .users-search-input{
+  color: rgba(226, 232, 240, .92);
+}
+
+body.theme-dark .users-search-input::placeholder{
+  color: rgba(226, 232, 240, .55);
+}
+
+body.theme-dark .users-search-clear{
+  color: rgba(226, 232, 240, .70);
+}
+
+body.theme-dark .users-card{
+  background: rgba(15, 23, 42, .55);
+  border-color: rgba(148, 163, 184, .18);
+}
+
+body.theme-dark .users-card-head{
+  color: rgba(226, 232, 240, .92);
+  border-bottom-color: rgba(148, 163, 184, .16);
+}
+
+body.theme-dark .users-table thead tr{
+  background: rgba(15, 23, 42, .70);
+}
+
+body.theme-dark .users-table th{
+  color: rgba(226, 232, 240, .78);
+  border-bottom-color: rgba(148, 163, 184, .16);
+}
+
+body.theme-dark .users-table td{
+  color: rgba(226, 232, 240, .88);
+  border-bottom-color: rgba(148, 163, 184, .12);
+}
+
+body.theme-dark .users-empty{
+  color: rgba(226, 232, 240, .65);
+}
+
+/* Badges no dark */
+body.theme-dark .users-badge--ok{
+  background: rgba(16, 185, 129, .14);
+  color: rgba(167, 243, 208, .95);
+  border-color: rgba(16, 185, 129, .22);
+}
+
+body.theme-dark .users-badge--bad{
+  background: rgba(239, 68, 68, .14);
+  color: rgba(254, 202, 202, .95);
+  border-color: rgba(239, 68, 68, .22);
+}
+
+body.theme-dark .users-badge--info{
+  background: rgba(59, 130, 246, .14);
+  color: rgba(191, 219, 254, .95);
+  border-color: rgba(59, 130, 246, .22);
+}
+
+/* Hover de linha (fica bem bonito) */
+body.theme-dark .users-table tbody tr:hover td{
+  background: rgba(148, 163, 184, .06);
+}

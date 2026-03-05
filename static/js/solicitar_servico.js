@@ -1,10 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const totalSteps = 4;
-  let step = 1;
-
+  // totalSteps dinâmico (4 ou 5) conforme o HTML renderizado
   const stepsList = document.getElementById("stepsList");
-  const contents = document.querySelectorAll(".step-content");
   const steps = document.querySelectorAll(".step");
+  const contents = document.querySelectorAll(".step-content");
+  const totalSteps = steps.length || 4;
+
+  let step = 1;
 
   const btnPrev = document.getElementById("btnPrev");
   const btnNext = document.getElementById("btnNext");
@@ -15,138 +16,106 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.getElementById("solicitarForm");
 
-  // === UPLOAD UI (Etapa 3) ===
+  // Se algo essencial estiver faltando, o JS não roda
+  if (!form || !btnPrev || !btnNext || !stepsList || !progressBar || !progressPct || !stepLabel) {
+    console.error("Algum elemento essencial do formulário não foi encontrado. Verifique os IDs no HTML.");
+    return;
+  }
+
+  // =========================
+  // CPF CHECK
+  // =========================
+  const cpfInput = document.getElementById("cpf");
+  const cpfError = document.getElementById("cpfError");
+  const cpfApi = (window.CPF_CHECK_API || "/api/check-cpf/").replace(/\/+$/, "") + "/";
+
+  let cpfBlocked = false;
+
+  function onlyDigits(v) {
+    return (v || "").replace(/\D/g, "");
+  }
+
+  function getPersonType() {
+    const checked = form.querySelector('[name="person_type"]:checked');
+    return checked ? checked.value : "PF";
+  }
+
+  function setCpfError(msg) {
+    if (!cpfError) return;
+    if (msg) {
+      cpfError.style.display = "block";
+      cpfError.textContent = msg;
+    } else {
+      cpfError.style.display = "none";
+      cpfError.textContent = "";
+    }
+  }
+
+  async function checkCpfExistsIfNeeded() {
+    if (!cpfInput) return true;
+
+    const personType = getPersonType();
+    const digits = onlyDigits(cpfInput.value);
+
+    // Só vale pra PF (CPF)
+    if (personType !== "PF") {
+      cpfBlocked = false;
+      setCpfError("");
+      return true;
+    }
+
+    // Só checa se tem 11 dígitos
+    if (digits.length !== 11) {
+      cpfBlocked = false;
+      setCpfError("");
+      return true;
+    }
+
+    try {
+      const url = `${cpfApi}?cpf=${encodeURIComponent(digits)}`;
+      const resp = await fetch(url, { method: "GET" });
+
+      if (!resp.ok) {
+        cpfBlocked = false;
+        setCpfError("");
+        return true;
+      }
+
+      const data = await resp.json();
+      if (data && data.ok && data.exists) {
+        cpfBlocked = true;
+        setCpfError("Este CPF já possui cadastro. Faça login para continuar.");
+        return false;
+      }
+
+      cpfBlocked = false;
+      setCpfError("");
+      return true;
+    } catch (e) {
+      cpfBlocked = false;
+      setCpfError("");
+      return true;
+    }
+  }
+
+  if (cpfInput) {
+    cpfInput.addEventListener("blur", () => { checkCpfExistsIfNeeded(); });
+    cpfInput.addEventListener("input", () => { if (!cpfBlocked) setCpfError(""); });
+
+    form.querySelectorAll('[name="person_type"]').forEach((r) => {
+      r.addEventListener("change", () => { checkCpfExistsIfNeeded(); });
+    });
+  }
+
+  // =========================
+  // UPLOAD UI
+  // =========================
   const anexosInput = document.getElementById("anexos");
   const uploadTitle = document.getElementById("uploadTitle");
   const uploadSub = document.getElementById("uploadSub");
   const uploadFeedback = document.getElementById("uploadFeedback");
   const uploadPreviews = document.getElementById("uploadPreviews");
 
-  // Se algo essencial estiver faltando, o JS não roda (evita travar silencioso)
-  if (!form || !btnPrev || !btnNext || !stepsList || !progressBar || !progressPct || !stepLabel) {
-    console.error("Algum elemento essencial do formulário não foi encontrado. Verifique os IDs no HTML.");
-    return;
-  }
-
-  function setActiveStep(newStep) {
-    step = Math.max(1, Math.min(totalSteps, newStep));
-
-    // Sidebar
-    steps.forEach((li) => {
-      li.classList.toggle("active", Number(li.dataset.step) === step);
-    });
-
-    // Content
-    contents.forEach((c) => {
-      c.classList.toggle("active", Number(c.dataset.content) === step);
-    });
-
-    // Progress
-    const pct = Math.round((step / totalSteps) * 100);
-    progressBar.style.width = `${pct}%`;
-    progressPct.textContent = `${pct}%`;
-    stepLabel.textContent = `Etapa ${step} de ${totalSteps}`;
-
-    // Buttons
-    btnPrev.disabled = step === 1;
-    btnNext.textContent = step === totalSteps ? "Enviar ✓" : "Próximo ›";
-
-    if (step === 4) fillReview();
-  }
-
-  function getValue(name) {
-    const el = form.querySelector(`[name="${name}"]`);
-    if (!el) return "";
-
-    if (el.type === "radio") {
-      const checked = form.querySelector(`[name="${name}"]:checked`);
-      return checked ? checked.value : "";
-    }
-    return (el.value || "").trim();
-  }
-
-  function fillReview() {
-    const full_name = getValue("full_name");
-    const documentVal = getValue("document");
-    const phone = getValue("phone");
-
-    const service_type = getValue("service_type");
-    const description = getValue("description");
-    const notes = getValue("notes");
-
-    const street = getValue("street");
-    const number = getValue("number");
-    const neighborhood = getValue("neighborhood");
-    const city = getValue("city");
-    const cep = getValue("cep");
-
-    const address = [street, number && `nº ${number}`, neighborhood, city, cep]
-      .filter(Boolean)
-      .join(", ");
-
-    const map = {
-      full_name,
-      document: documentVal,
-      phone,
-      service_type,
-      description,
-      notes,
-      address: address || "—",
-    };
-
-    document.querySelectorAll("[data-r]").forEach((span) => {
-      const key = span.getAttribute("data-r");
-      span.textContent = map[key] ? map[key] : "—";
-    });
-  }
-
-  function validateStep(currentStep) {
-    if (currentStep === 1) {
-      if (!getValue("document") || !getValue("full_name") || !getValue("phone")) return false;
-    }
-    if (currentStep === 2) {
-      if (!getValue("service_type") || !getValue("description")) return false;
-    }
-    return true;
-  }
-
-  btnPrev.addEventListener("click", () => setActiveStep(step - 1));
-
-  btnNext.addEventListener("click", () => {
-    if (step < totalSteps) {
-      if (!validateStep(step)) {
-        alert("Preencha os campos obrigatórios desta etapa para continuar.");
-        return;
-      }
-      setActiveStep(step + 1);
-      return;
-    }
-
-    if (!validateStep(1) || !validateStep(2)) {
-      alert("Há campos obrigatórios não preenchidos.");
-      return;
-    }
-
-    if (form.requestSubmit) form.requestSubmit();
-    else form.submit();
-  });
-
-  stepsList.addEventListener("click", (e) => {
-    const li = e.target.closest(".step");
-    if (!li) return;
-
-    const target = Number(li.dataset.step);
-
-    if (target > step && !validateStep(step)) {
-      alert("Preencha os campos obrigatórios desta etapa para continuar.");
-      return;
-    }
-    setActiveStep(target);
-  });
-
-  // =========================
-  // UPLOAD: mostrar selecionados + miniaturas + validar JPG/PNG
-  // =========================
   function resetUploadUI() {
     if (uploadTitle) uploadTitle.textContent = "Clique para selecionar arquivos";
     if (uploadSub) uploadSub.textContent = "PNG ou JPG";
@@ -218,17 +187,169 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // =========================
+  // STEPS
+  // =========================
+  function setActiveStep(newStep) {
+    step = Math.max(1, Math.min(totalSteps, newStep));
+
+    steps.forEach((li) => {
+      li.classList.toggle("active", Number(li.dataset.step) === step);
+    });
+
+    contents.forEach((c) => {
+      c.classList.toggle("active", Number(c.dataset.content) === step);
+    });
+
+    const pct = Math.round((step / totalSteps) * 100);
+    progressBar.style.width = `${pct}%`;
+    progressPct.textContent = `${pct}%`;
+    stepLabel.textContent = `Etapa ${step} de ${totalSteps}`;
+
+    btnPrev.disabled = step === 1;
+    btnNext.textContent = step === totalSteps ? "Enviar ✓" : "Próximo ›";
+
+    if (step === totalSteps) fillReview();
+  }
+
+  function getValue(name) {
+    const el = form.querySelector(`[name="${name}"]`);
+    if (!el) return "";
+
+    if (el.type === "radio") {
+      const checked = form.querySelector(`[name="${name}"]:checked`);
+      return checked ? checked.value : "";
+    }
+    return (el.value || "").trim();
+  }
+
+  function fillReview() {
+    const full_name = getValue("full_name");
+    const documentVal = getValue("document");
+    const phone = getValue("phone");
+
+    const service_type = getValue("service_type");
+    const description = getValue("description");
+    const notes = getValue("notes");
+
+    const street = getValue("street");
+    const number = getValue("number");
+    const neighborhood = getValue("neighborhood");
+    const city = getValue("city");
+    const cep = getValue("cep");
+
+    const reg_email = getValue("reg_email");
+
+    const address = [street, number && `nº ${number}`, neighborhood, city, cep]
+      .filter(Boolean)
+      .join(", ");
+
+    const map = {
+      full_name,
+      document: documentVal,
+      phone,
+      service_type,
+      description,
+      notes,
+      address: address || "—",
+      reg_email: reg_email || "—",
+    };
+
+    document.querySelectorAll("[data-r]").forEach((span) => {
+      const key = span.getAttribute("data-r");
+      span.textContent = map[key] ? map[key] : "—";
+    });
+  }
+
+  function hasAccountStep() {
+    // só existe se os inputs existem no DOM (template renderiza quando não está logado)
+    return Boolean(document.getElementById("reg_email")) &&
+           Boolean(document.getElementById("reg_password1")) &&
+           Boolean(document.getElementById("reg_password2"));
+  }
+
+  async function validateStep(currentStep) {
+    // Etapa 1: dados do solicitante
+    if (currentStep === 1) {
+      if (!getValue("document") || !getValue("full_name") || !getValue("phone")) return false;
+      const ok = await checkCpfExistsIfNeeded();
+      if (!ok) return false;
+    }
+
+    // Etapa 2: criar conta (somente se existir)
+    if (currentStep === 2 && hasAccountStep()) {
+      const email = getValue("reg_email");
+      const p1 = getValue("reg_password1");
+      const p2 = getValue("reg_password2");
+
+      if (!email || !p1 || !p2) return false;
+      if (p1 !== p2) return false;
+    }
+
+    // Localização e Serviço:
+    // Se tem etapa de conta, fica na etapa 3; se não tem, fica na etapa 2.
+    const serviceStep = hasAccountStep() ? 3 : 2;
+    if (currentStep === serviceStep) {
+      if (!getValue("service_type") || !getValue("description")) return false;
+    }
+
+    return true;
+  }
+
+  btnPrev.addEventListener("click", () => setActiveStep(step - 1));
+
+  btnNext.addEventListener("click", async () => {
+    if (step < totalSteps) {
+      const ok = await validateStep(step);
+      if (!ok) {
+        alert("Preencha os campos obrigatórios desta etapa para continuar.");
+        return;
+      }
+      setActiveStep(step + 1);
+      return;
+    }
+
+    // valida tudo antes de enviar
+    for (let s = 1; s <= totalSteps; s++) {
+      const ok = await validateStep(s);
+      if (!ok) {
+        alert("Há campos obrigatórios não preenchidos.");
+        setActiveStep(s);
+        return;
+      }
+    }
+
+    if (form.requestSubmit) form.requestSubmit();
+    else form.submit();
+  });
+
+  stepsList.addEventListener("click", async (e) => {
+    const li = e.target.closest(".step");
+    if (!li) return;
+
+    const target = Number(li.dataset.step);
+
+    if (target > step) {
+      const ok = await validateStep(step);
+      if (!ok) {
+        alert("Preencha os campos obrigatórios desta etapa para continuar.");
+        return;
+      }
+    }
+
+    setActiveStep(target);
+  });
+
   // Inicial
   setActiveStep(1);
 });
 
 /* =========================================================
    SUCESSO + DOWNLOAD DO COMPROVANTE
-   (usa variáveis globais do HTML: window.OS_CREATED, window.OS_TARGET_WIDTH)
    ========================================================= */
 (function () {
-  const created = Boolean(window.OS_CREATED); // vem do HTML
-  const targetWidth = Number(window.OS_TARGET_WIDTH || 900); // opcional
+  const created = Boolean(window.OS_CREATED);
+  const targetWidth = Number(window.OS_TARGET_WIDTH || 900);
 
   const overlay = document.getElementById("successOverlay");
   const btnClose = document.getElementById("successClose");
@@ -238,7 +359,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCopyOs = document.getElementById("btnCopyOs");
   const osNumberEl = document.getElementById("receiptOsNumber");
 
-  // Se essa página não tem modal, não faz nada
   if (!overlay || !receipt) return;
 
   function open() {

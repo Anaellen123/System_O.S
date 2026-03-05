@@ -1,11 +1,9 @@
 {% extends "head.html" %}
 {% load static %}
 
-{% block header %}
-{% endblock %}
+{% block header %}{% endblock %}
 
 {% block content %}
-
 
 <main class="solicitar-page">
   <header class="top-header">
@@ -21,9 +19,11 @@
       </nav>
     </div>
   </header>
+
   <section class="page-title container">
     <h1>Solicitar serviço</h1>
   </section>
+
   <section class="container layout-grid">
     <aside class="sidebar">
       <div class="card steps-card">
@@ -34,16 +34,26 @@
             <span class="step-num">1</span>
             <span class="step-text">Dados do Solicitante</span>
           </li>
+
+          {% if not request.user.is_authenticated %}
           <li class="step" data-step="2">
             <span class="step-num">2</span>
+            <span class="step-text">Criar conta</span>
+          </li>
+          {% endif %}
+
+          <li class="step" data-step="{% if not request.user.is_authenticated %}3{% else %}2{% endif %}">
+            <span class="step-num">{% if not request.user.is_authenticated %}3{% else %}2{% endif %}</span>
             <span class="step-text">Localização e Serviço</span>
           </li>
-          <li class="step" data-step="3">
-            <span class="step-num">3</span>
+
+          <li class="step" data-step="{% if not request.user.is_authenticated %}4{% else %}3{% endif %}">
+            <span class="step-num">{% if not request.user.is_authenticated %}4{% else %}3{% endif %}</span>
             <span class="step-text">Anexos</span>
           </li>
-          <li class="step" data-step="4">
-            <span class="step-num">4</span>
+
+          <li class="step" data-step="{% if not request.user.is_authenticated %}5{% else %}4{% endif %}">
+            <span class="step-num">{% if not request.user.is_authenticated %}5{% else %}4{% endif %}</span>
             <span class="step-text">Revisar e Enviar</span>
           </li>
         </ul>
@@ -67,17 +77,27 @@
           <div>
             <div class="form-top-title">Solicitar serviço</div>
             <div class="form-top-sub">
-              <span id="stepLabel">Etapa 1 de 4</span>
+              <span id="stepLabel">Etapa 1</span>
             </div>
           </div>
           <button class="close-btn" type="button" aria-label="Fechar">✕</button>
         </div>
 
+        {% if messages %}
+          <div style="margin: 12px 0;">
+            {% for message in messages %}
+              <div class="alert {{ message.tags }}" style="padding:10px 12px; border-radius:10px; margin-bottom:8px;">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
         <div class="progress-row">
           <div class="progress-track">
-            <div class="progress-bar" id="progressBar" style="width: 25%;"></div>
+            <div class="progress-bar" id="progressBar" style="width: 20%;"></div>
           </div>
-          <div class="progress-pct" id="progressPct">25%</div>
+          <div class="progress-pct" id="progressPct">20%</div>
         </div>
 
         <form
@@ -89,6 +109,10 @@
           novalidate
         >
           {% csrf_token %}
+
+          {% if not request.user.is_authenticated %}
+            <input type="hidden" name="create_account" value="1">
+          {% endif %}
 
           <!-- STEP 1 -->
           <div class="step-content active" data-content="1">
@@ -121,34 +145,46 @@
                 placeholder="000.000.000-00 (PF) ou 00.000.000/0001-00 (PJ)"
                 required
               >
+              <div id="cpfError" style="display:none;margin-top:6px;font-size:13px;color:#b91c1c;"></div>
             </div>
 
             <div class="field">
               <label for="nome">Nome do Solicitante <span class="req">*</span></label>
-              <input
-                id="nome"
-                name="full_name"
-                type="text"
-                placeholder="Seu nome completo"
-                required
-              >
+              <input id="nome" name="full_name" type="text" placeholder="Seu nome completo" required>
             </div>
 
             <div class="field">
               <label for="tel">Telefone para Contato <span class="req">*</span></label>
-              <input
-                id="tel"
-                name="phone"
-                type="text"
-                placeholder="(00) 00000-0000 (com DDD da cidade)"
-                required
-              >
+              <input id="tel" name="phone" type="text" placeholder="(00) 00000-0000 (com DDD da cidade)" required>
               <small class="help">Use o DDD da sua cidade</small>
             </div>
           </div>
 
-          <!-- STEP 2 -->
+          {% if not request.user.is_authenticated %}
+          <!-- STEP 2 (CADASTRO OBRIGATÓRIO) -->
           <div class="step-content" data-content="2">
+            <h2>Criar conta</h2>
+            <p class="muted">Crie sua conta para acompanhar suas solicitações.</p>
+
+            <div class="field">
+              <label for="reg_email">Email <span class="req">*</span></label>
+              <input id="reg_email" name="reg_email" type="email" placeholder="seu@email.com" required>
+            </div>
+
+            <div class="field">
+              <label for="reg_password1">Senha <span class="req">*</span></label>
+              <input id="reg_password1" name="reg_password1" type="password" placeholder="••••••••" required>
+            </div>
+
+            <div class="field">
+              <label for="reg_password2">Confirmar senha <span class="req">*</span></label>
+              <input id="reg_password2" name="reg_password2" type="password" placeholder="••••••••" required>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- STEP 3 (ou 2 se logado) -->
+          <div class="step-content" data-content="{% if not request.user.is_authenticated %}3{% else %}2{% endif %}">
             <h2>Localização e Serviço</h2>
             <p class="muted">Informe onde ocorreu e qual o serviço desejado</p>
 
@@ -194,29 +230,17 @@
 
             <div class="field">
               <label for="descricao">Descrição <span class="req">*</span></label>
-              <textarea
-                id="descricao"
-                name="description"
-                rows="4"
-                placeholder="Descreva o problema (ponto de referência, detalhes, etc.)"
-                required
-              ></textarea>
+              <textarea id="descricao" name="description" rows="4" placeholder="Descreva o problema (ponto de referência, detalhes, etc.)" required></textarea>
             </div>
           </div>
 
-          <!-- STEP 3 -->
-          <div class="step-content" data-content="3">
+          <!-- STEP 4 (ou 3 se logado) -->
+          <div class="step-content" data-content="{% if not request.user.is_authenticated %}4{% else %}3{% endif %}">
             <h2>Anexos</h2>
             <p class="muted">Envie imagens que ajudem na análise</p>
 
             <div class="upload">
-              <input
-                id="anexos"
-                name="attachments"
-                type="file"
-                multiple
-                accept="image/png,image/jpeg"
-              >
+              <input id="anexos" name="attachments" type="file" multiple accept="image/png,image/jpeg">
 
               <label for="anexos" class="upload-box" id="uploadBox">
                 <div class="upload-title" id="uploadTitle">Clique para selecionar arquivos</div>
@@ -229,17 +253,12 @@
 
             <div class="field">
               <label for="obs">Observações</label>
-              <textarea
-                id="obs"
-                name="notes"
-                rows="4"
-                placeholder="Observações adicionais (opcional)"
-              ></textarea>
+              <textarea id="obs" name="notes" rows="4" placeholder="Observações adicionais (opcional)"></textarea>
             </div>
           </div>
 
-          <!-- STEP 4 -->
-          <div class="step-content" data-content="4">
+          <!-- STEP 5 (ou 4 se logado) -->
+          <div class="step-content" data-content="{% if not request.user.is_authenticated %}5{% else %}4{% endif %}">
             <h2>Revisar e Enviar</h2>
             <p class="muted">Confira os dados antes de enviar</p>
 
@@ -252,6 +271,10 @@
               <div class="review-row"><b>Endereço:</b> <span data-r="address">—</span></div>
               <div class="review-row"><b>Descrição:</b> <span data-r="description">—</span></div>
               <div class="review-row"><b>Observações:</b> <span data-r="notes">—</span></div>
+              {% if not request.user.is_authenticated %}
+                <hr>
+                <div class="review-row"><b>Email:</b> <span data-r="reg_email">—</span></div>
+              {% endif %}
             </div>
 
             <div class="notice">
@@ -378,7 +401,9 @@
 <script>
   window.OS_CREATED = {{ created|yesno:"true,false" }};
   window.OS_TARGET_WIDTH = 900;
-  window.CEP_API_BASE = "/api/cep/";
+  window.CEP_API_BASE = "{% url 'api_cep' '00000000' %}".replace("00000000/", "");
+  window.CPF_CHECK_API = "/api/check-cpf/";
+  window.IS_AUTH = {{ request.user.is_authenticated|yesno:"true,false" }};
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -387,4 +412,3 @@
 <script src="{% static 'js/cep-api.js' %}"></script>
 <script src="{% static 'js/CPF-CNPJ-api.js' %}"></script>
 {% endblock %}
-

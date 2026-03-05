@@ -1,0 +1,279 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Editar Usuário{% endblock %}
+{% block page_title %}Editar Usuário{% endblock %}
+
+{% block content %}
+
+<div class="edituser-topbar">
+  <a href="{% url 'users_list' %}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+  </a>
+</div>
+
+<form method="post" class="edituser-card">
+  {% csrf_token %}
+
+  <div class="edituser-section-title">
+    Dados do usuário
+  </div>
+
+  <div class="edituser-grid">
+    <div>
+      <label class="edituser-lbl">Nome</label>
+      <input class="edituser-inp" type="text" name="first_name" value="{{ u.first_name|default:'' }}">
+    </div>
+
+    <div>
+      <label class="edituser-lbl">Sobrenome</label>
+      <input class="edituser-inp" type="text" name="last_name" value="{{ u.last_name|default:'' }}">
+    </div>
+
+    <div>
+      <label class="edituser-lbl">Email</label>
+      <input class="edituser-inp" type="email" name="email" value="{{ u.email|default:'' }}">
+    </div>
+
+    <div>
+      <label class="edituser-lbl">CPF</label>
+      <input class="edituser-inp" type="text" name="cpf" value="{{ profile.cpf|default:'' }}" placeholder="000.000.000-00">
+    </div>
+
+    <div>
+      <label class="edituser-lbl">Data de nascimento</label>
+      <input class="edituser-inp" type="date" name="birth_date" value="{{ profile.birth_date|date:'Y-m-d' }}">
+    </div>
+  </div>
+
+  <div class="edituser-section-title edituser-section-title--border-top">
+    Endereço
+  </div>
+
+  <div class="edituser-grid">
+    <div>
+      <label class="edituser-lbl">CEP</label>
+      <input class="edituser-inp" type="text" name="cep" value="{{ profile.cep|default:'' }}" placeholder="00000-000">
+    </div>
+
+    <div class="edituser-span-all">
+      <label class="edituser-lbl">Rua</label>
+      <input class="edituser-inp" type="text" name="street" value="{{ profile.street|default:'' }}">
+    </div>
+
+    <div>
+      <label class="edituser-lbl">Número</label>
+      <input class="edituser-inp" type="text" name="number" value="{{ profile.number|default:'' }}">
+    </div>
+
+    <div>
+      <label class="edituser-lbl">Bairro</label>
+      <input class="edituser-inp" type="text" name="neighborhood" value="{{ profile.neighborhood|default:'' }}">
+    </div>
+
+    <div>
+      <label class="edituser-lbl">Cidade</label>
+      <input class="edituser-inp" type="text" name="city" value="{{ profile.city|default:'' }}">
+    </div>
+  </div>
+
+  <div class="edituser-section-title edituser-section-title--border-top">
+    Acesso
+  </div>
+
+  <div class="edituser-grid">
+    <div class="edituser-span-all">
+      <label class="edituser-lbl">Nível de acesso (Grupo)</label>
+      <select class="edituser-inp" name="group_id">
+        <option value="">Sem nível</option>
+        {% for g in groups %}
+          <option value="{{ g.id }}" {% if current_group and current_group.id == g.id %}selected{% endif %}>
+            {{ g.name }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <div class="edituser-help">
+        Esse campo define o “Nível” que você mostra na listagem (primeiro grupo do usuário).
+      </div>
+    </div>
+
+    <div class="edituser-checks">
+      <label class="edituser-check">
+        <input type="checkbox" name="is_active" {% if u.is_active %}checked{% endif %}>
+        <span>Ativo</span>
+      </label>
+
+      <label class="edituser-check">
+        <input type="checkbox" name="is_staff" {% if u.is_staff %}checked{% endif %}>
+        <span>Staff</span>
+      </label>
+
+      <label class="edituser-check">
+        <input type="checkbox" name="is_superuser" {% if u.is_superuser %}checked{% endif %}>
+        <span>Superuser</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="edituser-actions">
+    <a href="{% url 'users_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check2"></i> Salvar
+    </button>
+  </div>
+</form>
+
+<style>
+/* =========================
+   EDIT USER (LIGHT DEFAULT)
+   ========================= */
+.edituser-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:12px 0 16px;
+}
+
+.edituser-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.edituser-section-title{
+  padding:14px 16px;
+  border-bottom:1px solid #e5e7eb;
+  font-weight:800;
+  color:#0f172a;
+}
+
+.edituser-section-title--border-top{
+  border-top:1px solid #e5e7eb;
+}
+
+.edituser-grid{
+  padding:16px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+.edituser-span-all{ grid-column: 1 / -1; }
+
+.edituser-lbl{
+  font-size:13px;
+  font-weight:800;
+  display:block;
+  margin-bottom:6px;
+  color:#334155;
+}
+
+.edituser-inp{
+  width:100%;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  padding:10px 12px;
+  outline:none;
+  font-size:14px;
+  background:#fff;
+  color:#0f172a;
+}
+
+.edituser-inp::placeholder{ color:#94a3b8; }
+
+.edituser-inp:focus{
+  border-color:#93c5fd;
+  box-shadow:0 0 0 3px rgba(147,197,253,.35);
+}
+
+.edituser-help{
+  color:#6b7280;
+  font-size:12px;
+  margin-top:6px;
+}
+
+.edituser-checks{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.edituser-check{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  user-select:none;
+}
+
+.edituser-check span{
+  font-weight:800;
+  color:#334155;
+}
+
+.edituser-actions{
+  padding:14px 16px;
+  border-top:1px solid #e5e7eb;
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  background:#f9fafb;
+}
+
+/* Responsivo */
+@media (max-width: 720px){
+  .edituser-grid{ grid-template-columns: 1fr; }
+}
+
+/* =========================
+   DARK MODE (via .theme-dark)
+   ========================= */
+body.theme-dark .edituser-card{
+  background: rgba(15, 23, 42, .55);
+  border-color: rgba(148, 163, 184, .18);
+}
+
+body.theme-dark .edituser-section-title{
+  color: rgba(226, 232, 240, .92);
+  border-bottom-color: rgba(148, 163, 184, .16);
+}
+
+body.theme-dark .edituser-section-title--border-top{
+  border-top-color: rgba(148, 163, 184, .16);
+}
+
+body.theme-dark .edituser-lbl{
+  color: rgba(226, 232, 240, .80);
+}
+
+body.theme-dark .edituser-inp{
+  background: rgba(2, 6, 23, .35);
+  border-color: rgba(148, 163, 184, .18);
+  color: rgba(226, 232, 240, .92);
+}
+
+body.theme-dark .edituser-inp::placeholder{
+  color: rgba(226, 232, 240, .50);
+}
+
+body.theme-dark .edituser-inp:focus{
+  border-color: rgba(59, 130, 246, .55);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.25);
+}
+
+body.theme-dark .edituser-help{
+  color: rgba(226, 232, 240, .62);
+}
+
+body.theme-dark .edituser-check span{
+  color: rgba(226, 232, 240, .85);
+}
+
+body.theme-dark .edituser-actions{
+  background: rgba(15, 23, 42, .70);
+  border-top-color: rgba(148, 163, 184, .16);
+}
+</style>
+
+{% endblock %}

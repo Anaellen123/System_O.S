@@ -1,0 +1,90 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Usuários{% endblock %}
+{% block page_title %}Usuários{% endblock %}
+
+{% block content %}
+
+<div class="users-toolbar">
+  <form method="get" class="users-search-form">
+    <div class="users-search">
+      <i class="bi bi-search users-search-ico"></i>
+      <input
+        type="text"
+        name="q"
+        value="{{ q }}"
+        placeholder="Buscar por nome, email ou usuário..."
+        class="users-search-input"
+      >
+      {% if q %}
+        <a href="{% url 'users_list' %}" class="users-search-clear">limpar</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<div class="users-card">
+  <div class="users-card-head">
+    Lista de usuários ({{ users|length }})
+  </div>
+
+  <div class="users-table-wrap">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Usuário</th>
+          <th>Email</th>
+          <th>Nível</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <div class="users-name">
+              {{ u.get_full_name|default:u.username }}
+            </div>
+          </td>
+
+          <td>{{ u.email|default:"-" }}</td>
+
+          <td>
+            {% with g=u.groups.first %}
+              {% if g %}{{ g.name }}{% else %}-{% endif %}
+            {% endwith %}
+          </td>
+
+          <td>
+            {% if u.is_active %}
+              <span class="users-badge users-badge--ok">Ativo</span>
+            {% else %}
+              <span class="users-badge users-badge--bad">Bloqueado</span>
+            {% endif %}
+
+            {% if u.is_superuser %}
+              <span class="users-badge users-badge--info">Superuser</span>
+            {% endif %}
+          </td>
+
+          <td class="users-actions">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'user_role_update' u.id %}">
+              <i class="bi bi-pencil"></i> EDITAR
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="users-empty">
+            Nenhum usuário encontrado.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

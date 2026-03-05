@@ -4,8 +4,7 @@
 {% block header %}{% endblock %}
 
 {% block content %}
-<main class="login-page"
-      style="--bg:url('{% static 'img/seu-background.png' %}');">
+<main class="login-page">
 
   <section class="login-left">
     <div class="brand-top">
@@ -33,67 +32,157 @@
 
   <section class="login-right">
     <div class="login-card">
+
       <div class="card-header">
         <img class="card-logo" src="{% static 'img/logo-prefeitura-removebg.png' %}" alt="Socorro">
       </div>
 
-      <h2 class="card-title">Entrar no sistema</h2>
-      <p class="card-desc">Faça login para acessar o Sistema de Gestão de Serviços Urbanos.</p>
+      <!-- ========================= -->
+      <!-- LOGIN FORM -->
+      <!-- ========================= -->
+      <div id="loginBox">
 
-      <form method="post" class="login-form">
-        {% csrf_token %}
+        <h2 class="card-title">Entrar no sistema</h2>
+        <p class="card-desc">Faça login para acessar o sistema.</p>
 
-        <label class="field-label" for="id_username">Email</label>
-        <div class="field">
-          <span class="field-ico" aria-hidden="true">✉</span>
-          <input
-            id="id_username"
-            name="username"
-            type="email"
-            show="email"
-            placeholder="seu@email.com"
-            autocomplete="username"
-            required
-          >
-        </div>
+        <form method="post" action="{% url 'login_admin' %}" class="login-form">
+          {% csrf_token %}
 
-        <div class="field-row">
-          <label class="field-label" for="id_password">Senha</label>
-          <a class="forgot" href="#">Esqueceu sua senha?</a>
-        </div>
+          <label class="field-label">Email</label>
+          <div class="field">
+            <span class="field-ico">✉</span>
+            <input name="username" type="email" placeholder="seu@email.com" required>
+          </div>
 
-        <div class="field field-password">
+          <label class="field-label">Senha</label>
+          <div class="field field-password">
+            <input id="id_password" name="password" type="password" placeholder="••••••••" required>
 
-          <input
-            id="id_password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            autocomplete="current-password"
-            required
-          >
+            <button type="button" class="toggle-pass" data-toggle="#id_password">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
 
-          <button
-            type="button"
-            id="togglePassword"
-            class="toggle-pass"
-            aria-label="Mostrar/ocultar senha"
-          >
-            <i class="bi bi-eye"></i>
+          <button class="btn-primary" type="submit">
+            Entrar
+          </button>
+        </form>
+
+        <div class="register-wrapper">
+          <button type="button" class="btn-register" onclick="showRegister()">
+            Criar nova conta
           </button>
         </div>
 
-        <button class="btn-primary" type="submit">Entrar</button>
-      </form>
-
-      <div class="test-box">
-        <div class="test-title">Credenciais de teste</div>
-        <div class="test-text">Email: <b>admin@admin</b> · Senha: <b>SOCORRO-admin2026</b></div>
       </div>
 
-      <a class="back" href="{% url 'index' %}">← Voltar para a página inicial</a>
+      <!-- ========================= -->
+      <!-- REGISTER FORM -->
+      <!-- ========================= -->
+      <div id="registerBox" style="display:none;">
+
+        <h2 class="card-title">Criar conta</h2>
+        <p class="card-desc">Preencha os dados para cadastro.</p>
+
+        <form method="post" action="{% url 'register' %}" class="login-form">
+          {% csrf_token %}
+
+          <label class="field-label">Usuário</label>
+          <div class="field">
+            <span class="field-ico">
+              <i class="bi bi-person-fill"></i>
+            </span>
+            <input name="username" type="text" required value="{{ register_data.username|default:'' }}">
+          </div>
+
+          <label class="field-label">Email</label>
+          <div class="field">
+            <span class="field-ico">✉</span>
+            <input name="email" type="email" required value="{{ register_data.email|default:'' }}">
+          </div>
+
+          <label class="field-label">Senha</label>
+          <div class="field field-password">
+            <span class="field-ico">
+              <i class="bi bi-file-lock2"></i>
+            </span>
+            <input id="id_password1" name="password1" type="password" required>
+
+            <button type="button" class="toggle-pass" data-toggle="#id_password1">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+
+          <label class="field-label">Confirmar senha</label>
+          <div class="field field-password">
+            <span class="field-ico">
+              <i class="bi bi-file-lock2"></i>
+            </span>
+            <input id="id_password2" name="password2" type="password" required>
+
+            <button type="button" class="toggle-pass" data-toggle="#id_password2">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+
+          <button class="btn-primary" type="submit">
+            Cadastrar
+          </button>
+        </form>
+
+        <div style="margin-top:15px;text-align:center;">
+          <button type="button" class="back" onclick="showLogin()">
+            Voltar para login
+          </button>
+        </div>
+
+      </div>
+
+      <a class="back" href="{% url 'index' %}">
+        ← Voltar para a página inicial
+      </a>
+
     </div>
   </section>
 
 </main>
+
+<script>
+function showRegister() {
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("registerBox").style.display = "block";
+}
+
+function showLogin() {
+  document.getElementById("registerBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+}
+
+function setupPasswordToggles() {
+  document.querySelectorAll(".toggle-pass").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const selector = btn.getAttribute("data-toggle");
+      const input = document.querySelector(selector);
+      if (!input) return;
+
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.className = isPassword ? "bi bi-eye-slash" : "bi bi-eye";
+      }
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", setupPasswordToggles);
+</script>
+
+{% if show_register %}
+<script>
+  showRegister();
+</script>
+{% endif %}
+
 {% endblock %}

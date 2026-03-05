@@ -1,0 +1,266 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Criar Equipe{% endblock %}
+{% block page_title %}Criar Equipe{% endblock %}
+
+{% block content %}
+
+<style>
+  :root{
+    --text:#0f172a; --muted:rgba(15,23,42,.62);
+    --line:rgba(15,23,42,.12);
+    --blue:#2563eb; --blueSoft:rgba(37,99,235,.14);
+    --card:#fff;
+    --radius:18px; --radiusSm:14px;
+    --shadow:0 14px 34px rgba(15,23,42,.10);
+  }
+
+  .team-page{ max-width:980px; margin:0 auto; padding:10px 2px; }
+  .team-card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
+  .team-head{ padding:16px 18px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(37,99,235,.08), rgba(255,255,255,0));
+    display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .team-title{ margin:0; font-weight:900; color:var(--text); font-size:20px; letter-spacing:-.02em; }
+  .team-subtitle{ margin:6px 0 0; color:var(--muted); font-size:14px; }
+  .team-body{ padding:18px; }
+
+  .grid{ display:grid; grid-template-columns:1fr; gap:14px; }
+  .grid-2{ grid-template-columns:1.2fr .8fr; gap:14px; }
+
+  .lbl{ display:block; font-weight:900; color:var(--text); margin:0 0 6px; font-size:13px; letter-spacing:.02em; }
+  .control{
+    background:#fff; border:1px solid rgba(148,163,184,.55);
+    border-radius:var(--radiusSm); padding:10px 12px;
+    transition:border-color .18s ease, box-shadow .18s ease;
+  }
+  .control:focus-within{
+    border-color: rgba(37,99,235,.65);
+    box-shadow: 0 0 0 4px rgba(37,99,235,.14);
+  }
+  .control input, .control select, .control textarea{
+    width:100%; border:0 !important; outline:none; background:transparent;
+    color:var(--text); font-size:14px;
+  }
+
+  .hint{ margin-top:8px; font-size:12px; color:var(--muted); line-height:1.35; }
+  .err{ margin-top:6px; color:#dc2626; font-size:12.5px; }
+
+  .actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; padding-top:4px; }
+  .btnx{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:10px 14px; border-radius:14px; text-decoration:none;
+    font-weight:900; font-size:14px; border:1px solid transparent; cursor:pointer;
+    transition:transform .08s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+    white-space:nowrap;
+  }
+  .btnx:active{ transform:translateY(1px); }
+  .btnx-ghost{ background:#fff; color:var(--text); border-color:rgba(148,163,184,.55); box-shadow:0 8px 18px rgba(15,23,42,.06); }
+  .btnx-ghost:hover{ border-color:rgba(37,99,235,.35); box-shadow:0 12px 24px rgba(15,23,42,.10); }
+  .btnx-primary{ background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff; box-shadow:0 16px 30px rgba(37,99,235,.22); }
+  .btnx-primary:hover{ box-shadow:0 18px 36px rgba(37,99,235,.28); }
+
+  details.acc{
+    border:1px solid rgba(148,163,184,.55);
+    border-radius:var(--radiusSm);
+    background:#fff;
+    overflow:hidden;
+  }
+  details.acc[open]{ box-shadow:0 0 0 4px rgba(37,99,235,.10); border-color:rgba(37,99,235,.45); }
+  summary.acc-head{
+    list-style:none;
+    cursor:pointer;
+    padding:12px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    user-select:none;
+    font-weight:900;
+    color:var(--text);
+  }
+  summary.acc-head::-webkit-details-marker{ display:none; }
+
+  .acc-count{
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+    background:rgba(15,23,42,.06);
+    color:rgba(15,23,42,.75);
+    font-weight:900;
+  }
+
+  .acc-body{ padding:12px; border-top:1px solid rgba(15,23,42,.08); }
+
+  .user-list{
+    max-height:260px;
+    overflow:auto;
+    padding:6px;
+    border-radius:12px;
+    background:rgba(15,23,42,.03);
+    border:1px solid rgba(15,23,42,.06);
+  }
+
+  .user-list ul{ list-style:none; margin:0; padding:0; }
+
+  .user-list li{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px;
+    border-radius:12px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.08);
+    margin-bottom:8px;
+  }
+
+  .user-list input[type="checkbox"]{
+    width:18px;
+    height:18px;
+    accent-color: var(--blue);
+  }
+
+  .user-search{
+    margin-bottom:10px;
+  }
+
+  .user-search input{
+    width:100%;
+    border:1px solid rgba(148,163,184,.55);
+    border-radius:12px;
+    padding:10px 12px;
+    outline:none;
+  }
+
+  @media (max-width:760px){
+    .team-head{ flex-direction:column; align-items:flex-start; }
+    .grid-2{ grid-template-columns:1fr; }
+    .actions{ justify-content:stretch; }
+    .btnx{ width:100%; }
+  }
+</style>
+
+<div class="team-page">
+  <div class="team-card">
+
+    <div class="team-head">
+      <div>
+        <h4 class="team-title">Criar Equipe</h4>
+        <p class="team-subtitle">Defina o nome da equipe, membros e responsável.</p>
+      </div>
+
+      <a href="{% url 'team_list' %}" class="btnx btnx-ghost">Voltar</a>
+    </div>
+
+    <div class="team-body">
+      <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="err">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="grid">
+
+          <div class="field">
+            <label for="id_name" class="lbl">Nome da equipe</label>
+            <div class="control">{{ form.name }}</div>
+            {% if form.name.errors %}<div class="err">{{ form.name.errors }}</div>{% endif %}
+          </div>
+
+          <div class="grid grid-2">
+
+            <div class="field">
+              <label class="lbl">Usuários da equipe (grupo Interno)</label>
+
+              <details class="acc" open>
+                <summary class="acc-head">
+                  <span>Selecionar usuários</span>
+                  <span class="acc-count" id="usersCount">0 selecionados</span>
+                </summary>
+
+                <div class="acc-body">
+
+                  <div class="user-search">
+                    <input id="userFilter" type="text" placeholder="Buscar usuário..." autocomplete="off">
+                  </div>
+
+                  <div class="user-list" id="userListWrap">
+                    {{ form.users }}
+                  </div>
+
+                  {% if form.users.errors %}
+                    <div class="err">{{ form.users.errors }}</div>
+                  {% endif %}
+
+                  <div class="hint">Clique para selecionar os membros da equipe.</div>
+
+                </div>
+              </details>
+            </div>
+
+            <div class="field">
+              <label for="id_responsible" class="lbl">Responsável</label>
+              <div class="control">{{ form.responsible }}</div>
+
+              {% if form.responsible.errors %}
+                <div class="err">{{ form.responsible.errors }}</div>
+              {% endif %}
+
+              <div class="hint">O responsável precisa estar entre os usuários selecionados.</div>
+            </div>
+
+          </div>
+
+          <div class="actions">
+            <a href="{% url 'team_list' %}" class="btnx btnx-ghost">Cancelar</a>
+            <button type="submit" class="btnx btnx-primary">Criar equipe</button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+
+  const wrap = document.getElementById("userListWrap");
+  const filter = document.getElementById("userFilter");
+  const countEl = document.getElementById("usersCount");
+
+  if(!wrap) return;
+
+  function getCheckboxes(){
+    return Array.from(wrap.querySelectorAll('input[type="checkbox"]'));
+  }
+
+  function updateCount(){
+    const total = getCheckboxes().filter(cb => cb.checked).length;
+    countEl.textContent = `${total} selecionado${total === 1 ? "" : "s"}`;
+  }
+
+  wrap.addEventListener("change", function(e){
+    if(e.target.matches('input[type="checkbox"]')){
+      updateCount();
+    }
+  });
+
+  if(filter){
+    filter.addEventListener("input", function(){
+      const q = filter.value.toLowerCase();
+
+      wrap.querySelectorAll("li").forEach(li=>{
+        const text = li.innerText.toLowerCase();
+        li.style.display = text.includes(q) ? "" : "none";
+      });
+    });
+  }
+
+  updateCount();
+
+})();
+</script>
+
+{% endblock %}

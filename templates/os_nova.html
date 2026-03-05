@@ -12,7 +12,6 @@
     <h1>Nova Ordem de Serviço</h1>
     <p>Registre uma solicitação de serviço urbano preenchendo os campos abaixo</p>
   </div>
-  
 </div>
 
 <form method="post" enctype="multipart/form-data" class="os-form">
@@ -54,6 +53,7 @@
         </div>
       </div>
     </section>
+
     <section class="os-card">
       <div class="os-card-head">
         <div class="os-ico">📍</div>
@@ -104,13 +104,12 @@
         </div>
 
         <div class="field">
-          <label>Endereço completo</label>
+          <label>Ponto de Referência</label>
           <input type="text" name="endereco_completo" placeholder="Endereço completo para referência" />
         </div>
       </div>
     </section>
 
-    <!-- SERVIÇO -->
     <section class="os-card">
       <div class="os-card-head">
         <div class="os-ico">🧰</div>
@@ -123,12 +122,51 @@
       <div class="os-card-body">
         <div class="field">
           <label>Tipo de Serviço *</label>
-          {{ form.service_type }}
+          <select id="id_service_type" name="service_type" required>
+            <option value="">Selecione...</option>
+            <option value="Coleta de entulho">Coleta de entulho</option>
+            <option value="Reparo de iluminação">Reparo de iluminação</option>
+            <option value="Limpeza urbana">Limpeza urbana</option>
+            <option value="Roçagem e capinação">Roçagem e capinação</option>
+            <option value="Poda de árvore">Poda de árvore</option>
+            <option value="Sinalização">Sinalização</option>
+          </select>
         </div>
 
         <div class="field">
           <label>Descrição *</label>
           {{ form.description }}
+        </div>
+
+        <div class="field">
+          <label>Anexos (PNG/JPG) <span class="muted">(Opcional)</span></label>
+
+          <input
+            id="id_attachments"
+            name="attachments"
+            type="file"
+            multiple
+            accept="image/png,image/jpeg"
+            class="file-input"
+          >
+
+          <label for="id_attachments" class="upload-box" id="uploadBox" style="margin-top:8px;">
+            <div class="upload-left">
+              <div class="upload-icon" aria-hidden="true">📷</div>
+              <div class="upload-texts">
+                <div class="upload-title" id="uploadTitle">Selecionar imagens</div>
+                <div class="upload-sub" id="uploadSub">PNG ou JPG (você pode selecionar várias)</div>
+              </div>
+            </div>
+
+            <div class="upload-right">
+              <span class="upload-count" id="uploadCount" hidden>0</span>
+              <span class="upload-cta">Escolher arquivos</span>
+            </div>
+          </label>
+
+          <div class="upload-feedback" id="uploadFeedback" aria-live="polite"></div>
+          <div class="upload-previews" id="uploadPreviews"></div>
         </div>
 
         <div class="field">
@@ -141,6 +179,7 @@
         </div>
       </div>
     </section>
+
     <section class="os-card">
       <div class="os-card-head">
         <div class="os-ico">⚙️</div>
@@ -169,11 +208,81 @@
       </div>
     </section>
   </div>
+
   <div class="os-footer">
     <a href="{% url 'dashboard' %}" class="btn-light">Cancelar</a>
     <button type="submit" class="btn-primary">Criar Ordem de Serviço</button>
   </div>
 </form>
+
+<script>
+  (function(){
+    const input = document.getElementById("id_attachments");
+    const feedback = document.getElementById("uploadFeedback");
+    const previews = document.getElementById("uploadPreviews");
+    const title = document.getElementById("uploadTitle");
+    const sub = document.getElementById("uploadSub");
+    const count = document.getElementById("uploadCount");
+
+    if(!input) return;
+
+    function clearPreviews(){
+      if(previews) previews.innerHTML = "";
+    }
+
+    function addPreview(file){
+      if(!previews) return;
+
+      const url = URL.createObjectURL(file);
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "width:84px;height:84px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:rgba(255,255,255,.6);box-shadow:var(--shadow-sm);";
+
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = file.name;
+      img.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
+      img.onload = () => URL.revokeObjectURL(url);
+
+      wrap.appendChild(img);
+      previews.appendChild(wrap);
+    }
+
+    input.addEventListener("change", () => {
+      clearPreviews();
+
+      const files = Array.from(input.files || []);
+
+      if(count){
+        if(files.length){
+          count.hidden = false;
+          count.textContent = String(files.length);
+        }else{
+          count.hidden = true;
+          count.textContent = "0";
+        }
+      }
+
+      if(!files.length){
+        if(title) title.textContent = "Selecionar imagens";
+        if(sub) sub.textContent = "PNG ou JPG (você pode selecionar várias)";
+        if(feedback) feedback.textContent = "";
+        return;
+      }
+
+      if(title) title.textContent = `${files.length} arquivo(s) selecionado(s)`;
+      if(sub) sub.textContent = "Se quiser, você pode trocar as imagens selecionando novamente.";
+
+      const invalid = files.filter(f => !["image/png","image/jpeg"].includes(f.type));
+      if(invalid.length){
+        if(feedback) feedback.textContent = "Alguns arquivos não são PNG/JPG. Remova e selecione apenas imagens.";
+      }else{
+        if(feedback) feedback.textContent = "";
+      }
+
+      files.forEach(addPreview);
+    });
+  })();
+</script>
 
 <script src="{% static 'js/os_nova.js' %}"></script>
 {% endblock %}

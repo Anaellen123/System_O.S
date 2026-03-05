@@ -406,7 +406,7 @@
     </div>
 
     <div class="content-pad">
-      <form method="post">
+      <form method="post" id="osForm">
         {% csrf_token %}
 
         <div class="grid">
@@ -436,8 +436,8 @@
           </div>
 
           <div>
-            <label>Responsável (Equipe)</label>
-            {{ form.assigned_to }}
+            <label>Equipe</label>
+            {{ form.team }}
           </div>
 
           <div>
@@ -480,10 +480,6 @@
             {{ form.notes }}
           </div>
         </div>
-
-        <div class="actions" style="margin-top:14px;">
-          <button class="btn primary" type="submit">💾 Salvar alterações</button>
-        </div>
       </form>
     </div>
 
@@ -511,6 +507,13 @@
           <div class="empty">Nenhum anexo foi enviado para esta OS.</div>
         {% endif %}
       {% endwith %}
+    </div>
+
+    <!-- ✅ BOTÃO NO FINAL DA TELA -->
+    <div class="section" style="padding-top: 0;">
+      <div class="actions" style="justify-content:flex-end;">
+        <button class="btn primary" type="submit" form="osForm">Salvar alterações</button>
+      </div>
     </div>
   </div>
 </div>

@@ -2,20 +2,41 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
 
 import os
 import uuid
 
 
+User = get_user_model()
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="profile",
+    )
+
+    cpf = models.CharField(max_length=14, blank=True)
+    birth_date = models.DateField(blank=True, null=True)
+
+    cep = models.CharField(max_length=9, blank=True)
+    street = models.CharField(max_length=150, blank=True)
+    number = models.CharField(max_length=20, blank=True)
+    neighborhood = models.CharField(max_length=120, blank=True)
+    city = models.CharField(max_length=120, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Perfil - {self.user.username}"
+
+
 def validate_image_type(file):
-    """
-    Validação no backend (não confie só no HTML accept="").
-    Aceita somente JPG/JPEG e PNG.
-    """
     allowed = ["image/jpeg", "image/png"]
     content_type = getattr(file, "content_type", None)
 
-    # Em alguns casos content_type pode vir vazio (ex: testes). Ainda assim tentamos validar por extensão.
     ext = os.path.splitext(file.name)[1].lower()
 
     if content_type and content_type not in allowed:
@@ -26,19 +47,44 @@ def validate_image_type(file):
 
 
 def attachment_upload_to(instance, filename):
-    """
-    Salva em: media/service_requests/<OS_NUMBER>/<uuid>.<ext>
-    Ex: media/service_requests/OS-20260210-0001/ab12cd34ef56....jpg
-    """
-    os_number = instance.request.os_number  # precisa existir antes de salvar anexo
+    os_number = instance.request.os_number
     ext = os.path.splitext(filename)[1].lower()
 
-    # normaliza jpeg
     if ext == ".jpeg":
         ext = ".jpg"
 
     new_name = f"{uuid.uuid4().hex}{ext}"
     return f"service_requests/{os_number}/{new_name}"
+
+
+class Team(models.Model):
+    PRIORITY_LOW = "LOW"
+    PRIORITY_MEDIUM = "MEDIUM"
+    PRIORITY_HIGH = "HIGH"
+    PRIORITY_URGENT = "URGENT"
+
+    PRIORITY_CHOICES = [
+        (PRIORITY_LOW, "Baixa"),
+        (PRIORITY_MEDIUM, "Média"),
+        (PRIORITY_HIGH, "Alta"),
+        (PRIORITY_URGENT, "Urgente"),
+    ]
+
+    name = models.CharField(max_length=120, unique=True)
+    responsible = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="teams_responsible",
+    )
+
+    function_description = models.TextField(blank=True)
+    due_at = models.DateTimeField(null=True, blank=True)
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default=PRIORITY_MEDIUM)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
 
 
 class ServiceRequest(models.Model):
@@ -53,9 +99,6 @@ class ServiceRequest(models.Model):
         ("DONE", "Concluído"),
     ]
 
-    # =========================
-    # IDENTIFICAÇÃO DA OS
-    # =========================
     os_number = models.CharField(
         max_length=20,
         unique=True,
@@ -64,26 +107,17 @@ class ServiceRequest(models.Model):
         verbose_name="Número da OS",
     )
 
-    # =========================
-    # DADOS DO SOLICITANTE
-    # =========================
     person_type = models.CharField(max_length=2, choices=PERSON_TYPE_CHOICES)
-    document = models.CharField(max_length=18)  # CPF/CNPJ
+    document = models.CharField(max_length=18)
     full_name = models.CharField(max_length=120)
     phone = models.CharField(max_length=20)
 
-    # =========================
-    # ENDEREÇO
-    # =========================
     cep = models.CharField(max_length=9, blank=True)
     street = models.CharField(max_length=150, blank=True)
     number = models.CharField(max_length=20, blank=True)
     neighborhood = models.CharField(max_length=120, blank=True)
     city = models.CharField(max_length=120, blank=True)
 
-    # =========================
-    # SERVIÇO
-    # =========================
     service_type = models.CharField(max_length=80)
     description = models.TextField()
     notes = models.TextField(blank=True)
@@ -106,11 +140,33 @@ class ServiceRequest(models.Model):
         related_name="service_requests_assigned",
     )
 
+    # ✅ NOVO: Equipe atribuída à OS
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="service_requests",
+        verbose_name="Equipe",
+    )
+
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default="OPEN")
 
-    # =========================
-    # GERAÇÃO AUTOMÁTICA DA OS
-    # =========================
+    class Meta:
+        permissions = [
+            ("tab_dashboard", "Pode visualizar a aba Dashboard"),
+            ("tab_users", "Pode visualizar a aba Usuários"),
+            ("tab_requests", "Pode visualizar a aba Solicitações"),
+            ("tab_os", "Pode visualizar a aba Ordens de Serviço"),
+            ("tab_reports", "Pode visualizar a aba Relatórios"),
+            ("tab_team", "Pode visualizar a aba Equipe"),
+            ("manage_users", "Pode gerenciar usuários (editar níveis/perfis)"),
+            ("manage_os", "Pode gerenciar OS (criar/editar)"),
+            ("assign_os", "Pode atribuir OS para responsáveis"),
+            ("change_os_status", "Pode alterar status da OS"),
+            ("manage_team", "Pode gerenciar Equipes (criar/editar/remover)"),
+        ]
+
     def save(self, *args, **kwargs):
         if not self.os_number:
             today = timezone.localdate()
@@ -141,7 +197,6 @@ class ServiceRequestAttachment(models.Model):
         related_name="attachments"
     )
 
-    # Salva dentro de: media/service_requests/<OS_NUMBER>/
     file = models.FileField(
         upload_to=attachment_upload_to,
         validators=[validate_image_type],
@@ -151,3 +206,15 @@ class ServiceRequestAttachment(models.Model):
 
     def __str__(self):
         return f"Anexo {self.id} - {self.request.os_number}"
+
+
+class TeamMember(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="members")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="team_memberships")
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("team", "user")
+
+    def __str__(self):
+        return f"{self.team} - {self.user}"

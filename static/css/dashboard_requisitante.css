@@ -1,0 +1,351 @@
+/* =======================
+   CARDS DE STATUS
+======================= */
+
+.dashboard-stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  margin-bottom:24px;
+}
+
+.stat-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:20px;
+  transition:.25s ease;
+  display:flex;
+  flex-direction:column;
+}
+
+.stat-card span{
+  font-size:13px;
+  color:#6b7280;
+  margin-bottom:6px;
+}
+
+.stat-card strong{
+  font-size:26px;
+  font-weight:800;
+}
+
+.stat-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
+}
+
+/* cores laterais */
+
+.stat-card.total{ border-left:2px solid #2563eb; }
+.stat-card.abertas{ border-left:2px solid #f59e0b; }
+.stat-card.andamento{ border-left:2px solid #3b82f6; }
+.stat-card.concluidas{ border-left:2px solid #10b981; }
+
+/* =======================
+   TABELA
+======================= */
+
+.dashboard-table{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.table-header{
+  padding:16px 20px;
+  border-bottom:1px solid #e5e7eb;
+  font-weight:700;
+}
+
+.table-wrapper{
+  overflow:auto;
+}
+
+.dashboard-table table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+
+.dashboard-table th{
+  background:#f9fafb;
+  text-align:left;
+  padding:12px 16px;
+  font-weight:600;
+  color:#374151;
+  border-bottom:1px solid #e5e7eb;
+}
+
+.dashboard-table td{
+  padding:12px 16px;
+  border-bottom:1px solid #f1f5f9;
+}
+
+.dashboard-table tr:hover{
+  background:#f9fafb;
+}
+
+.os-number{
+  font-weight:700;
+  color:#111827;
+}
+
+.date{
+  color:#6b7280;
+}
+
+.empty{
+  padding:20px;
+  text-align:center;
+  color:#6b7280;
+}
+
+/* =======================
+   BADGES DE STATUS
+======================= */
+
+.status-badge{
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+}
+
+/* OPEN */
+.status-open{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+/* IN_PROGRESS */
+.status-in_progress{
+  background:#dbeafe;
+  color:#1e40af;
+}
+
+/* DONE */
+.status-done{
+  background:#d1fae5;
+  color:#065f46;
+}
+
+
+
+body.dark-mode .stat-card{
+  background:#1e293b;
+  border:1px solid #334155;
+  color:#f1f5f9;
+}
+
+body.dark-mode .stat-card span{
+  color:#94a3b8;
+}
+
+body.dark-mode .stat-card:hover{
+  box-shadow:0 10px 25px rgba(0,0,0,.4);
+}
+
+/* =========================================================
+   DARK MODE - MEU PAINEL
+   Ativa com: body.theme-dark  (conforme teu theme.js)
+========================================================= */
+
+body.theme-dark .dashboard-stats{
+  color:#e5e7eb;
+}
+
+/* -----------------------
+   CARDS
+------------------------ */
+body.theme-dark .stat-card{
+  background:#0f172a;
+  border:1px solid #1f2937;
+  box-shadow:none;
+  color:#f8fafc;
+}
+
+body.theme-dark .stat-card span{
+  color:#94a3b8;
+}
+
+body.theme-dark .stat-card strong{
+  color:#f8fafc;
+}
+
+body.theme-dark .stat-card:hover{
+  box-shadow:0 14px 30px rgba(0,0,0,.35);
+  transform:translateY(-3px);
+}
+
+/* barrinha lateral */
+body.theme-dark .stat-card.total{ border-left-color:#3b82f6; }
+body.theme-dark .stat-card.abertas{ border-left-color:#f59e0b; }
+body.theme-dark .stat-card.andamento{ border-left-color:#60a5fa; }
+body.theme-dark .stat-card.concluidas{ border-left-color:#34d399; }
+
+/* -----------------------
+   CONTAINER DA TABELA
+------------------------ */
+body.theme-dark .dashboard-table{
+  background:#0f172a;
+  border:1px solid #1f2937;
+}
+
+body.theme-dark .table-header{
+  border-bottom:1px solid #1f2937;
+}
+
+body.theme-dark .table-header h3{
+  color:#f1f5f9;
+}
+
+/* -----------------------
+   TABELA
+------------------------ */
+body.theme-dark .dashboard-table table{
+  color:#e5e7eb;
+}
+
+body.theme-dark .dashboard-table th{
+  background:#111827;
+  color:#cbd5e1;
+  border-bottom:1px solid #1f2937;
+}
+
+body.theme-dark .dashboard-table td{
+  border-bottom:1px solid #1f2937;
+}
+
+body.theme-dark .dashboard-table tr:hover{
+  background:#111827;
+}
+
+body.theme-dark .os-number{
+  color:#f8fafc;
+}
+
+body.theme-dark .date{
+  color:#94a3b8;
+}
+
+body.theme-dark .empty{
+  color:#94a3b8;
+}
+
+/* -----------------------
+   BADGES (status)
+------------------------ */
+body.theme-dark .status-badge{
+  border:1px solid rgba(255,255,255,.08);
+}
+
+/* OPEN */
+body.theme-dark .status-open{
+  background:rgba(245,158,11,.18);
+  color:#fbbf24;
+}
+
+/* IN_PROGRESS */
+body.theme-dark .status-in_progress{
+  background:rgba(59,130,246,.18);
+  color:#93c5fd;
+}
+
+/* DONE */
+body.theme-dark .status-done{
+  background:rgba(16,185,129,.18);
+  color:#6ee7b7;
+}
+
+
+
+/* =========================
+   TABELA RESPONSIVA (MOBILE)
+========================= */
+
+@media (max-width: 620px){
+
+  .table-wrapper{
+    overflow: visible; /* para não ficar scroll horizontal */
+  }
+
+  .dashboard-table table,
+  .dashboard-table thead,
+  .dashboard-table tbody,
+  .dashboard-table th,
+  .dashboard-table td,
+  .dashboard-table tr{
+    display:block;
+    width:100%;
+  }
+
+  .dashboard-table thead{
+    display:none; /* esconde o cabeçalho no mobile */
+  }
+
+  .dashboard-table tbody tr{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    padding:12px 12px;
+    margin:12px 12px 14px;
+    box-shadow:0 10px 22px rgba(15,23,42,.06);
+  }
+
+  .dashboard-table tbody tr:hover{
+    background:#fff; /* não precisa hover no mobile */
+  }
+
+  .dashboard-table td{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    padding:10px 0;
+    border-bottom:1px solid #f1f5f9;
+  }
+
+  .dashboard-table td:last-child{
+    border-bottom:0;
+  }
+
+  .dashboard-table td::before{
+    content: attr(data-label);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:#6b7280;
+    flex: 0 0 92px;
+  }
+
+  .dashboard-table .os-number{
+    font-size:14px;
+  }
+
+  .dashboard-table .status-badge{
+    margin-left:auto;
+  }
+}
+
+/* =========================
+   DARK MODE - MOBILE CARDS
+========================= */
+
+@media (max-width: 620px){
+  body.theme-dark .dashboard-table tbody tr{
+    background:rgba(15,23,42,.72);
+    border-color:rgba(148,163,184,.16);
+    box-shadow:0 12px 26px rgba(0,0,0,.28);
+  }
+
+  body.theme-dark .dashboard-table td{
+    border-bottom-color:rgba(148,163,184,.12);
+  }
+
+  body.theme-dark .dashboard-table td::before{
+    color:rgba(226,232,240,.68);
+  }
+}
