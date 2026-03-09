@@ -1,14 +1,10 @@
-{% extends "dashboard_base.html" %}
+{% extends "dashboard_base.html" %} 
 {% block title %}{{ os.os_number }}{% endblock %}
 {% block page_title %}{{ os.os_number }}{% endblock %}
 
 {% block content %}
 <style>
-  /* =========================
-     OS DETAIL - sofisticado + dark mode
-     (usa as variáveis do dashboard.css)
-     ========================= */
-
+  
   .wrap{ padding: 22px; }
 
   .box{
@@ -163,6 +159,25 @@
     box-shadow:
       0 0 0 5px rgba(37,99,235,.18),
       0 10px 22px rgba(2,6,23,.10);
+  }
+
+  /* campos bloqueados */
+  input:disabled,
+  select:disabled,
+  textarea:disabled{
+    background:#f1f5f9 !important;
+    border:1.6px solid #d1d5db !important;
+    color:#475569 !important;
+    cursor:not-allowed;
+    box-shadow:none;
+  }
+
+  /* remove seta do select desabilitado */
+  select:disabled{
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    background-image:none;
   }
 
   /* ===== ANEXOS ===== */
@@ -350,6 +365,23 @@
       0 12px 28px rgba(0,0,0,.35);
   }
 
+  body.theme-dark input:disabled,
+  body.theme-dark select:disabled,
+  body.theme-dark textarea:disabled{
+    background: rgba(51,65,85,.55) !important;
+    border:1.6px solid rgba(100,116,139,.55) !important;
+    color: rgba(203,213,225,.95) !important;
+    box-shadow:none !important;
+    cursor:not-allowed;
+  }
+
+  body.theme-dark select:disabled{
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    background-image:none;
+  }
+
   body.theme-dark .btn{
     background: rgba(15,23,42,.55);
     border-color: rgba(148,163,184,.16);
@@ -438,6 +470,11 @@
           <div>
             <label>Equipe</label>
             {{ form.team }}
+          </div>
+
+          <div>
+            <label>Prazo</label>
+            {{ form.due_at }}
           </div>
 
           <div>

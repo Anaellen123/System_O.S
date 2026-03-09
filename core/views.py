@@ -94,13 +94,19 @@ def solicitar_servico(request):
                             request,
                             "Este CPF já possui cadastro em outra conta. Faça login com a conta correta para concluir."
                         )
-                        return render(request, "solicitar_servico.html", {"form": form, "created": False})
+                        return render(request, "solicitar_servico.html", {
+                            "form": form,
+                            "created": False
+                        })
                 else:
                     messages.error(
                         request,
                         "Este CPF já possui cadastro. Faça login para continuar."
                     )
-                    return render(request, "solicitar_servico.html", {"form": form, "created": False})
+                    return render(request, "solicitar_servico.html", {
+                        "form": form,
+                        "created": False
+                    })
 
         if not user_to_link:
             errors = []
@@ -124,7 +130,10 @@ def solicitar_servico(request):
             if errors:
                 for e in errors:
                     messages.error(request, e)
-                return render(request, "solicitar_servico.html", {"form": form, "created": False})
+                return render(request, "solicitar_servico.html", {
+                    "form": form,
+                    "created": False
+                })
 
             with transaction.atomic():
                 username = _make_unique_username(reg_email)
@@ -671,8 +680,24 @@ def team_list(request):
         messages.error(request, "Você não tem permissão para acessar a Equipe.")
         return redirect("dashboard_requisitante")
 
-    teams = Team.objects.all().order_by("-created_at").select_related("responsible")
-    return render(request, "team_list.html", {"teams": teams})
+    teams = (
+        Team.objects.all()
+        .order_by("-created_at")
+        .select_related("responsible")
+        .prefetch_related("members__user", "service_requests")
+    )
+
+    users = (
+        User.objects.filter(groups__name__iexact="interno", is_active=True)
+        .distinct()
+        .order_by("first_name", "username", "email")
+    )
+
+    return render(request, "team_list.html", {
+        "teams": teams,
+        "users": users,
+        "priority_choices": Team.PRIORITY_CHOICES,
+    })
 
 
 @login_required(login_url="login_admin")
@@ -686,15 +711,21 @@ def team_create(request):
         form = TeamCreateForm(request.POST)
         if form.is_valid():
             with transaction.atomic():
+                users = list(form.cleaned_data["users"])
+                responsible = form.cleaned_data["responsible"]
+
+                if responsible not in users:
+                    users.append(responsible)
+
                 team = Team.objects.create(
                     name=form.cleaned_data["name"].strip(),
-                    responsible=form.cleaned_data["responsible"],
+                    responsible=responsible,
                     function_description=(form.cleaned_data.get("function_description") or "").strip(),
                     due_at=form.cleaned_data.get("due_at"),
-                    priority=form.cleaned_data.get("priority"),
+                    priority=form.cleaned_data.get("priority") or Team.PRIORITY_MEDIUM,
                 )
 
-                for u in form.cleaned_data["users"]:
+                for u in users:
                     TeamMember.objects.create(team=team, user=u)
 
             messages.success(request, "Equipe criada com sucesso.")
@@ -705,3 +736,75 @@ def team_create(request):
         form = TeamCreateForm()
 
     return render(request, "team_create.html", {"form": form})
+
+
+@login_required(login_url="login_admin")
+@require_http_methods(["POST"])
+def team_update(request, team_id):
+    if _is_requisitante(request.user):
+        messages.error(request, "Você não tem permissão para editar equipes.")
+        return redirect("dashboard_requisitante")
+
+    team = get_object_or_404(Team, id=team_id)
+    form = TeamCreateForm(request.POST)
+
+    if form.is_valid():
+        with transaction.atomic():
+            users = list(form.cleaned_data["users"])
+            responsible = form.cleaned_data["responsible"]
+
+            if responsible not in users:
+                users.append(responsible)
+
+            team.name = form.cleaned_data["name"].strip()
+            team.responsible = responsible
+            team.function_description = (form.cleaned_data.get("function_description") or "").strip()
+            team.due_at = form.cleaned_data.get("due_at")
+            team.priority = form.cleaned_data.get("priority") or Team.PRIORITY_MEDIUM
+            team.save()
+
+            TeamMember.objects.filter(team=team).delete()
+            for u in users:
+                TeamMember.objects.create(team=team, user=u)
+
+        messages.success(request, f'Equipe "{team.name}" atualizada com sucesso.')
+    else:
+        messages.error(request, "Não foi possível atualizar a equipe. Revise os campos.")
+
+    return redirect("team_list")
+
+
+@login_required(login_url="login_admin")
+@require_http_methods(["POST"])
+def team_delete(request, team_id):
+    if _is_requisitante(request.user):
+        messages.error(request, "Você não tem permissão para excluir equipes.")
+        return redirect("dashboard_requisitante")
+
+    team = get_object_or_404(Team, id=team_id)
+    team_name = team.name
+    team.delete()
+
+    messages.success(request, f'Equipe "{team_name}" excluída com sucesso.')
+    return redirect("team_list")
+
+
+@login_required(login_url="login_admin")
+def team_my(request):
+    return render(request, "team/my_team.html")
+
+@login_required(login_url="login_admin")
+@require_http_methods(["POST"])
+def team_remove_os(request, team_id, os_id):
+    if _is_requisitante(request.user):
+        messages.error(request, "Você não tem permissão para alterar equipes.")
+        return redirect("dashboard_requisitante")
+
+    team = get_object_or_404(Team, id=team_id)
+    os_obj = get_object_or_404(ServiceRequest, id=os_id, team=team)
+
+    os_obj.team = None
+    os_obj.save(update_fields=["team"])
+
+    messages.success(request, f"O.S {os_obj.os_number} removida da equipe {team.name}.")
+    return redirect("team_list")

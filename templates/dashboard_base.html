@@ -79,8 +79,6 @@
           <span>Usuários</span>
         </a>
       {% endif %}
-
-      <!-- ✅ EQUIPE: só aparece com permissão core.tab_team -->
       {% if perms.core.tab_team %}
         <div class="menu-accordion
           {% if request.resolver_match.url_name == 'team_list' or request.resolver_match.url_name == 'team_create' %}

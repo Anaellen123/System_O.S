@@ -29,27 +29,38 @@ class ServiceRequestUpdateForm(forms.ModelForm):
             "person_type", "document", "full_name", "phone",
             "cep", "street", "number", "neighborhood", "city",
             "service_type", "description", "notes",
-            "status", "assigned_to",
-            "team",  # ✅ equipe da OS
+            "status", "assigned_to", "team", "due_at",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
             "notes": forms.Textarea(attrs={"rows": 3}),
+            "due_at": forms.DateInput(
+                attrs={
+                    "type": "date",
+                    "class": "form-control",
+                },
+                format="%Y-%m-%d"
+            ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Responsável (usuário)
         self.fields["assigned_to"].required = False
         self.fields["assigned_to"].queryset = (
             User.objects.filter(is_staff=True, is_active=True)
             .order_by("first_name", "username")
         )
 
-        # Equipe (lista as equipes criadas)
         self.fields["team"].required = False
         self.fields["team"].queryset = Team.objects.all().order_by("-created_at", "name")
+
+        self.fields["due_at"].required = False
+        self.fields["due_at"].input_formats = ["%Y-%m-%d"]
+
+        self.fields["person_type"].disabled = True
+        self.fields["document"].disabled = True
+        self.fields["full_name"].disabled = True
 
 
 class UserRegisterForm(UserCreationForm):
@@ -90,42 +101,61 @@ class UserRoleForm(forms.ModelForm):
 
 
 class TeamCreateForm(forms.Form):
-    name = forms.CharField(label="Nome da equipe", max_length=120)
+    name = forms.CharField(
+        label="Nome da equipe",
+        max_length=120,
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Digite o nome da equipe",
+        })
+    )
 
-    # ✅ seleção por checkbox e só do grupo "interno"
     users = forms.ModelMultipleChoiceField(
         label="Usuários da equipe (Interno)",
         queryset=User.objects.none(),
-        widget=forms.CheckboxSelectMultiple,
-        required=True,
+        widget=forms.SelectMultiple(attrs={
+            "class": "form-control",
+        }),
+        required=False,
     )
 
     responsible = forms.ModelChoiceField(
         label="Responsável",
         queryset=User.objects.none(),
         required=True,
+        widget=forms.Select(attrs={
+            "class": "form-control",
+        }),
     )
 
-    # (você pode esconder esses campos no template, eles não vão impedir salvar)
     function_description = forms.CharField(
         label="Função / Atividade",
         required=False,
-        widget=forms.Textarea(attrs={"rows": 4}),
+        widget=forms.Textarea(attrs={
+            "rows": 4,
+            "class": "form-control",
+            "placeholder": "Descreva a função da equipe",
+        }),
     )
 
     due_at = forms.DateTimeField(
         label="Prazo (data/hora)",
         required=False,
-        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        widget=forms.DateTimeInput(attrs={
+            "type": "datetime-local",
+            "class": "form-control",
+        }),
         input_formats=["%Y-%m-%dT%H:%M"],
     )
 
-    # ✅ ESSENCIAL: deixar opcional pra não quebrar quando não renderizar no template
     priority = forms.ChoiceField(
         label="Prioridade",
         choices=Team.PRIORITY_CHOICES,
         initial=Team.PRIORITY_MEDIUM,
         required=False,
+        widget=forms.Select(attrs={
+            "class": "form-control",
+        }),
     )
 
     def __init__(self, *args, **kwargs):
@@ -145,7 +175,7 @@ class TeamCreateForm(forms.Form):
         users = cleaned.get("users")
         responsible = cleaned.get("responsible")
 
-        if users is not None and responsible is not None:
+        if responsible and users is not None:
             if responsible not in users:
                 self.add_error(
                     "responsible",

@@ -6,30 +6,54 @@
 {% block content %}
 
 <style>
-
-.team-wrapper{
-  max-width:1100px;
-}
+.team-wrapper{ max-width:1100px; }
 
 .team-card{
   background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
+  border:2px solid #cbd5e1;
+  border-radius:16px;
   padding:18px;
-  margin-bottom:16px;
+  margin-bottom:22px;
+  box-shadow:0 10px 24px rgba(15,23,42,.10);
+  position:relative;
+  overflow:hidden;
+}
+
+.team-card:before{
+  content:"";
+  position:absolute;
+  left:0; top:0; bottom:0;
+  width:6px;
+  background:#e2e8f0;
+}
+
+.team-card:hover{
+  border-color:#94a3b8;
+  box-shadow:0 14px 34px rgba(15,23,42,.14);
+  transform:translateY(-1px);
+  transition:.18s ease;
 }
 
 .team-head{
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  margin-bottom:14px;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:12px;
+}
+
+.team-head-left{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:0;
 }
 
 .team-title{
   font-size:18px;
   font-weight:800;
   color:#0f172a;
+  line-height:1.3;
 }
 
 .team-meta{
@@ -44,6 +68,79 @@
   border-radius:999px;
   font-size:12px;
   font-weight:700;
+}
+
+.members-wrap{
+  margin:10px 0 14px;
+  padding:12px;
+  border:1px solid #e5e7eb;
+  background:#fafafa;
+  border-radius:12px;
+}
+
+.members-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.members-title{
+  font-size:13px;
+  font-weight:800;
+  color:#0f172a;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.members-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.member-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid #e2e8f0;
+  background:#fff;
+  font-size:13px;
+  color:#0f172a;
+  line-height:1;
+}
+
+.member-dot{
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:#94a3b8;
+  display:inline-block;
+}
+
+.member-role{
+  font-size:11px;
+  font-weight:800;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid #e2e8f0;
+  background:#f8fafc;
+  color:#334155;
+}
+
+.member-role.owner{
+  background:#ecfeff;
+  border-color:#a5f3fc;
+  color:#155e75;
+}
+
+.member-sub{
+  font-size:12px;
+  color:#64748b;
 }
 
 .os-table{
@@ -63,6 +160,7 @@
   padding:12px 10px;
   border-bottom:1px solid #f1f5f9;
   font-size:14px;
+  vertical-align:middle;
 }
 
 .os-link{
@@ -82,20 +180,9 @@
   font-weight:700;
 }
 
-.status.OPEN{
-  background:#fef9c3;
-  color:#854d0e;
-}
-
-.status.IN_PROGRESS{
-  background:#dbeafe;
-  color:#1e40af;
-}
-
-.status.DONE{
-  background:#dcfce7;
-  color:#166534;
-}
+.status.OPEN{ background:#fef9c3;color:#854d0e; }
+.status.IN_PROGRESS{ background:#dbeafe;color:#1e40af; }
+.status.DONE{ background:#dcfce7;color:#166534; }
 
 .empty{
   padding:14px;
@@ -103,97 +190,965 @@
   font-size:14px;
 }
 
+.os-remove-cell{
+  width:52px;
+  text-align:center;
+}
+
+.os-remove-form{
+  display:inline-block;
+  margin:0;
+}
+
+.os-remove-btn{
+  width:30px;
+  height:30px;
+  border:none;
+  border-radius:8px;
+  background:#fff1f2;
+  color:#788df3;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:.18s ease;
+  border:1px solid #86cdfd;
+  padding:0;
+}
+
+.os-remove-btn:hover{
+  background:#d8eaf5;
+  border-color:#19b4fc;
+  transform:translateY(-1px);
+}
+
+.os-remove-btn svg{
+  width:14px;
+  height:14px;
+  display:block;
+}
+
+/* ações */
+.team-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:14px;
+  justify-content:flex-end;
+}
+
+.btn-action{
+  border:none;
+  border-radius:10px;
+  padding:10px 14px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.btn-edit{
+  background:#2563eb;
+  color:#fff;
+}
+
+.btn-edit:hover{
+  background:#1d4ed8;
+}
+
+.btn-delete{
+  background:#ef4444;
+  color:#fff;
+}
+
+.btn-delete:hover{
+  background:#dc2626;
+}
+
+/* modal */
+.custom-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:9999;
+}
+
+.custom-modal.active{
+  display:flex;
+}
+
+.custom-modal-box{
+  width:min(820px, 100%);
+  max-height:90vh;
+  overflow:auto;
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 20px 50px rgba(15,23,42,.22);
+  border:1px solid #e5e7eb;
+}
+
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:18px 20px;
+  border-bottom:1px solid #e5e7eb;
+}
+
+.modal-title{
+  margin:0;
+  font-size:18px;
+  font-weight:800;
+  color:#0f172a;
+}
+
+.modal-close{
+  border:none;
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:18px;
+  font-weight:700;
+}
+
+.modal-body{
+  padding:18px 20px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:14px;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.form-group.full{
+  grid-column:1 / -1;
+}
+
+.form-label{
+  font-size:13px;
+  font-weight:700;
+  color:#334155;
+}
+
+.form-control{
+  width:100%;
+  border:1px solid #cbd5e1;
+  border-radius:12px;
+  padding:11px 12px;
+  font-size:14px;
+  background:#fff;
+  color:#0f172a;
+  outline:none;
+}
+
+.form-control:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,.12);
+}
+
+textarea.form-control{
+  min-height:110px;
+  resize:vertical;
+}
+
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:18px;
+}
+
+.btn-secondary{
+  border:none;
+  background:#e2e8f0;
+  color:#0f172a;
+  border-radius:10px;
+  padding:10px 14px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-primary{
+  border:none;
+  background:#2563eb;
+  color:#fff;
+  border-radius:10px;
+  padding:10px 14px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.form-help{
+  color:#64748b;
+  font-size:12px;
+  margin-top:2px;
+  line-height:1.5;
+}
+
+/* membros do modal */
+.member-editor-box{
+  border:1px solid #e2e8f0;
+  background:#f8fafc;
+  border-radius:14px;
+  padding:14px;
+}
+
+.member-editor-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.member-editor-title{
+  font-size:14px;
+  font-weight:800;
+  color:#0f172a;
+}
+
+.member-editor-count{
+  font-size:12px;
+  font-weight:700;
+  color:#334155;
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:999px;
+  padding:5px 10px;
+}
+
+.member-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.member-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 12px;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  background:#fff;
+}
+
+.member-row-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.member-row-dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:#94a3b8;
+  flex:0 0 auto;
+}
+
+.member-row-name{
+  font-size:14px;
+  font-weight:700;
+  color:#0f172a;
+}
+
+.member-row-email{
+  font-size:12px;
+  color:#64748b;
+  margin-top:2px;
+}
+
+.member-row-role{
+  font-size:11px;
+  font-weight:800;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid #e2e8f0;
+  background:#f8fafc;
+  color:#334155;
+}
+
+.member-row-role.owner{
+  background:#ecfeff;
+  border-color:#a5f3fc;
+  color:#155e75;
+}
+
+.member-row-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+
+.btn-remove-member{
+  border:none;
+  background:#ef4444;
+  color:#fff;
+  border-radius:10px;
+  padding:8px 12px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-remove-member:hover{
+  background:#dc2626;
+}
+
+.add-member-box{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:end;
+}
+
+.btn-add-member{
+  border:none;
+  background:#0f766e;
+  color:#fff;
+  border-radius:10px;
+  padding:11px 14px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-add-member:hover{
+  background:#115e59;
+}
+
+.hidden-user-input{
+  display:none;
+}
+
+.empty-members-editor{
+  padding:12px;
+  border:1px dashed #cbd5e1;
+  border-radius:12px;
+  background:#fff;
+  color:#64748b;
+  font-size:13px;
+  text-align:center;
+}
+
+@media (max-width: 768px){
+  .team-head{
+    flex-direction:column;
+  }
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .team-actions{
+    justify-content:stretch;
+  }
+
+  .team-actions form,
+  .team-actions button{
+    width:100%;
+  }
+
+  .add-member-box{
+    grid-template-columns:1fr;
+  }
+
+  .member-row{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .member-row-actions{
+    width:100%;
+    justify-content:flex-end;
+  }
+}
 </style>
 
 <div class="team-wrapper">
 
-<div style="display:flex;justify-content:space-between;margin-bottom:16px;">
-  <h2 style="font-size:20px;font-weight:800;">Equipes Criadas</h2>
-  <div class="badge">{{ teams|length }} equipe(s)</div>
-</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
+    <h2 style="font-size:20px;font-weight:800;margin:0;">Equipes Criadas</h2>
+    <div class="badge">{{ teams|length }} equipe(s)</div>
+  </div>
 
+  {% for t in teams %}
+  <div class="team-card">
 
-{% for t in teams %}
+    <div class="team-head">
+      <div class="team-head-left">
+        <div class="team-title">{{ t.name }}</div>
+      </div>
 
-<div class="team-card">
-
-  <div class="team-head">
-
-    <div>
-      <div class="team-title">{{ t.name }}</div>
-      <div class="team-meta">
-        Responsável: 
-        <b>{{ t.responsible.get_full_name|default:t.responsible.username }}</b>
+      <div class="team-meta" style="text-align:right;">
+        Criada em {{ t.created_at|date:"d/m/Y" }} •
+        {{ t.members.count }} membro(s)
       </div>
     </div>
 
-    <div class="team-meta">
-      Criada em {{ t.created_at|date:"d/m/Y" }} • 
-      {{ t.members.count }} membro(s)
+    <div class="members-wrap">
+      <div class="members-head">
+        <div class="members-title"><span style="font-size:14px;">👥</span>Integrantes da equipe</div>
+        <div class="badge">{{ t.members.count }} membro(s)</div>
+      </div>
+
+      <div class="members-grid">
+
+        {% if t.responsible %}
+          <div class="member-pill">
+            <span class="member-dot"></span>
+            <span>
+              {{ t.responsible.get_full_name|default:t.responsible.username }}
+              {% if t.responsible.email %}<span class="member-sub">• {{ t.responsible.email }}</span>{% endif %}
+            </span>
+            <span class="member-role owner">Responsável</span>
+          </div>
+        {% endif %}
+
+        {% if t.members.all %}
+          {% for m in t.members.all %}
+            {% if m.user %}
+              {% if not t.responsible or m.user.pk != t.responsible.pk %}
+                <div class="member-pill">
+                  <span class="member-dot"></span>
+                  <span>
+                    {{ m.user.get_full_name|default:m.user.username }}
+                    {% if m.user.email %}<span class="member-sub">• {{ m.user.email }}</span>{% endif %}
+                  </span>
+                  <span class="member-role">Membro</span>
+                </div>
+              {% endif %}
+            {% else %}
+              <div class="member-pill">
+                <span class="member-dot"></span>
+                <span>{{ m }}</span>
+                <span class="member-role">Membro</span>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="empty">Nenhum integrante cadastrado nesta equipe.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% with os_list=t.service_requests.all %}
+      {% if os_list %}
+        <table class="os-table">
+          <thead>
+            <tr>
+              <th>OS</th>
+              <th>Serviço</th>
+              <th>Prazo</th>
+              <th>Status</th>
+              <th class="os-remove-cell">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for os in os_list %}
+            <tr>
+              <td>
+                <a class="os-link" href="{% url 'os_detail' os.pk %}">
+                  {{ os.os_number }}
+                </a>
+              </td>
+              <td>{{ os.service_type }}</td>
+              <td>{{ os.due_at|date:"d/m/Y"|default:"—" }}</td>
+              <td>
+                <span class="status {{ os.status }}">
+                  {{ os.get_status_display }}
+                </span>
+              </td>
+              <td class="os-remove-cell">
+                <form
+                  method="post"
+                  action="{% url 'team_remove_os' t.id os.id %}"
+                  class="os-remove-form"
+                  onsubmit="return confirm('Deseja remover a O.S {{ os.os_number }} desta equipe?');"
+                >
+                  {% csrf_token %}
+                  <button type="submit" class="os-remove-btn" title="Remover O.S da equipe" aria-label="Remover O.S da equipe">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty">Nenhuma Ordem de Serviço atribuída a esta equipe.</div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="team-actions">
+      <button type="button" class="btn-action btn-edit" onclick="openModal('edit-team-{{ t.id }}')">
+        Editar
+      </button>
+
+      <form method="post" action="{% url 'team_delete' t.id %}" onsubmit="return confirm('Tem certeza que deseja excluir a equipe {{ t.name|escapejs }}?');">
+        {% csrf_token %}
+        <button type="submit" class="btn-action btn-delete">Excluir</button>
+      </form>
     </div>
 
   </div>
 
+  <div class="custom-modal" id="edit-team-{{ t.id }}">
+    <div class="custom-modal-box">
+      <div class="modal-head">
+        <h3 class="modal-title">Editar equipe: {{ t.name }}</h3>
+        <button type="button" class="modal-close" onclick="closeModal('edit-team-{{ t.id }}')">&times;</button>
+      </div>
 
-  {% with os_list=t.service_requests.all %}
+      <div class="modal-body">
+        <form method="post" action="{% url 'team_update' t.id %}" class="team-edit-form" data-team-id="{{ t.id }}">
+          {% csrf_token %}
 
-  {% if os_list %}
+          <div class="form-grid">
 
-  <table class="os-table">
+            <div class="form-group full">
+              <label class="form-label">Nome da equipe</label>
+              <input
+                type="text"
+                name="name"
+                class="form-control"
+                value="{{ t.name }}"
+                required
+              >
+            </div>
 
-    <thead>
-      <tr>
-        <th>OS</th>
-        <th>Solicitante</th>
-        <th>Serviço</th>
-        <th>Status</th>
-      </tr>
-    </thead>
+            <div class="form-group">
+              <label class="form-label">Responsável</label>
+              <select name="responsible" class="form-control responsible-select" data-team-id="{{ t.id }}" required>
+                <option value="">Selecione</option>
 
-    <tbody>
+                {% if t.responsible %}
+                  <option
+                    value="{{ t.responsible.id }}"
+                    data-user-id="{{ t.responsible.id }}"
+                    data-user-name="{{ t.responsible.get_full_name|default:t.responsible.username|escape }}"
+                    data-user-email="{{ t.responsible.email|default:''|escape }}"
+                    selected
+                  >
+                    {{ t.responsible.get_full_name|default:t.responsible.username }}{% if t.responsible.email %} - {{ t.responsible.email }}{% endif %}
+                  </option>
+                {% endif %}
 
-      {% for os in os_list %}
+                {% for m in t.members.all %}
+                  {% if m.user and m.user.id != t.responsible.id %}
+                    <option
+                      value="{{ m.user.id }}"
+                      data-user-id="{{ m.user.id }}"
+                      data-user-name="{{ m.user.get_full_name|default:m.user.username|escape }}"
+                      data-user-email="{{ m.user.email|default:''|escape }}"
+                    >
+                      {{ m.user.get_full_name|default:m.user.username }}{% if m.user.email %} - {{ m.user.email }}{% endif %}
+                    </option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+              <small class="form-help">Aqui aparecem somente usuários que já pertencem a esta equipe.</small>
+            </div>
 
-      <tr>
+            <div class="form-group">
+              <label class="form-label">Prioridade</label>
+              <select name="priority" class="form-control">
+                <option value="">Selecione</option>
+                {% for value, label in priority_choices %}
+                  <option value="{{ value }}" {% if t.priority == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
 
-        <td>
-          <a class="os-link" href="{% url 'os_detail' os.pk %}">
-            {{ os.os_number }}
-          </a>
-        </td>
+            <div class="form-group">
+              <label class="form-label">Prazo</label>
+              <input
+                type="datetime-local"
+                name="due_at"
+                class="form-control"
+                value="{% if t.due_at %}{{ t.due_at|date:'Y-m-d\\TH:i' }}{% endif %}"
+              >
+            </div>
 
-        <td>{{ os.full_name }}</td>
+            <div class="form-group full">
+              <label class="form-label">Descrição / Função da equipe</label>
+              <textarea name="function_description" class="form-control">{{ t.function_description|default:'' }}</textarea>
+            </div>
 
-        <td>{{ os.service_type }}</td>
+            <div class="form-group full">
+              <label class="form-label">Integrantes da equipe</label>
 
-        <td>
-          <span class="status {{ os.status }}">
-            {{ os.get_status_display }}
-          </span>
-        </td>
+              <div class="member-editor-box">
+                <div class="member-editor-head">
+                  <div class="member-editor-title">Gerenciar integrantes</div>
+                  <div class="member-editor-count" id="member-count-{{ t.id }}">0 integrante(s)</div>
+                </div>
 
-      </tr>
+                <div class="member-list" id="member-list-{{ t.id }}">
+                  {% if t.responsible %}
+                    <div
+                      class="member-row"
+                      data-user-id="{{ t.responsible.id }}"
+                      data-protected-owner="1"
+                    >
+                      <div class="member-row-left">
+                        <span class="member-row-dot"></span>
+                        <div>
+                          <div class="member-row-name">{{ t.responsible.get_full_name|default:t.responsible.username }}</div>
+                          <div class="member-row-email">{{ t.responsible.email|default:"Sem e-mail" }}</div>
+                        </div>
+                      </div>
 
-      {% endfor %}
+                      <div class="member-row-actions">
+                        <span class="member-row-role owner">Responsável</span>
+                        <button type="button" class="btn-remove-member" disabled style="opacity:.45;cursor:not-allowed;">
+                          Remover
+                        </button>
+                      </div>
 
-    </tbody>
+                      <input type="hidden" name="users" value="{{ t.responsible.id }}" class="hidden-user-input">
+                    </div>
+                  {% endif %}
 
-  </table>
+                  {% for m in t.members.all %}
+                    {% if m.user and m.user.id != t.responsible.id %}
+                      <div
+                        class="member-row"
+                        data-user-id="{{ m.user.id }}"
+                      >
+                        <div class="member-row-left">
+                          <span class="member-row-dot"></span>
+                          <div>
+                            <div class="member-row-name">{{ m.user.get_full_name|default:m.user.username }}</div>
+                            <div class="member-row-email">{{ m.user.email|default:"Sem e-mail" }}</div>
+                          </div>
+                        </div>
 
-  {% else %}
+                        <div class="member-row-actions">
+                          <span class="member-row-role">Membro</span>
+                          <button type="button" class="btn-remove-member" onclick="removeMember(this, '{{ t.id }}')">
+                            Remover
+                          </button>
+                        </div>
 
-  <div class="empty">
-    Nenhuma Ordem de Serviço atribuída a esta equipe.
+                        <input type="hidden" name="users" value="{{ m.user.id }}" class="hidden-user-input">
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+
+                <div class="empty-members-editor" id="member-empty-{{ t.id }}" style="display:none;">
+                  Nenhum integrante selecionado.
+                </div>
+
+                <div class="add-member-box">
+                  <div>
+                    <label class="form-label" style="margin-bottom:6px;">Adicionar integrante</label>
+                    <select class="form-control" id="add-member-select-{{ t.id }}">
+                      <option value="">Selecione um usuário interno</option>
+                      {% for u in users %}
+                        <option
+                          value="{{ u.id }}"
+                          data-user-id="{{ u.id }}"
+                          data-user-name="{{ u.get_full_name|default:u.username|escape }}"
+                          data-user-email="{{ u.email|default:''|escape }}"
+                        >
+                          {{ u.get_full_name|default:u.username }}{% if u.email %} - {{ u.email }}{% endif %}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="btn-add-member"
+                    onclick="addMember('{{ t.id }}')"
+                  >
+                    Adicionar à equipe
+                  </button>
+                </div>
+
+                <small class="form-help">
+                  Use o botão <b>Remover</b> para tirar integrantes da equipe. Para adicionar novos integrantes, escolha um usuário interno no campo acima e clique em <b>Adicionar à equipe</b>.
+                </small>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeModal('edit-team-{{ t.id }}')">Cancelar</button>
+            <button type="submit" class="btn-primary">Salvar alterações</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
-  {% endif %}
-
-  {% endwith %}
-
-</div>
-
-{% endfor %}
+  {% empty %}
+    <div class="empty">Nenhuma equipe cadastrada.</div>
+  {% endfor %}
 
 </div>
+
+<script>
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text || "";
+  return div.innerHTML;
+}
+
+function updateMemberCount(teamId) {
+  const list = document.getElementById("member-list-" + teamId);
+  const counter = document.getElementById("member-count-" + teamId);
+  const emptyBox = document.getElementById("member-empty-" + teamId);
+
+  if (!list || !counter || !emptyBox) return;
+
+  const rows = list.querySelectorAll(".member-row");
+  counter.textContent = rows.length + " integrante(s)";
+  emptyBox.style.display = rows.length ? "none" : "block";
+}
+
+function rebuildResponsibleOptions(teamId) {
+  const form = document.querySelector('.team-edit-form[data-team-id="' + teamId + '"]');
+  if (!form) return;
+
+  const responsibleSelect = form.querySelector(".responsible-select");
+  const list = document.getElementById("member-list-" + teamId);
+
+  if (!responsibleSelect || !list) return;
+
+  const currentValue = responsibleSelect.value;
+  const rows = list.querySelectorAll(".member-row");
+
+  let optionsHtml = '<option value="">Selecione</option>';
+
+  rows.forEach(function(row) {
+    const userId = row.getAttribute("data-user-id");
+    const nameEl = row.querySelector(".member-row-name");
+    const emailEl = row.querySelector(".member-row-email");
+
+    const userName = nameEl ? nameEl.textContent.trim() : "";
+    const userEmail = emailEl ? emailEl.textContent.trim() : "";
+
+    optionsHtml += `
+      <option
+        value="${escapeHtml(userId)}"
+        data-user-id="${escapeHtml(userId)}"
+        data-user-name="${escapeHtml(userName)}"
+        data-user-email="${escapeHtml(userEmail === 'Sem e-mail' ? '' : userEmail)}"
+      >
+        ${escapeHtml(userName)}${userEmail && userEmail !== 'Sem e-mail' ? ' - ' + escapeHtml(userEmail) : ''}
+      </option>
+    `;
+  });
+
+  responsibleSelect.innerHTML = optionsHtml;
+
+  const hasCurrent = Array.from(responsibleSelect.options).some(function(opt) {
+    return opt.value === currentValue;
+  });
+
+  if (hasCurrent) {
+    responsibleSelect.value = currentValue;
+  } else if (responsibleSelect.options.length > 1) {
+    responsibleSelect.selectedIndex = 1;
+  } else {
+    responsibleSelect.selectedIndex = 0;
+  }
+}
+
+function ensureResponsibleIsProtected(teamId) {
+  const form = document.querySelector('.team-edit-form[data-team-id="' + teamId + '"]');
+  if (!form) return;
+
+  const responsibleSelect = form.querySelector(".responsible-select");
+  const responsibleId = responsibleSelect ? responsibleSelect.value : "";
+
+  form.querySelectorAll(".member-row").forEach(function(row) {
+    const rowUserId = row.getAttribute("data-user-id");
+    const roleBadge = row.querySelector(".member-row-role");
+    const removeBtn = row.querySelector(".btn-remove-member");
+
+    if (rowUserId === responsibleId) {
+      row.setAttribute("data-protected-owner", "1");
+      if (roleBadge) {
+        roleBadge.textContent = "Responsável";
+        roleBadge.classList.add("owner");
+      }
+      if (removeBtn) {
+        removeBtn.disabled = true;
+        removeBtn.style.opacity = ".45";
+        removeBtn.style.cursor = "not-allowed";
+      }
+    } else {
+      row.removeAttribute("data-protected-owner");
+      if (roleBadge) {
+        roleBadge.textContent = "Membro";
+        roleBadge.classList.remove("owner");
+      }
+      if (removeBtn) {
+        removeBtn.disabled = false;
+        removeBtn.style.opacity = "";
+        removeBtn.style.cursor = "";
+      }
+    }
+  });
+}
+
+function addMember(teamId) {
+  const select = document.getElementById("add-member-select-" + teamId);
+  const list = document.getElementById("member-list-" + teamId);
+  const form = document.querySelector('.team-edit-form[data-team-id="' + teamId + '"]');
+
+  if (!select || !list || !form) return;
+
+  const option = select.options[select.selectedIndex];
+  const userId = option ? option.value : "";
+
+  if (!userId) {
+    alert("Selecione um usuário para adicionar.");
+    return;
+  }
+
+  const alreadyExists = list.querySelector('.member-row[data-user-id="' + userId + '"]');
+  if (alreadyExists) {
+    alert("Esse usuário já está na equipe.");
+    return;
+  }
+
+  const responsibleSelect = form.querySelector(".responsible-select");
+  const responsibleId = responsibleSelect ? responsibleSelect.value : "";
+
+  const userName = option.getAttribute("data-user-name") || option.textContent || "";
+  const userEmail = option.getAttribute("data-user-email") || "Sem e-mail";
+  const isResponsible = responsibleId === userId;
+
+  const row = document.createElement("div");
+  row.className = "member-row";
+  row.setAttribute("data-user-id", userId);
+
+  row.innerHTML = `
+    <div class="member-row-left">
+      <span class="member-row-dot"></span>
+      <div>
+        <div class="member-row-name">${escapeHtml(userName)}</div>
+        <div class="member-row-email">${escapeHtml(userEmail || "Sem e-mail")}</div>
+      </div>
+    </div>
+
+    <div class="member-row-actions">
+      <span class="member-row-role ${isResponsible ? 'owner' : ''}">${isResponsible ? 'Responsável' : 'Membro'}</span>
+      <button type="button" class="btn-remove-member" onclick="removeMember(this, '${teamId}')">
+        Remover
+      </button>
+    </div>
+
+    <input type="hidden" name="users" value="${escapeHtml(userId)}" class="hidden-user-input">
+  `;
+
+  list.appendChild(row);
+  select.value = "";
+
+  rebuildResponsibleOptions(teamId);
+  ensureResponsibleIsProtected(teamId);
+  updateMemberCount(teamId);
+}
+
+function removeMember(button, teamId) {
+  const row = button.closest(".member-row");
+  if (!row) return;
+
+  if (row.getAttribute("data-protected-owner") === "1") {
+    alert("Você não pode remover o responsável atual da equipe. Primeiro altere o responsável.");
+    return;
+  }
+
+  row.remove();
+
+  rebuildResponsibleOptions(teamId);
+  ensureResponsibleIsProtected(teamId);
+  updateMemberCount(teamId);
+}
+
+function openModal(id){
+  const modal = document.getElementById(id);
+  if(modal){
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden";
+
+    const form = modal.querySelector(".team-edit-form");
+    if (form) {
+      const teamId = form.getAttribute("data-team-id");
+      rebuildResponsibleOptions(teamId);
+      updateMemberCount(teamId);
+      ensureResponsibleIsProtected(teamId);
+    }
+  }
+}
+
+function closeModal(id){
+  const modal = document.getElementById(id);
+  if(modal){
+    modal.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+}
+
+document.querySelectorAll(".responsible-select").forEach(function(selectEl){
+  selectEl.addEventListener("change", function(){
+    const teamId = selectEl.getAttribute("data-team-id");
+    ensureResponsibleIsProtected(teamId);
+  });
+});
+
+document.querySelectorAll(".team-edit-form").forEach(function(form){
+  const teamId = form.getAttribute("data-team-id");
+  rebuildResponsibleOptions(teamId);
+  updateMemberCount(teamId);
+  ensureResponsibleIsProtected(teamId);
+});
+
+document.addEventListener("click", function(e){
+  if(e.target.classList.contains("custom-modal")){
+    e.target.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+});
+
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape"){
+    document.querySelectorAll(".custom-modal.active").forEach(function(modal){
+      modal.classList.remove("active");
+    });
+    document.body.style.overflow = "";
+  }
+});
+</script>
 
 {% endblock %}

@@ -6,10 +6,14 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("solicitar-servico/", views.solicitar_servico, name="solicitar_servico"),
 
-    # ===== PÁGINAS INTERNAS ======
+    # ===== PÁGINAS INTERNAS =====
     path("equipe/", views.team_list, name="team_list"),
     path("equipe/nova/", views.team_create, name="team_create"),
-    
+    path("equipe/<int:team_id>/editar/", views.team_update, name="team_update"),
+    path("equipe/<int:team_id>/excluir/", views.team_delete, name="team_delete"),
+    path("equipe/minha/", views.team_my, name="team_my"),
+    path("equipe/<int:team_id>/os/<int:os_id>/remover/", views.team_remove_os, name="team_remove_os"),
+
     # ===== CADASTRO (PÚBLICO) =====
     path("register/", views.register, name="register"),
 
@@ -28,14 +32,14 @@ urlpatterns = [
     path("dashboard/solicitacoes/", views.requests_list, name="requests_list"),
     path("dashboard/solicitacoes/<int:pk>/", views.request_detail, name="request_detail"),
 
-    # ======= Nova O.S ===========
+    # ===== NOVA O.S =====
     path("dashboard/os/nova/", views.os_create, name="os_create"),
 
-    # ====== Ordem de serviço ======
+    # ===== ORDEM DE SERVIÇO =====
     path("dashboard/os/", views.os_list, name="os_list"),
     path("dashboard/os/status/<str:status>/", views.os_list, name="os_list_status"),
 
-    # ====== EDIÇÃO DE O.S ====
+    # ===== EDIÇÃO / DETALHE DE O.S =====
     path("dashboard/os/<int:pk>/", views.os_detail, name="os_detail"),
 
     # ===== APIS =====
@@ -44,9 +48,9 @@ urlpatterns = [
     path("api/os-status/<str:os_number>/", views.api_os_status, name="api_os_status"),
     path("api/check-cpf/", views.api_check_cpf_exists, name="api_check_cpf_exists"),
 
-    # ===== Users permissions ====
+    # ===== USERS PERMISSIONS =====
     path("usuarios/<int:user_id>/editar/", views.user_role_update, name="user_role_update"),
+
+    # ===== DASHBOARD REQUISITANTE =====
     path("meu-painel/", views.dashboard_requisitante, name="dashboard_requisitante"),
-
-
 ]

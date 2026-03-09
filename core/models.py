@@ -122,6 +122,8 @@ class ServiceRequest(models.Model):
     description = models.TextField()
     notes = models.TextField(blank=True)
 
+    due_at = models.DateTimeField("Prazo", null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     created_by = models.ForeignKey(
@@ -140,7 +142,6 @@ class ServiceRequest(models.Model):
         related_name="service_requests_assigned",
     )
 
-    # ✅ NOVO: Equipe atribuída à OS
     team = models.ForeignKey(
         Team,
         on_delete=models.SET_NULL,
