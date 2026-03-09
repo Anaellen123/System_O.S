@@ -327,6 +327,26 @@ def user_role_update(request, user_id):
 
 
 @login_required(login_url="login_admin")
+@require_http_methods(["POST"])
+def user_delete(request, user_id):
+    if not request.user.is_superuser:
+        messages.error(request, "Você não tem permissão para excluir usuários.")
+        return redirect("dashboard")
+
+    u = get_object_or_404(User, id=user_id)
+
+    if u.id == request.user.id:
+        messages.error(request, "Você não pode excluir seu próprio usuário.")
+        return redirect("users_list")
+
+    user_name = u.get_full_name() or u.username
+    u.delete()
+
+    messages.success(request, f'Usuário "{user_name}" excluído com sucesso.')
+    return redirect("users_list")
+
+
+@login_required(login_url="login_admin")
 def users_list(request):
     if not request.user.is_superuser:
         messages.error(request, "Você não tem permissão para acessar Usuários.")
@@ -537,6 +557,7 @@ def os_list(request, status=None):
             | Q(full_name__icontains=q)
             | Q(document__icontains=q)
             | Q(phone__icontains=q)
+            | Q(neighborhood__icontains=q)
         )
 
     total = qs.count()
@@ -792,6 +813,7 @@ def team_delete(request, team_id):
 @login_required(login_url="login_admin")
 def team_my(request):
     return render(request, "team/my_team.html")
+
 
 @login_required(login_url="login_admin")
 @require_http_methods(["POST"])

@@ -50,6 +50,7 @@ urlpatterns = [
 
     # ===== USERS PERMISSIONS =====
     path("usuarios/<int:user_id>/editar/", views.user_role_update, name="user_role_update"),
+    path("usuarios/<int:user_id>/excluir/", views.user_delete, name="user_delete"),
 
     # ===== DASHBOARD REQUISITANTE =====
     path("meu-painel/", views.dashboard_requisitante, name="dashboard_requisitante"),

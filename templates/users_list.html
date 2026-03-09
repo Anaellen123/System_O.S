@@ -69,10 +69,22 @@
             {% endif %}
           </td>
 
-          <td class="users-actions">
+          <td class="users-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <a class="btn btn-sm btn-outline-primary" href="{% url 'user_role_update' u.id %}">
-              <i class="bi bi-pencil"></i> EDITAR
+              <i class="bi bi-pencil"></i> 
             </a>
+
+            {% if request.user.id != u.id %}
+            <form method="post"
+                  action="{% url 'user_delete' u.id %}"
+                  style="margin:0;"
+                  onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> 
+              </button>
+            </form>
+            {% endif %}
           </td>
         </tr>
         {% empty %}
