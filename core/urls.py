@@ -23,6 +23,9 @@ urlpatterns = [
 
     # ===== DASHBOARD (ÁREA INTERNA) =====
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("minhas-os/", views.team_my, name="team_my"),
+    path("minha-equipe/relatorio/", views.team_my_report, name="team_my_report"),
+    
 
     # ===== USUÁRIOS (SOMENTE SUPERUSER) =====
     path("dashboard/usuarios/", views.users_list, name="users_list"),

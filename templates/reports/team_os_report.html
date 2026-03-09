@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Relatório de O.S da Equipe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <style>
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      background:#eef2f7;
+      color:#0f172a;
+      font-family:Arial, Helvetica, sans-serif;
+    }
+
+    .report-page{
+      max-width:1100px;
+      margin:24px auto;
+      background:#fff;
+      border:1px solid #dbe3ee;
+      border-radius:18px;
+      box-shadow:0 12px 30px rgba(15,23,42,.08);
+      overflow:hidden;
+    }
+
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:16px 20px;
+      border-bottom:1px solid #e5e7eb;
+      background:#f8fafc;
+      flex-wrap:wrap;
+    }
+
+    .toolbar-left{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .toolbar-title{
+      margin:0;
+      font-size:22px;
+      font-weight:800;
+      color:#0f172a;
+    }
+
+    .toolbar-sub{
+      margin:0;
+      font-size:13px;
+      color:#64748b;
+    }
+
+    .toolbar-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:12px;
+      text-decoration:none;
+      font-size:14px;
+      font-weight:800;
+      border:1px solid #cbd5e1;
+      cursor:pointer;
+      background:#fff;
+      color:#0f172a;
+    }
+
+    .btn-primary{
+      background:#1d4ed8;
+      color:#fff;
+      border-color:#1d4ed8;
+    }
+
+    .content{
+      padding:22px;
+    }
+
+    .header-box{
+      border:2px solid #cbd5e1;
+      border-radius:18px;
+      padding:18px;
+      margin-bottom:18px;
+      background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .header-top{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .main-title{
+      margin:0;
+      font-size:26px;
+      font-weight:800;
+      color:#0f172a;
+    }
+
+    .generated-at{
+      font-size:13px;
+      color:#64748b;
+      font-weight:700;
+    }
+
+    .team-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid #dbe3ee;
+      font-size:13px;
+      font-weight:700;
+      color:#334155;
+    }
+
+    .section{
+      margin-top:18px;
+    }
+
+    .section-title{
+      margin:0 0 10px;
+      font-size:17px;
+      font-weight:800;
+      color:#0f172a;
+    }
+
+    .desc-box{
+      padding:14px 16px;
+      border-radius:14px;
+      border:1px solid #e2e8f0;
+      background:#f8fafc;
+      color:#334155;
+      font-size:14px;
+      line-height:1.7;
+      white-space:pre-line;
+    }
+
+    .members-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .member{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid #dbe3ee;
+      background:#fff;
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .member-role{
+      display:inline-block;
+      margin-left:4px;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      background:#ecfeff;
+      color:#155e75;
+      border:1px solid #a5f3fc;
+    }
+
+    .stats-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .stat{
+      border:1px solid #dbe3ee;
+      border-radius:14px;
+      padding:14px;
+      background:#fff;
+    }
+
+    .stat-label{
+      font-size:12px;
+      color:#64748b;
+      font-weight:800;
+      margin-bottom:8px;
+      text-transform:uppercase;
+      letter-spacing:.03em;
+    }
+
+    .stat-value{
+      font-size:28px;
+      font-weight:800;
+      color:#0f172a;
+    }
+
+    .os-card{
+      margin-top:18px;
+      border:2px solid #cbd5e1;
+      border-radius:18px;
+      overflow:hidden;
+      page-break-inside:avoid;
+    }
+
+    .os-card-head{
+      padding:14px 16px;
+      background:#f8fafc;
+      border-bottom:1px solid #e5e7eb;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .os-number{
+      margin:0;
+      font-size:18px;
+      font-weight:800;
+      color:#0f172a;
+    }
+
+    .os-service{
+      margin:6px 0 0;
+      color:#334155;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .status{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .status.OPEN{
+      background:#fef3c7;
+      color:#92400e;
+    }
+
+    .status.IN_PROGRESS{
+      background:#dbeafe;
+      color:#1d4ed8;
+    }
+
+    .status.DONE{
+      background:#dcfce7;
+      color:#166534;
+    }
+
+    .os-body{
+      padding:16px;
+    }
+
+    .info-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .info-item{
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:12px;
+      background:#fff;
+    }
+
+    .info-label{
+      font-size:12px;
+      color:#64748b;
+      font-weight:800;
+      margin-bottom:6px;
+      text-transform:uppercase;
+      letter-spacing:.03em;
+    }
+
+    .info-value{
+      font-size:14px;
+      color:#0f172a;
+      font-weight:700;
+      line-height:1.5;
+    }
+
+    .desc-title{
+      margin:14px 0 8px;
+      font-size:15px;
+      font-weight:800;
+      color:#0f172a;
+    }
+
+    .desc-text{
+      margin:0;
+      padding:14px;
+      border-radius:14px;
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      color:#334155;
+      font-size:14px;
+      line-height:1.7;
+      white-space:pre-line;
+    }
+
+    .empty-box{
+      margin-top:18px;
+      padding:28px;
+      border:2px dashed #cbd5e1;
+      border-radius:18px;
+      text-align:center;
+      color:#64748b;
+      font-size:15px;
+      background:#fff;
+    }
+
+    @media (max-width: 760px){
+      .stats-grid,
+      .info-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media print{
+      body{
+        background:#fff;
+      }
+
+      .report-page{
+        margin:0;
+        max-width:none;
+        border:none;
+        border-radius:0;
+        box-shadow:none;
+      }
+
+      .toolbar{
+        display:none;
+      }
+
+      .content{
+        padding:0;
+      }
+
+      .os-card{
+        break-inside:avoid;
+        page-break-inside:avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="report-page">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <h1 class="toolbar-title">Relatório de O.S da Equipe</h1>
+        <p class="toolbar-sub">Página preparada para impressão</p>
+      </div>
+
+      <div class="toolbar-actions">
+        <button type="button" class="btn btn-primary" onclick="window.print()">
+          <i class="bi bi-printer"></i>
+          Imprimir
+        </button>
+        <button type="button" class="btn" onclick="window.close()">
+          <i class="bi bi-x-lg"></i>
+          Fechar
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      {% if team %}
+        <div class="header-box">
+          <div class="header-top">
+            <div>
+              <h2 class="main-title">{{ team.name }}</h2>
+
+              <div class="team-meta">
+                <span class="pill">
+                  <i class="bi bi-person-badge"></i>
+                  Responsável: {{ team.responsible.get_full_name|default:team.responsible.username }}
+                </span>
+
+                <span class="pill">
+                  <i class="bi bi-people"></i>
+                  {{ team.members.count }} integrante(s)
+                </span>
+
+                <span class="pill">
+                  <i class="bi bi-flag"></i>
+                  Prioridade: {{ team.get_priority_display }}
+                </span>
+
+                {% if team.due_at %}
+                  <span class="pill">
+                    <i class="bi bi-calendar-event"></i>
+                    Prazo: {{ team.due_at|date:"d/m/Y H:i" }}
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="generated-at">
+              Gerado em: {{ generated_at|date:"d/m/Y H:i" }}
+            </div>
+          </div>
+
+          {% if team.function_description %}
+            <div class="section">
+              <h3 class="section-title">Descrição da equipe</h3>
+              <div class="desc-box">{{ team.function_description }}</div>
+            </div>
+          {% endif %}
+
+          <div class="section">
+            <h3 class="section-title">Integrantes</h3>
+            <div class="members-grid">
+              {% if team.responsible %}
+                <div class="member">
+                  <i class="bi bi-person-circle"></i>
+                  {{ team.responsible.get_full_name|default:team.responsible.username }}
+                  <span class="member-role">Responsável</span>
+                </div>
+              {% endif %}
+
+              {% for m in team.members.all %}
+                {% if m.user and m.user.pk != team.responsible.pk %}
+                  <div class="member">
+                    <i class="bi bi-person"></i>
+                    {{ m.user.get_full_name|default:m.user.username }}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="stat-label">Total de O.S</div>
+              <div class="stat-value">{{ stats.total }}</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Abertas</div>
+              <div class="stat-value">{{ stats.abertas }}</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Em andamento</div>
+              <div class="stat-value">{{ stats.andamento }}</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Concluídas</div>
+              <div class="stat-value">{{ stats.concluidas }}</div>
+            </div>
+          </div>
+        </div>
+
+        {% if os_list %}
+          {% for os in os_list %}
+            <div class="os-card">
+              <div class="os-card-head">
+                <div>
+                  <h3 class="os-number">O.S {{ os.os_number }}</h3>
+                  <p class="os-service">{{ os.service_type }}</p>
+                </div>
+
+                <span class="status {{ os.status }}">
+                  {{ os.get_status_display }}
+                </span>
+              </div>
+
+              <div class="os-body">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <div class="info-label">Solicitante</div>
+                    <div class="info-value">{{ os.full_name|default:"—" }}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Documento</div>
+                    <div class="info-value">{{ os.document|default:"—" }}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Telefone</div>
+                    <div class="info-value">{{ os.phone|default:"—" }}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Bairro</div>
+                    <div class="info-value">{{ os.neighborhood|default:"—" }}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Cidade</div>
+                    <div class="info-value">{{ os.city|default:"—" }}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Endereço</div>
+                    <div class="info-value">
+                      {{ os.street|default:"—" }}
+                      {% if os.number %}
+                        , {{ os.number }}
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Data de criação</div>
+                    <div class="info-value">{{ os.created_at|date:"d/m/Y H:i" }}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Prazo</div>
+                    <div class="info-value">{{ os.due_at|date:"d/m/Y H:i"|default:"—" }}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Criado por</div>
+                    <div class="info-value">
+                      {% if os.created_by %}
+                        {{ os.created_by.get_full_name|default:os.created_by.username }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Atribuído para</div>
+                    <div class="info-value">
+                      {% if os.assigned_to %}
+                        {{ os.assigned_to.get_full_name|default:os.assigned_to.username }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <h4 class="desc-title">Descrição da O.S</h4>
+                <p class="desc-text">{{ os.description }}</p>
+
+                {% if os.notes %}
+                  <h4 class="desc-title">Observações</h4>
+                  <p class="desc-text">{{ os.notes }}</p>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-box">
+            <strong>Sua equipe ainda não possui O.S vinculadas.</strong>
+          </div>
+        {% endif %}
+
+      {% else %}
+        <div class="empty-box">
+          <strong>Você ainda não está vinculado(a) a nenhuma equipe.</strong>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</body>
+</html>

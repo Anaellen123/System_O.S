@@ -1,13 +1,493 @@
 {% extends "dashboard_base.html" %}
 
-{% block title %}Minha Equipe{% endblock %}
-{% block page_title %}Minha Equipe{% endblock %}
+{% block title %}Minhas O.S{% endblock %}
+{% block page_title %}Minhas O.S{% endblock %}
 
 {% block content %}
 
-<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;">
-  <h3>Minha Equipe</h3>
-  <p>Aqui aparecerão as informações da equipe do usuário.</p>
+<style>
+.myos-wrap{
+  max-width: 1150px;
+}
+
+.page-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+
+.page-title-2{
+  margin:0;
+  font-size:24px;
+  font-weight:800;
+  color:#0f172a;
+}
+
+.page-sub{
+  margin:6px 0 0;
+  color:#64748b;
+  font-size:14px;
+}
+
+.page-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.btn-print{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:11px 16px;
+  border-radius:12px;
+  border:1px solid #cbd5e1;
+  background:linear-gradient(135deg, #2563eb, #1d4ed8);
+  color:#fff;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:800;
+  box-shadow:0 10px 24px rgba(37,99,235,.22);
+  transition:.18s ease;
+}
+
+.btn-print:hover{
+  transform:translateY(-1px);
+  box-shadow:0 14px 28px rgba(37,99,235,.28);
+  color:#fff;
+  text-decoration:none;
+}
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:14px;
+  margin-bottom:18px;
+}
+
+.stat-card{
+  background:#fff;
+  border:1px solid #dbe3ee;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 8px 24px rgba(15,23,42,.08);
+}
+
+.stat-label{
+  font-size:13px;
+  color:#64748b;
+  margin-bottom:8px;
+  font-weight:700;
+}
+
+.stat-value{
+  font-size:28px;
+  line-height:1;
+  font-weight:800;
+  color:#0f172a;
+}
+
+.team-box{
+  background:#fff;
+  border:2px solid #cbd5e1;
+  border-radius:18px;
+  box-shadow:0 10px 28px rgba(15,23,42,.08);
+  overflow:hidden;
+  margin-bottom:20px;
+}
+
+.team-box-head{
+  padding:18px 20px;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+.team-name{
+  margin:0;
+  font-size:22px;
+  font-weight:800;
+  color:#0f172a;
+}
+
+.team-meta{
+  margin-top:8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.meta-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 12px;
+  border-radius:999px;
+  border:1px solid #e2e8f0;
+  background:#f8fafc;
+  font-size:13px;
+  color:#334155;
+  font-weight:700;
+}
+
+.team-body{
+  padding:20px;
+}
+
+.team-desc{
+  margin:0 0 16px;
+  padding:14px 16px;
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  color:#334155;
+  font-size:14px;
+  line-height:1.6;
+}
+
+.members-wrap{
+  margin-bottom:18px;
+  padding:14px;
+  border:1px solid #e5e7eb;
+  background:#fafafa;
+  border-radius:14px;
+}
+
+.members-title{
+  font-size:15px;
+  font-weight:800;
+  color:#0f172a;
+  margin-bottom:12px;
+}
+
+.members-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.member-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid #e2e8f0;
+  background:#fff;
+  font-size:13px;
+  color:#0f172a;
+}
+
+.member-role{
+  font-size:11px;
+  font-weight:800;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#ecfeff;
+  border:1px solid #a5f3fc;
+  color:#155e75;
+}
+
+.os-box{
+  background:#fff;
+  border:2px solid #cbd5e1;
+  border-radius:18px;
+  box-shadow:0 10px 28px rgba(15,23,42,.08);
+  overflow:hidden;
+}
+
+.os-head{
+  padding:18px 20px;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.os-title{
+  margin:0;
+  font-size:20px;
+  font-weight:800;
+  color:#0f172a;
+}
+
+.os-count{
+  padding:6px 12px;
+  border-radius:999px;
+  background:#f1f5f9;
+  border:1px solid #e2e8f0;
+  font-size:12px;
+  font-weight:800;
+  color:#334155;
+}
+
+.os-table-wrap{
+  overflow:auto;
+}
+
+.os-table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.os-table th{
+  text-align:left;
+  padding:12px 14px;
+  font-size:12px;
+  color:#64748b;
+  border-bottom:1px solid #e5e7eb;
+  background:#f8fafc;
+}
+
+.os-table td{
+  padding:14px;
+  border-bottom:1px solid #f1f5f9;
+  font-size:14px;
+  color:#0f172a;
+  vertical-align:middle;
+}
+
+.os-link{
+  text-decoration:none;
+  color:#2563eb;
+  font-weight:800;
+}
+
+.os-link:hover{
+  text-decoration:underline;
+}
+
+.status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+}
+
+.status.OPEN{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.status.IN_PROGRESS{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+
+.status.DONE{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.empty-box{
+  background:#fff;
+  border:2px dashed #cbd5e1;
+  border-radius:18px;
+  padding:28px;
+  text-align:center;
+  color:#64748b;
+  font-size:15px;
+}
+
+.empty-box strong{
+  color:#0f172a;
+}
+
+@media (max-width: 900px){
+  .stats-grid{
+    grid-template-columns:repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 640px){
+  .stats-grid{
+    grid-template-columns:1fr;
+  }
+
+  .page-head{
+    align-items:flex-start;
+  }
+
+  .page-actions{
+    width:100%;
+  }
+
+  .btn-print{
+    width:100%;
+  }
+}
+</style>
+
+<div class="myos-wrap">
+
+  <div class="page-head">
+    <div>
+      <h2 class="page-title-2">Minhas O.S</h2>
+      <p class="page-sub">Veja a equipe em que você está vinculado(a) e as Ordens de Serviço atribuídas a ela.</p>
+    </div>
+
+    {% if team %}
+      <div class="page-actions">
+        <a href="{% url 'team_my_report' %}" target="_blank" class="btn-print">
+          <i class="bi bi-printer"></i>
+          Imprimir relatório
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if team %}
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total de O.S</div>
+        <div class="stat-value">{{ stats.total }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Abertas</div>
+        <div class="stat-value">{{ stats.abertas }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Em andamento</div>
+        <div class="stat-value">{{ stats.andamento }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Concluídas</div>
+        <div class="stat-value">{{ stats.concluidas }}</div>
+      </div>
+    </div>
+
+    <div class="team-box">
+      <div class="team-box-head">
+        <div>
+          <h3 class="team-name">{{ team.name }}</h3>
+
+          <div class="team-meta">
+            <span class="meta-pill">
+              <i class="bi bi-person-badge"></i>
+              Responsável:
+              {{ team.responsible.get_full_name|default:team.responsible.username }}
+            </span>
+
+            <span class="meta-pill">
+              <i class="bi bi-people"></i>
+              {{ team.members.count }} integrante(s)
+            </span>
+
+            <span class="meta-pill">
+              <i class="bi bi-flag"></i>
+              Prioridade: {{ team.get_priority_display }}
+            </span>
+
+            {% if team.due_at %}
+              <span class="meta-pill">
+                <i class="bi bi-calendar-event"></i>
+                Prazo: {{ team.due_at|date:"d/m/Y H:i" }}
+              </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="team-body">
+        {% if team.function_description %}
+          <p class="team-desc">{{ team.function_description }}</p>
+        {% endif %}
+
+        <div class="members-wrap">
+          <div class="members-title">Integrantes da equipe</div>
+
+          <div class="members-grid">
+            {% if team.responsible %}
+              <div class="member-pill">
+                <i class="bi bi-person-circle"></i>
+                {{ team.responsible.get_full_name|default:team.responsible.username }}
+                <span class="member-role">Responsável</span>
+              </div>
+            {% endif %}
+
+            {% for m in team.members.all %}
+              {% if m.user and m.user.pk != team.responsible.pk %}
+                <div class="member-pill">
+                  <i class="bi bi-person"></i>
+                  {{ m.user.get_full_name|default:m.user.username }}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="os-box">
+      <div class="os-head">
+        <h3 class="os-title">Ordens de Serviço da sua equipe</h3>
+        <div class="os-count">{{ os_list|length }} O.S</div>
+      </div>
+
+      {% if os_list %}
+        <div class="os-table-wrap">
+          <table class="os-table">
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Serviço</th>
+                <th>Solicitante</th>
+                <th>Bairro</th>
+                <th>Prazo</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for os in os_list %}
+                <tr>
+                  <td>
+                    <a href="{% url 'os_detail' os.pk %}" class="os-link">
+                      {{ os.os_number }}
+                    </a>
+                  </td>
+                  <td>{{ os.service_type }}</td>
+                  <td>{{ os.full_name }}</td>
+                  <td>{{ os.neighborhood|default:"—" }}</td>
+                  <td>{{ os.due_at|date:"d/m/Y"|default:"—" }}</td>
+                  <td>
+                    <span class="status {{ os.status }}">
+                      {{ os.get_status_display }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-box">
+          <strong>Sua equipe ainda não possui O.S vinculadas.</strong>
+        </div>
+      {% endif %}
+    </div>
+
+  {% else %}
+    <div class="empty-box">
+      <strong>Você ainda não está vinculado(a) a nenhuma equipe.</strong>
+      <div style="margin-top:8px;">
+        Peça para um administrador adicionar você em uma equipe.
+      </div>
+    </div>
+  {% endif %}
+
 </div>
 
 {% endblock %}

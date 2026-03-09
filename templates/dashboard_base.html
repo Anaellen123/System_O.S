@@ -39,7 +39,7 @@
 
       {% if perms.core.tab_dashboard %}
         <a class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
-          href="{% url 'dashboard' %}">
+           href="{% url 'dashboard' %}">
           <i class="bi bi-grid-1x2"></i>
           <span>Dashboard</span>
         </a>
@@ -60,25 +60,34 @@
           </button>
 
           <ul class="submenu">
-            <li><a class="submenu-item {% if request.resolver_match.url_name == 'os_list' %}active{% endif %}"
-                  href="{% url 'os_list' %}">Todas</a></li>
-            <li><a class="submenu-item {% if request.resolver_match.url_name == 'os_list_status' and request.resolver_match.kwargs.status == 'OPEN' %}active{% endif %}"
-                  href="{% url 'os_list_status' 'OPEN' %}">Pendentes</a></li>
-            <li><a class="submenu-item {% if request.resolver_match.url_name == 'os_list_status' and request.resolver_match.kwargs.status == 'IN_PROGRESS' %}active{% endif %}"
-                  href="{% url 'os_list_status' 'IN_PROGRESS' %}">Em Andamento</a></li>
-            <li><a class="submenu-item {% if request.resolver_match.url_name == 'os_list_status' and request.resolver_match.kwargs.status == 'DONE' %}active{% endif %}"
-                  href="{% url 'os_list_status' 'DONE' %}">Concluídas</a></li>
+            <li>
+              <a class="submenu-item {% if request.resolver_match.url_name == 'os_list' %}active{% endif %}"
+                 href="{% url 'os_list' %}">Todas</a>
+            </li>
+            <li>
+              <a class="submenu-item {% if request.resolver_match.url_name == 'os_list_status' and request.resolver_match.kwargs.status == 'OPEN' %}active{% endif %}"
+                 href="{% url 'os_list_status' 'OPEN' %}">Pendentes</a>
+            </li>
+            <li>
+              <a class="submenu-item {% if request.resolver_match.url_name == 'os_list_status' and request.resolver_match.kwargs.status == 'IN_PROGRESS' %}active{% endif %}"
+                 href="{% url 'os_list_status' 'IN_PROGRESS' %}">Em Andamento</a>
+            </li>
+            <li>
+              <a class="submenu-item {% if request.resolver_match.url_name == 'os_list_status' and request.resolver_match.kwargs.status == 'DONE' %}active{% endif %}"
+                 href="{% url 'os_list_status' 'DONE' %}">Concluídas</a>
+            </li>
           </ul>
         </div>
       {% endif %}
 
       {% if perms.core.tab_users %}
         <a class="menu-item {% if request.resolver_match.url_name == 'users_list' or request.resolver_match.url_name == 'user_role_update' %}active{% endif %}"
-          href="{% url 'users_list' %}">
+           href="{% url 'users_list' %}">
           <i class="bi bi-person-badge"></i>
           <span>Usuários</span>
         </a>
       {% endif %}
+
       {% if perms.core.tab_team %}
         <div class="menu-accordion
           {% if request.resolver_match.url_name == 'team_list' or request.resolver_match.url_name == 'team_create' %}
@@ -95,19 +104,32 @@
           <ul class="submenu">
             <li>
               <a class="submenu-item {% if request.resolver_match.url_name == 'team_list' %}active{% endif %}"
-                href="{% url 'team_list' %}">Listar equipes</a>
+                 href="{% url 'team_list' %}">Listar equipes</a>
             </li>
             <li>
               <a class="submenu-item {% if request.resolver_match.url_name == 'team_create' %}active{% endif %}"
-                href="{% url 'team_create' %}">Criar equipes</a>
+                 href="{% url 'team_create' %}">Criar equipes</a>
             </li>
           </ul>
         </div>
       {% endif %}
 
+      <!-- MINHAS O.S (aba própria e só para grupo interno) -->
+      {% if request.user.is_authenticated %}
+        {% for g in request.user.groups.all %}
+          {% if g.name|lower == 'interno' %}
+            <a class="menu-item {% if request.resolver_match.url_name == 'team_my' %}active{% endif %}"
+               href="{% url 'team_my' %}">
+              <i class="bi bi-clipboard2-data"></i>
+              <span>Minhas O.S</span>
+            </a>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
       {% if perms.core.tab_requests %}
         <a class="menu-item {% if request.resolver_match.url_name == 'requests_list' or request.resolver_match.url_name == 'request_detail' %}active{% endif %}"
-          href="{% url 'requests_list' %}">
+           href="{% url 'requests_list' %}">
           <span class="menu-left">
             <i class="bi bi-tools"></i>
             <span>Serviços</span>
@@ -157,7 +179,6 @@
 
     <!-- FOOTER -->
     <div class="sidebar-bottom">
-
       <a class="logout" href="{% url 'logout' %}">
         <i class="bi bi-box-arrow-right"></i> Sair
       </a>

@@ -38,6 +38,10 @@ def _is_requisitante(user) -> bool:
     return user.is_authenticated and user.groups.filter(name__iexact="requisitante").exists()
 
 
+def _is_interno(user) -> bool:
+    return user.is_authenticated and user.groups.filter(name__iexact="interno").exists()
+
+
 def _only_digits(s: str) -> str:
     return "".join(ch for ch in (s or "") if ch.isdigit())
 
@@ -812,7 +816,41 @@ def team_delete(request, team_id):
 
 @login_required(login_url="login_admin")
 def team_my(request):
-    return render(request, "team/my_team.html")
+    if not _is_interno(request.user):
+        messages.error(request, "Você não tem permissão para acessar Minhas O.S.")
+        return redirect("dashboard")
+
+    membership = (
+        TeamMember.objects
+        .select_related("team", "user", "team__responsible")
+        .prefetch_related("team__members__user")
+        .filter(user=request.user)
+        .first()
+    )
+
+    team = membership.team if membership else None
+    os_list = []
+
+    if team:
+        os_list = list(
+            ServiceRequest.objects
+            .filter(team=team)
+            .select_related("team", "assigned_to", "created_by")
+            .order_by("-created_at")
+        )
+
+    stats = {
+        "total": len(os_list) if team else 0,
+        "abertas": sum(1 for os in os_list if os.status == "OPEN") if team else 0,
+        "andamento": sum(1 for os in os_list if os.status == "IN_PROGRESS") if team else 0,
+        "concluidas": sum(1 for os in os_list if os.status == "DONE") if team else 0,
+    }
+
+    return render(request, "my_team.html", {
+        "team": team,
+        "os_list": os_list,
+        "stats": stats,
+    })
 
 
 @login_required(login_url="login_admin")
@@ -830,3 +868,43 @@ def team_remove_os(request, team_id, os_id):
 
     messages.success(request, f"O.S {os_obj.os_number} removida da equipe {team.name}.")
     return redirect("team_list")
+
+
+@login_required(login_url="login_admin")
+def team_my_report(request):
+    if not _is_interno(request.user):
+        messages.error(request, "Você não tem permissão para acessar este relatório.")
+        return redirect("dashboard")
+
+    membership = (
+        TeamMember.objects
+        .select_related("team", "user", "team__responsible")
+        .prefetch_related("team__members__user")
+        .filter(user=request.user)
+        .first()
+    )
+
+    team = membership.team if membership else None
+    os_list = []
+
+    if team:
+        os_list = list(
+            ServiceRequest.objects
+            .filter(team=team)
+            .select_related("team", "assigned_to", "created_by")
+            .order_by("-created_at")
+        )
+
+    stats = {
+        "total": len(os_list) if team else 0,
+        "abertas": sum(1 for os in os_list if os.status == "OPEN") if team else 0,
+        "andamento": sum(1 for os in os_list if os.status == "IN_PROGRESS") if team else 0,
+        "concluidas": sum(1 for os in os_list if os.status == "DONE") if team else 0,
+    }
+
+    return render(request, "reports/team_os_report.html", {
+        "team": team,
+        "os_list": os_list,
+        "stats": stats,
+        "generated_at": timezone.localtime(),
+    })
