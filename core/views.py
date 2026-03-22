@@ -1070,35 +1070,49 @@ def team_my(request):
         messages.error(request, "Você não tem permissão para acessar Minhas O.S.")
         return redirect("dashboard")
 
-    membership = (
-        TeamMember.objects
-        .select_related("team", "user", "team__responsible")
-        .prefetch_related("team__members__user")
-        .filter(user=request.user)
-        .first()
+    teams = (
+        Team.objects
+        .filter(Q(responsible=request.user) | Q(members__user=request.user))
+        .distinct()
+        .select_related("responsible")
+        .prefetch_related("members__user", "service_requests")
+        .order_by("-created_at")
     )
 
-    team = membership.team if membership else None
-    os_list = []
+    total = 0
+    abertas = 0
+    andamento = 0
+    concluidas = 0
 
-    if team:
-        os_list = list(
+    for team in teams:
+        team.os_list = list(
             ServiceRequest.objects
             .filter(team=team)
             .select_related("team", "assigned_to", "created_by")
             .order_by("-created_at")
         )
 
+        team.stats = {
+            "total": len(team.os_list),
+            "abertas": sum(1 for os in team.os_list if os.status == "OPEN"),
+            "andamento": sum(1 for os in team.os_list if os.status == "IN_PROGRESS"),
+            "concluidas": sum(1 for os in team.os_list if os.status == "DONE"),
+        }
+
+        total += team.stats["total"]
+        abertas += team.stats["abertas"]
+        andamento += team.stats["andamento"]
+        concluidas += team.stats["concluidas"]
+
     stats = {
-        "total": len(os_list) if team else 0,
-        "abertas": sum(1 for os in os_list if os.status == "OPEN") if team else 0,
-        "andamento": sum(1 for os in os_list if os.status == "IN_PROGRESS") if team else 0,
-        "concluidas": sum(1 for os in os_list if os.status == "DONE") if team else 0,
+        "total": total,
+        "abertas": abertas,
+        "andamento": andamento,
+        "concluidas": concluidas,
     }
 
     return render(request, "my_team.html", {
-        "team": team,
-        "os_list": os_list,
+        "teams": teams,
         "stats": stats,
     })
 
@@ -1126,35 +1140,49 @@ def team_my_report(request):
         messages.error(request, "Você não tem permissão para acessar este relatório.")
         return redirect("dashboard")
 
-    membership = (
-        TeamMember.objects
-        .select_related("team", "user", "team__responsible")
-        .prefetch_related("team__members__user")
-        .filter(user=request.user)
-        .first()
+    teams = (
+        Team.objects
+        .filter(Q(responsible=request.user) | Q(members__user=request.user))
+        .distinct()
+        .select_related("responsible")
+        .prefetch_related("members__user", "service_requests")
+        .order_by("-created_at")
     )
 
-    team = membership.team if membership else None
-    os_list = []
+    total = 0
+    abertas = 0
+    andamento = 0
+    concluidas = 0
 
-    if team:
-        os_list = list(
+    for team in teams:
+        team.os_list = list(
             ServiceRequest.objects
             .filter(team=team)
             .select_related("team", "assigned_to", "created_by")
             .order_by("-created_at")
         )
 
+        team.stats = {
+            "total": len(team.os_list),
+            "abertas": sum(1 for os in team.os_list if os.status == "OPEN"),
+            "andamento": sum(1 for os in team.os_list if os.status == "IN_PROGRESS"),
+            "concluidas": sum(1 for os in team.os_list if os.status == "DONE"),
+        }
+
+        total += team.stats["total"]
+        abertas += team.stats["abertas"]
+        andamento += team.stats["andamento"]
+        concluidas += team.stats["concluidas"]
+
     stats = {
-        "total": len(os_list) if team else 0,
-        "abertas": sum(1 for os in os_list if os.status == "OPEN") if team else 0,
-        "andamento": sum(1 for os in os_list if os.status == "IN_PROGRESS") if team else 0,
-        "concluidas": sum(1 for os in os_list if os.status == "DONE") if team else 0,
+        "total": total,
+        "abertas": abertas,
+        "andamento": andamento,
+        "concluidas": concluidas,
     }
 
     return render(request, "reports/team_os_report.html", {
-        "team": team,
-        "os_list": os_list,
+        "teams": teams,
         "stats": stats,
         "generated_at": timezone.localtime(),
     })
