@@ -16,11 +16,14 @@ urlpatterns = [
 
     # ===== CADASTRO (PÚBLICO) =====
     path("register/", views.register, name="register"),
+    path("ativar-conta/<uidb64>/<token>/", views.activate_account, name="activate_account"),
 
     # ===== AUTENTICAÇÃO =====
     path("login/", views.login_view, name="login_admin"),
     path("logout/", views.logout_view, name="logout"),
-
+    path("esqueci-senha/", views.forgot_password_request, name="forgot_password"),
+    path("redefinir-senha/<uidb64>/<token>/", views.reset_password_confirm, name="reset_password_confirm"),
+    
     # ===== DASHBOARD (ÁREA INTERNA) =====
     path("dashboard/", views.dashboard, name="dashboard"),
     path("minhas-os/", views.team_my, name="team_my"),

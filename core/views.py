@@ -2,18 +2,24 @@ from datetime import timedelta
 import json
 from urllib.request import urlopen
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Q, Count
 from django.db.models.functions import TruncDate
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.decorators.http import require_http_methods, require_GET
 
 from .forms import (
@@ -61,6 +67,36 @@ def _make_unique_username(base: str) -> str:
         if not User.objects.filter(username__iexact=candidate).exists():
             return candidate
         i += 1
+
+
+def _send_activation_email(request, user):
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+
+    activation_path = reverse("activate_account", kwargs={
+        "uidb64": uid,
+        "token": token,
+    })
+    activation_link = request.build_absolute_uri(activation_path)
+
+    subject = "Ative sua conta - Portal de Serviços Urbanos"
+    message = (
+        f"Olá, {user.username}!\n\n"
+        f"Seu cadastro foi realizado com sucesso.\n\n"
+        f"Para ativar sua conta, clique no link abaixo:\n"
+        f"{activation_link}\n\n"
+        f"Se você não realizou este cadastro, ignore este email."
+    )
+
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or "no-reply@portaldeservicos.com"
+
+    send_mail(
+        subject,
+        message,
+        from_email,
+        [user.email],
+        fail_silently=False,
+    )
 
 
 def index(request):
@@ -112,6 +148,8 @@ def solicitar_servico(request):
                         "created": False
                     })
 
+        created_new_user = False
+
         if not user_to_link:
             errors = []
 
@@ -139,28 +177,45 @@ def solicitar_servico(request):
                     "created": False
                 })
 
-            with transaction.atomic():
-                username = _make_unique_username(reg_email)
-                user_to_link = User.objects.create_user(
-                    username=username,
-                    email=reg_email,
-                    password=reg_p1,
+            try:
+                with transaction.atomic():
+                    username = _make_unique_username(reg_email)
+                    user_to_link = User.objects.create_user(
+                        username=username,
+                        email=reg_email,
+                        password=reg_p1,
+                        is_active=False,
+                    )
+
+                    g = Group.objects.filter(name__iexact="requisitante").first()
+                    if g:
+                        user_to_link.groups.add(g)
+
+                    profile, _ = UserProfile.objects.get_or_create(user=user_to_link)
+                    if person_type == "PF" and len(document_digits) == 11:
+                        profile.cpf = document_digits
+                        profile.save()
+
+                    created_new_user = True
+
+                _send_activation_email(request, user_to_link)
+
+            except Exception as e:
+                if user_to_link and user_to_link.pk:
+                    user_to_link.delete()
+
+                messages.error(
+                    request,
+                    f"Não foi possível enviar o email de ativação. Erro: {e}"
                 )
-
-                g = Group.objects.filter(name__iexact="requisitante").first()
-                if g:
-                    user_to_link.groups.add(g)
-
-                profile, _ = UserProfile.objects.get_or_create(user=user_to_link)
-                if person_type == "PF" and len(document_digits) == 11:
-                    profile.cpf = document_digits
-                    profile.save()
-
-            login(request, user_to_link)
+                return render(request, "solicitar_servico.html", {
+                    "form": form,
+                    "created": False
+                })
 
         obj = form.save(commit=False)
 
-        if user_to_link and user_to_link.is_authenticated:
+        if user_to_link:
             obj.created_by = user_to_link
 
             if person_type == "PF" and len(document_digits) == 11:
@@ -173,6 +228,12 @@ def solicitar_servico(request):
 
         for f in request.FILES.getlist("attachments"):
             ServiceRequestAttachment.objects.create(request=obj, file=f)
+
+        if created_new_user:
+            messages.success(
+                request,
+                "Solicitação criada com sucesso! Sua conta foi criada e enviamos um link de ativação para seu email."
+            )
 
         return render(request, "solicitar_servico.html", {
             "form": ServiceRequestForm(),
@@ -225,7 +286,7 @@ def register(request):
 
     if request.method == "POST":
         username = (request.POST.get("username") or "").strip()
-        email = (request.POST.get("email") or "").strip()
+        email = (request.POST.get("email") or "").strip().lower()
         password1 = (request.POST.get("password1") or "").strip()
         password2 = (request.POST.get("password2") or "").strip()
 
@@ -245,6 +306,12 @@ def register(request):
         if email and User.objects.filter(email__iexact=email).exists():
             errors.append("Este email já está cadastrado.")
 
+        if password1 and password1 == password2:
+            try:
+                validate_password(password1)
+            except ValidationError as e:
+                errors.extend(e.messages)
+
         if errors:
             for e in errors:
                 messages.error(request, e)
@@ -254,23 +321,198 @@ def register(request):
                 "register_data": {"username": username, "email": email},
             })
 
-        with transaction.atomic():
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password1
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password1,
+                    is_active=False,
+                )
+
+                g = Group.objects.filter(name__iexact="requisitante").first()
+                if g:
+                    user.groups.add(g)
+
+                UserProfile.objects.get_or_create(user=user)
+
+            _send_activation_email(request, user)
+
+            messages.success(
+                request,
+                "Conta criada com sucesso! Enviamos um link de ativação para seu email."
             )
+            return redirect("login_admin")
 
-            g = Group.objects.filter(name__iexact="requisitante").first()
-            if g:
-                user.groups.add(g)
+        except Exception as e:
+            try:
+                user.delete()
+            except Exception:
+                pass
 
-            UserProfile.objects.get_or_create(user=user)
-
-        messages.success(request, "Conta criada com sucesso! Você já pode fazer login.")
-        return redirect("login_admin")
+            messages.error(
+                request,
+                f"Não foi possível enviar o email de ativação. Erro: {e}"
+            )
+            return render(request, "login_admin.html", {
+                "show_register": True,
+                "register_data": {"username": username, "email": email},
+            })
 
     return redirect("login_admin")
+
+
+@require_http_methods(["GET"])
+def activate_account(request, uidb64, token):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except Exception:
+        user = None
+
+    if not user:
+        messages.error(request, "Link de ativação inválido.")
+        return redirect("login_admin")
+
+    if user.is_active:
+        messages.info(request, "Esta conta já foi ativada. Faça login.")
+        return redirect("login_admin")
+
+    if not default_token_generator.check_token(user, token):
+        messages.error(request, "Link de ativação inválido ou expirado.")
+        return redirect("login_admin")
+
+    user.is_active = True
+    user.save(update_fields=["is_active"])
+
+    messages.success(request, "Conta ativada com sucesso! Agora você já pode fazer login.")
+    return redirect("login_admin")
+
+
+@require_http_methods(["POST"])
+def forgot_password_request(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
+    email = (request.POST.get("email") or "").strip().lower()
+    print("EMAIL RECEBIDO PARA RECUPERAÇÃO:", email)
+
+    if not email:
+        messages.error(request, "Informe seu email.")
+        return render(request, "login_admin.html", {
+            "show_forgot": True,
+        })
+
+    user = User.objects.filter(email__iexact=email).first()
+    print("USUÁRIO ENCONTRADO:", user)
+
+    if not user:
+        messages.error(request, "Nenhum usuário foi encontrado com este email.")
+        return render(request, "login_admin.html", {
+            "show_forgot": True,
+        })
+
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+
+    reset_path = reverse("reset_password_confirm", kwargs={
+        "uidb64": uid,
+        "token": token,
+    })
+    reset_link = request.build_absolute_uri(reset_path)
+
+    print("LINK DE RECUPERAÇÃO GERADO:", reset_link)
+
+    subject = "Recuperação de senha - Portal de Serviços Urbanos"
+    message = (
+        f"Olá, {user.username}!\n\n"
+        f"Recebemos uma solicitação para redefinir sua senha.\n\n"
+        f"Acesse o link abaixo para cadastrar uma nova senha:\n"
+        f"{reset_link}\n\n"
+        f"Se você não solicitou esta alteração, ignore este email."
+    )
+
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or "no-reply@portaldeservicos.com"
+
+    try:
+        resultado = send_mail(
+            subject,
+            message,
+            from_email,
+            [user.email],
+            fail_silently=False,
+        )
+        print("EMAIL ENVIADO COM SUCESSO. RESULTADO =", resultado)
+        messages.success(request, "Enviamos o link de recuperação para seu email.")
+        return redirect("login_admin")
+
+    except Exception as e:
+        print("ERRO AO ENVIAR EMAIL:", repr(e))
+        messages.error(
+            request,
+            f"Não foi possível enviar o email de recuperação. Erro: {e}"
+        )
+        return render(request, "login_admin.html", {
+            "show_forgot": True,
+        })
+
+
+@require_http_methods(["GET", "POST"])
+def reset_password_confirm(request, uidb64, token):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except Exception:
+        user = None
+
+    if not user or not default_token_generator.check_token(user, token):
+        messages.error(request, "Link de redefinição inválido ou expirado.")
+        return redirect("login_admin")
+
+    if request.method == "POST":
+        password1 = (request.POST.get("password1") or "").strip()
+        password2 = (request.POST.get("password2") or "").strip()
+
+        if not password1 or not password2:
+            messages.error(request, "Informe e confirme a nova senha.")
+            return render(request, "reset_password.html", {
+                "uidb64": uidb64,
+                "token": token,
+            })
+
+        if password1 != password2:
+            messages.error(request, "As senhas não coincidem.")
+            return render(request, "reset_password.html", {
+                "uidb64": uidb64,
+                "token": token,
+            })
+
+        try:
+            validate_password(password1, user=user)
+        except ValidationError as e:
+            for msg in e.messages:
+                messages.error(request, msg)
+            return render(request, "reset_password.html", {
+                "uidb64": uidb64,
+                "token": token,
+            })
+
+        user.set_password(password1)
+        user.save()
+
+        messages.success(request, "Senha redefinida com sucesso. Faça login com a nova senha.")
+        return redirect("login_admin")
+
+    return render(request, "reset_password.html", {
+        "uidb64": uidb64,
+        "token": token,
+    })
 
 
 def is_superuser(user):
@@ -379,8 +621,8 @@ def login_view(request):
         return redirect("dashboard")
 
     if request.method == "POST":
-        username_or_email = request.POST.get("username", "").strip()
-        password = request.POST.get("password", "").strip()
+        username_or_email = (request.POST.get("username") or "").strip()
+        password = (request.POST.get("password") or "").strip()
 
         user = authenticate(request, username=username_or_email, password=password)
 
@@ -391,7 +633,15 @@ def login_view(request):
             except User.DoesNotExist:
                 user = None
 
-        if user is None:
+        if user is None and username_or_email:
+            u = User.objects.filter(
+                Q(username__iexact=username_or_email) | Q(email__iexact=username_or_email)
+            ).first()
+
+            if u and not u.is_active:
+                messages.error(request, "Sua conta ainda não foi ativada por email.")
+                return render(request, "login_admin.html")
+
             messages.error(request, "Usuário ou senha inválidos.")
             return render(request, "login_admin.html")
 

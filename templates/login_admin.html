@@ -58,8 +58,17 @@
           <div class="field field-password">
             <input id="id_password" name="password" type="password" placeholder="••••••••" required>
 
-            <button type="button" class="toggle-pass" data-toggle="#id_password">
+            <button type="button" class="toggle-pass" data-toggle="#id_password" aria-label="Mostrar ou ocultar senha">
               <i class="bi bi-eye"></i>
+            </button>
+          </div>
+
+          <div style="margin-top:10px; text-align:right;">
+            <button type="button"
+                    class="back"
+                    style="background:none;border:none;padding:0;color:#2563eb;font-weight:600;cursor:pointer;"
+                    onclick="showForgotPassword()">
+              Esqueci minha senha
             </button>
           </div>
 
@@ -82,7 +91,9 @@
       <div id="registerBox" style="display:none;">
 
         <h2 class="card-title">Criar conta</h2>
-        <p class="card-desc">Preencha os dados para cadastro.</p>
+        <p class="card-desc">
+          Preencha os dados para cadastro. Após finalizar, enviaremos um link de ativação para seu email.
+        </p>
 
         <form method="post" action="{% url 'register' %}" class="login-form">
           {% csrf_token %}
@@ -92,13 +103,13 @@
             <span class="field-ico">
               <i class="bi bi-person-fill"></i>
             </span>
-            <input name="username" type="text" required value="{{ register_data.username|default:'' }}">
+            <input name="username" type="text" placeholder="Digite seu usuário" required value="{{ register_data.username|default:'' }}">
           </div>
 
           <label class="field-label">Email</label>
           <div class="field">
             <span class="field-ico">✉</span>
-            <input name="email" type="email" required value="{{ register_data.email|default:'' }}">
+            <input name="email" type="email" placeholder="seu@email.com" required value="{{ register_data.email|default:'' }}">
           </div>
 
           <label class="field-label">Senha</label>
@@ -106,9 +117,9 @@
             <span class="field-ico">
               <i class="bi bi-file-lock2"></i>
             </span>
-            <input id="id_password1" name="password1" type="password" required>
+            <input id="id_password1" name="password1" type="password" placeholder="Crie uma senha" required>
 
-            <button type="button" class="toggle-pass" data-toggle="#id_password1">
+            <button type="button" class="toggle-pass" data-toggle="#id_password1" aria-label="Mostrar ou ocultar senha">
               <i class="bi bi-eye"></i>
             </button>
           </div>
@@ -118,15 +129,52 @@
             <span class="field-ico">
               <i class="bi bi-file-lock2"></i>
             </span>
-            <input id="id_password2" name="password2" type="password" required>
+            <input id="id_password2" name="password2" type="password" placeholder="Confirme sua senha" required>
 
-            <button type="button" class="toggle-pass" data-toggle="#id_password2">
+            <button type="button" class="toggle-pass" data-toggle="#id_password2" aria-label="Mostrar ou ocultar senha">
               <i class="bi bi-eye"></i>
             </button>
           </div>
 
+          <div style="margin-top:8px; padding:10px 12px; border-radius:12px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; font-size:13px; line-height:1.5;">
+            Após o cadastro, sua conta ficará aguardando confirmação.
+            Você só poderá entrar no sistema depois de clicar no link enviado para o seu email.
+          </div>
+
           <button class="btn-primary" type="submit">
             Cadastrar
+          </button>
+        </form>
+
+        <div style="margin-top:15px;text-align:center;">
+          <button type="button" class="back" onclick="showLogin()">
+            Voltar para login
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ========================= -->
+      <!-- FORGOT PASSWORD FORM -->
+      <!-- ========================= -->
+      <div id="forgotBox" style="display:none;">
+
+        <h2 class="card-title">Recuperar senha</h2>
+        <p class="card-desc">
+          Informe seu email para receber o link de redefinição de senha.
+        </p>
+
+        <form method="post" action="{% url 'forgot_password' %}" class="login-form">
+          {% csrf_token %}
+
+          <label class="field-label">Email cadastrado</label>
+          <div class="field">
+            <span class="field-ico">✉</span>
+            <input name="email" type="email" placeholder="seu@email.com" required>
+          </div>
+
+          <button class="btn-primary" type="submit">
+            Enviar link de recuperação
           </button>
         </form>
 
@@ -148,14 +196,25 @@
 </main>
 
 <script>
-function showRegister() {
+function hideAllBoxes() {
   document.getElementById("loginBox").style.display = "none";
+  document.getElementById("registerBox").style.display = "none";
+  document.getElementById("forgotBox").style.display = "none";
+}
+
+function showRegister() {
+  hideAllBoxes();
   document.getElementById("registerBox").style.display = "block";
 }
 
 function showLogin() {
-  document.getElementById("registerBox").style.display = "none";
+  hideAllBoxes();
   document.getElementById("loginBox").style.display = "block";
+}
+
+function showForgotPassword() {
+  hideAllBoxes();
+  document.getElementById("forgotBox").style.display = "block";
 }
 
 function setupPasswordToggles() {
@@ -182,6 +241,12 @@ document.addEventListener("DOMContentLoaded", setupPasswordToggles);
 {% if show_register %}
 <script>
   showRegister();
+</script>
+{% endif %}
+
+{% if show_forgot %}
+<script>
+  showForgotPassword();
 </script>
 {% endif %}
 

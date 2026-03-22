@@ -105,3 +105,16 @@ CSRF_TRUSTED_ORIGINS = [
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = "servicosurbanossocorro@gmail.com"
+EMAIL_HOST_PASSWORD = "ifzmfdoiaebqitxv"
+
+DEFAULT_FROM_EMAIL = f"Portal de Serviços Urbanos <{EMAIL_HOST_USER}>"
+
+
+EMAIL_TIMEOUT = 20
