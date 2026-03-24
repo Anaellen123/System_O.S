@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group
+from django.utils import timezone
 
 from .models import ServiceRequest, Team
 
@@ -23,24 +24,27 @@ class ServiceRequestForm(forms.ModelForm):
 
 
 class ServiceRequestUpdateForm(forms.ModelForm):
+    prazo_dias = forms.IntegerField(
+        required=False,
+        min_value=0,
+        label="Prazo em dias",
+        widget=forms.NumberInput(attrs={
+            "class": "form-control",
+            "placeholder": "Digite o prazo em dias",
+        })
+    )
+
     class Meta:
         model = ServiceRequest
         fields = [
             "person_type", "document", "full_name", "phone",
             "cep", "street", "number", "neighborhood", "city",
             "service_type", "description", "notes",
-            "status", "assigned_to", "team", "due_at",
+            "status", "assigned_to", "team",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
             "notes": forms.Textarea(attrs={"rows": 3}),
-            "due_at": forms.DateInput(
-                attrs={
-                    "type": "date",
-                    "class": "form-control",
-                },
-                format="%Y-%m-%d"
-            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -55,12 +59,16 @@ class ServiceRequestUpdateForm(forms.ModelForm):
         self.fields["team"].required = False
         self.fields["team"].queryset = Team.objects.all().order_by("-created_at", "name")
 
-        self.fields["due_at"].required = False
-        self.fields["due_at"].input_formats = ["%Y-%m-%d"]
-
         self.fields["person_type"].disabled = True
         self.fields["document"].disabled = True
         self.fields["full_name"].disabled = True
+
+        instance = kwargs.get("instance")
+        if instance and instance.created_at and instance.due_at:
+            data_inicial = timezone.localtime(instance.created_at).date()
+            data_final = instance.due_at.date() if hasattr(instance.due_at, "date") else instance.due_at
+            diferenca = (data_final - data_inicial).days
+            self.fields["prazo_dias"].initial = max(diferenca, 0)
 
 
 class UserRegisterForm(UserCreationForm):

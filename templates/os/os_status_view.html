@@ -1,0 +1,388 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Visualizar O.S {{ os.os_number }}{% endblock %}
+{% block page_title %}Visualizar O.S {{ os.os_number }}{% endblock %}
+
+{% block content %}
+<style>
+  .os-view-wrap{
+    max-width: 1100px;
+  }
+
+  .os-view-card{
+    background: #fff;
+    border: 2px solid #cbd5e1;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 10px 24px rgba(15,23,42,.10);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .os-view-card:before{
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: #e2e8f0;
+  }
+
+  .os-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+
+  .os-title{
+    font-size:24px;
+    font-weight:800;
+    color:#0f172a;
+    margin:0;
+  }
+
+  .os-sub{
+    margin:6px 0 0;
+    color:#64748b;
+    font-size:14px;
+  }
+
+  .status-chip{
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid transparent;
+  }
+
+  .status-chip.OPEN{
+    background:#fef3c7;
+    color:#92400e;
+    border-color:#fde68a;
+  }
+
+  .status-chip.IN_PROGRESS{
+    background:#dbeafe;
+    color:#1d4ed8;
+    border-color:#93c5fd;
+  }
+
+  .status-chip.DONE{
+    background:#dcfce7;
+    color:#166534;
+    border-color:#86efac;
+  }
+
+  .os-grid{
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap:16px;
+    margin-top:18px;
+  }
+
+  .field{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:14px;
+    padding:14px;
+  }
+
+  .field.full{
+    grid-column: 1 / -1;
+  }
+
+  .field-label{
+    display:block;
+    font-size:12px;
+    font-weight:800;
+    color:#475569;
+    margin-bottom:8px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+
+  .field-value{
+    font-size:15px;
+    color:#0f172a;
+    line-height:1.6;
+    word-break:break-word;
+    white-space:pre-wrap;
+  }
+
+  .readonly-box{
+    min-height:46px;
+    display:flex;
+    align-items:center;
+    background:#d3d3d3;
+    border: 1px solid #8e8e8e;
+    border-radius:12px;
+    padding:10px 12px;
+  }
+
+  .status-form{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  .status-select{
+    min-width:220px;
+    height:44px;
+    border-radius:12px;
+    border:1px solid #cbd5e1;
+    padding:0 12px;
+    background:#fff;
+    color:#0f172a;
+    font-size:14px;
+    font-weight:600;
+  }
+
+  .save-btn{
+    height:44px;
+    border:none;
+    border-radius:12px;
+    padding:0 16px;
+    background:#2563eb;
+    color:#fff;
+    font-weight:700;
+    cursor:pointer;
+    transition:.18s ease;
+  }
+
+  .save-btn:hover{
+    background:#1d4ed8;
+    transform:translateY(-1px);
+  }
+
+  .attachments-grid{
+    display:grid;
+    border: 1px solid #8e8e8e;
+    border-radius: 5px;
+    grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));
+    gap:12px;
+  }
+
+  .attachment-card{
+    border:1px solid #e2e8f0;
+    border-radius:14px;
+    background:#fff;
+    padding:10px;
+  }
+
+  .attachment-card img{
+    width:100%;
+    height:160px;
+    object-fit:cover;
+    border-radius:10px;
+    border:1px solid #e5e7eb;
+    display:block;
+    margin-bottom:8px;
+  }
+
+  .attachment-link{
+    display:inline-block;
+    color:#2563eb;
+    font-size:13px;
+    font-weight:700;
+    text-decoration:none;
+    word-break:break-word;
+  }
+
+  .attachment-link:hover{
+    text-decoration:underline;
+  }
+
+  .top-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:18px;
+  }
+
+  .action-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    min-height:42px;
+    padding:0 16px;
+    border-radius:12px;
+    font-weight:700;
+    border:1px solid #cbd5e1;
+    background:#fff;
+    color:#0f172a;
+    transition:.18s ease;
+  }
+
+  .action-btn:hover{
+    transform:translateY(-1px);
+    border-color:#94a3b8;
+  }
+
+  .action-btn.primary{
+    background:#eff6ff;
+    color:#2563eb;
+    border-color:#93c5fd;
+  }
+
+  @media (max-width: 768px){
+    .os-grid{
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="os-view-wrap">
+  <div class="os-view-card">
+
+    <div class="os-head">
+      <div>
+        <h2 class="os-title">Ordem de Serviço {{ os.os_number }}</h2>
+        <div class="os-sub">
+          Visualização da O.S com alteração permitida somente para o status.
+        </div>
+      </div>
+
+      <div>
+        <span class="status-chip {{ os.status }}">
+          {{ os.get_status_display }}
+        </span>
+      </div>
+    </div>
+
+    <div class="os-grid">
+
+      <div class="field">
+        <span class="field-label">Número da O.S</span>
+        <div class="readonly-box">
+          <div class="field-value">{{ os.os_number }}</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Prazo</span>
+        <div class="readonly-box">
+          <div class="field-value">{{ prazo_formatado }}</div>
+        </div>
+      </div>
+
+      <div class="field full">
+        <span class="field-label">Mudança de Status</span>
+        <form method="post" class="status-form">
+          {% csrf_token %}
+          <select name="status" class="status-select">
+            {% for value, label in status_choices %}
+              <option value="{{ value }}" {% if os.status == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="save-btn">Salvar status</button>
+        </form>
+      </div>
+
+      <div class="field full">
+        <span class="field-label">Endereço</span>
+        <div class="readonly-box">
+          <div class="field-value">{{ endereco_completo }}</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Tipo de serviço</span>
+        <div class="readonly-box">
+          <div class="field-value">{{ os.service_type|default:"—" }}</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Status atual</span>
+        <div class="readonly-box">
+          <div class="field-value">{{ os.get_status_display }}</div>
+        </div>
+      </div>
+
+      <div class="field full">
+        <span class="field-label">Descrição</span>
+        <div class="readonly-box" style="align-items:flex-start;">
+          <div class="field-value">{{ os.description|default:"—" }}</div>
+        </div>
+      </div>
+
+      <div class="field full">
+        <span class="field-label">Anexos</span>
+
+        {% if anexos %}
+          <div class="attachments-grid">
+            {% for anexo in anexos %}
+              <div class="attachment-card">
+                {% if anexo.file %}
+                  <a href="{{ anexo.file.url }}" target="_blank">
+                    <img src="{{ anexo.file.url }}" alt="Anexo da O.S {{ os.os_number }}">
+                  </a>
+                  <a href="{{ anexo.file.url }}" target="_blank" class="attachment-link">
+                    Abrir anexo
+                  </a>
+                {% else %}
+                  <div class="field-value">Arquivo indisponível.</div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="readonly-box">
+            <div class="field-value">Nenhum anexo enviado.</div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="field full">
+        <span class="field-label">Observações Internas</span>
+        <div class="readonly-box" style="align-items:flex-start;">
+          <div class="field-value">{{ observacoes }}</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="top-actions">
+        <button type="button" class="action-btn" onclick="fecharAbaOuVoltar()">
+            Fechar aba
+        </button>
+    </div>
+  </div>
+</div>
+<script>
+  function fecharAbaOuVoltar() {
+    try {
+      window.close();
+
+      setTimeout(function () {
+        if (!window.closed) {
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.location.href = "{% url 'team_my' %}";
+          }
+        }
+      }, 150);
+    } catch (e) {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = "{% url 'team_my' %}";
+      }
+    }
+  }
+</script>
+      
+{% endblock %}

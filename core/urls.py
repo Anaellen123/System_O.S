@@ -47,6 +47,7 @@ urlpatterns = [
 
     # ===== EDIÇÃO / DETALHE DE O.S =====
     path("dashboard/os/<int:pk>/", views.os_detail, name="os_detail"),
+    path("os/<int:pk>/visualizar/", views.os_status_view, name="os_status_view"),
 
     # ===== APIS =====
     path("api/cep/<str:cep>/", views.api_cep, name="api_cep"),
@@ -60,4 +61,7 @@ urlpatterns = [
 
     # ===== DASHBOARD REQUISITANTE =====
     path("meu-painel/", views.dashboard_requisitante, name="dashboard_requisitante"),
+
+    # === Impressões =======
+    path("os/<int:pk>/imprimir/", views.os_print, name="os_print"),
 ]

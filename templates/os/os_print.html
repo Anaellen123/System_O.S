@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Impressão da O.S {{ os.os_number }}</title>
+  <style>
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      color:#111827;
+      margin:0;
+      background:#f8fafc;
+    }
+
+    .page{
+      max-width:900px;
+      margin:24px auto;
+      background:#fff;
+      border:1px solid #dbe3ee;
+      border-radius:14px;
+      padding:28px;
+      box-shadow:0 8px 24px rgba(15,23,42,.08);
+    }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      border-bottom:2px solid #e5e7eb;
+      padding-bottom:16px;
+      margin-bottom:22px;
+    }
+
+    .title{
+      margin:0;
+      font-size:24px;
+      font-weight:800;
+      color:#0f172a;
+    }
+
+    .sub{
+      margin:6px 0 0;
+      color:#475569;
+      font-size:14px;
+    }
+
+    .print-btn{
+      border:none;
+      background:#2563eb;
+      color:#fff;
+      padding:10px 16px;
+      border-radius:10px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:16px;
+      margin-bottom:20px;
+    }
+
+    .card{
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:14px;
+      background:#fff;
+    }
+
+    .card.full{
+      grid-column:1 / -1;
+    }
+
+    .label{
+      display:block;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      color:#64748b;
+      margin-bottom:6px;
+      font-weight:700;
+    }
+
+    .value{
+      font-size:15px;
+      color:#0f172a;
+      line-height:1.6;
+      word-break:break-word;
+    }
+
+    .obs-box{
+      white-space:pre-wrap;
+    }
+
+    .anexos-preview{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+      gap:14px;
+      margin-top:8px;
+    }
+
+    .anexo-preview-item{
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:10px;
+      background:#f8fafc;
+    }
+
+    .anexo-preview-link{
+      display:block;
+      text-decoration:none;
+    }
+
+    .anexo-preview-img{
+      width:100%;
+      height:auto;
+      max-height:320px;
+      object-fit:contain;
+      display:block;
+      border-radius:10px;
+      background:#fff;
+      border:1px solid #dbe3ee;
+    }
+
+    @media print{
+      body{
+        background:#fff;
+      }
+
+      .page{
+        margin:0;
+        max-width:none;
+        border:none;
+        border-radius:0;
+        box-shadow:none;
+        padding:0;
+      }
+
+      .print-area{
+        display:none !important;
+      }
+
+      .anexos-preview{
+        grid-template-columns:1fr;
+      }
+
+      .anexo-preview-item{
+        break-inside:avoid;
+        page-break-inside:avoid;
+      }
+
+      .anexo-preview-img{
+        max-height:500px;
+      }
+    }
+
+    @media (max-width: 700px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+
+      .top{
+        flex-direction:column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="top">
+      <div>
+        <h1 class="title">Ordem de Serviço {{ os.os_number }}</h1>
+        <p class="sub">Documento para impressão da O.S</p>
+      </div>
+
+      <div class="print-area">
+        <button class="print-btn" onclick="window.print()">Imprimir</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <span class="label">Número da O.S</span>
+        <div class="value">{{ os.os_number }}</div>
+      </div>
+
+      <div class="card">
+        <span class="label">Prazo</span>
+        <div class="value">{{ prazo_formatado }}</div>
+      </div>
+
+      <div class="card full">
+        <span class="label">Endereço</span>
+        <div class="value">{{ endereco_completo }}</div>
+      </div>
+
+      <div class="card full">
+        <span class="label">Serviço</span>
+        <div class="value">{{ os.service_type|default:"—" }}</div>
+      </div>
+
+      <div class="card full">
+        <span class="label">Descrição</span>
+        <div class="value obs-box">{{ os.description|default:"—" }}</div>
+      </div>
+
+      <div class="card full">
+        <span class="label">Observações</span>
+        <div class="value obs-box">
+          {% if observacoes %}
+            {{ observacoes }}
+          {% else %}
+            —
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card full">
+        <span class="label">Anexos</span>
+
+        {% if anexos %}
+          <div class="anexos-preview">
+            {% for anexo in anexos %}
+              <div class="anexo-preview-item">
+                {% if anexo.file %}
+                  <a href="{{ anexo.file.url }}" target="_blank" class="anexo-preview-link">
+                    <img src="{{ anexo.file.url }}" alt="Anexo da O.S {{ os.os_number }}" class="anexo-preview-img">
+                  </a>
+                {% elif anexo.image %}
+                  <a href="{{ anexo.image.url }}" target="_blank" class="anexo-preview-link">
+                    <img src="{{ anexo.image.url }}" alt="Imagem da O.S {{ os.os_number }}" class="anexo-preview-img">
+                  </a>
+                {% else %}
+                  <div class="value">Anexo disponível</div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="value">Nenhum anexo cadastrado.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

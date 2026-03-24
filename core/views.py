@@ -99,6 +99,77 @@ def _send_activation_email(request, user):
     )
 
 
+def _formatar_prazo_data(data_inicial, data_final):
+    """
+    Retorna o prazo em formato amigável:
+    - até 29 dias: X dias
+    - a partir de 30 dias: X mês(es) e Y dia(s)
+    """
+    if not data_inicial or not data_final:
+        return ""
+
+    if hasattr(data_inicial, "date"):
+        data_inicial = data_inicial.date()
+    if hasattr(data_final, "date"):
+        data_final = data_final.date()
+
+    diferenca = (data_final - data_inicial).days
+
+    if diferenca <= 0:
+        return "0 dias"
+
+    if diferenca < 30:
+        return f"{diferenca} dia" if diferenca == 1 else f"{diferenca} dias"
+
+    meses = diferenca // 30
+    resto = diferenca % 30
+
+    if resto == 0:
+        return f"{meses} mês" if meses == 1 else f"{meses} meses"
+
+    if meses == 1:
+        return f"1 mês e {resto} dia" if resto == 1 else f"1 mês e {resto} dias"
+
+    return f"{meses} meses e {resto} dia" if resto == 1 else f"{meses} meses e {resto} dias"
+
+
+def _montar_endereco_os(os_obj):
+    partes = [
+        getattr(os_obj, "street", "") or "",
+        getattr(os_obj, "number", "") or "",
+        getattr(os_obj, "neighborhood", "") or "",
+        getattr(os_obj, "city", "") or "",
+        getattr(os_obj, "cep", "") or "",
+    ]
+    return ", ".join([p.strip() for p in partes if str(p).strip()])
+
+
+def _obter_observacoes_os(os_obj):
+    candidatos = [
+        "notes",
+        "note",
+        "observation",
+        "observations",
+        "observacao",
+        "observacoes",
+        "comments",
+        "comment",
+    ]
+    for campo in candidatos:
+        if hasattr(os_obj, campo):
+            valor = getattr(os_obj, campo, "")
+            if valor:
+                return valor
+    return ""
+
+
+def _obter_anexos_os(os_obj):
+    try:
+        return ServiceRequestAttachment.objects.filter(request=os_obj)
+    except Exception:
+        return []
+
+
 def index(request):
     return render(request, "index.html")
 
@@ -847,7 +918,16 @@ def os_detail(request, pk):
 
         form = ServiceRequestUpdateForm(request.POST, instance=os_obj)
         if form.is_valid():
-            form.save()
+            os_edit = form.save(commit=False)
+
+            prazo_dias = form.cleaned_data.get("prazo_dias")
+            if prazo_dias is not None and str(prazo_dias).strip() != "":
+                data_base = timezone.localtime(os_obj.created_at).date()
+                os_edit.due_at = data_base + timedelta(days=int(prazo_dias))
+
+            os_edit.save()
+            form.save_m2m()
+
             messages.success(request, "OS atualizada com sucesso!")
             return redirect("os_detail", pk=os_obj.pk)
         else:
@@ -855,7 +935,35 @@ def os_detail(request, pk):
     else:
         form = ServiceRequestUpdateForm(instance=os_obj)
 
-    return render(request, "os_detail.html", {"os": os_obj, "form": form})
+    prazo_formatado = _formatar_prazo_data(os_obj.created_at, os_obj.due_at)
+
+    return render(request, "os_detail.html", {
+        "os": os_obj,
+        "form": form,
+        "prazo_formatado": prazo_formatado,
+    })
+
+
+@login_required(login_url="login_admin")
+def os_print(request, pk):
+    os_obj = get_object_or_404(ServiceRequest, pk=pk)
+
+    if _is_requisitante(request.user) and os_obj.created_by_id != request.user.id:
+        messages.error(request, "Você não tem permissão para imprimir esta OS.")
+        return redirect("dashboard_requisitante")
+
+    anexos = _obter_anexos_os(os_obj)
+    endereco_completo = _montar_endereco_os(os_obj)
+    observacoes = _obter_observacoes_os(os_obj)
+    prazo_formatado = _formatar_prazo_data(os_obj.created_at, os_obj.due_at)
+
+    return render(request, "os/os_print.html", {
+        "os": os_obj,
+        "anexos": anexos,
+        "endereco_completo": endereco_completo or "—",
+        "observacoes": observacoes or "",
+        "prazo_formatado": prazo_formatado or "—",
+    })
 
 
 def api_cep(request, cep):
@@ -961,6 +1069,10 @@ def team_list(request):
         .select_related("responsible")
         .prefetch_related("members__user", "service_requests")
     )
+
+    for team in teams:
+        for os in team.service_requests.all():
+            os.prazo_formatado = _formatar_prazo_data(os.created_at, os.due_at)
 
     users = (
         User.objects.filter(groups__name__iexact="interno", is_active=True)
@@ -1092,6 +1204,9 @@ def team_my(request):
             .order_by("-created_at")
         )
 
+        for os in team.os_list:
+            os.prazo_formatado = _formatar_prazo_data(os.created_at, os.due_at)
+
         team.stats = {
             "total": len(team.os_list),
             "abertas": sum(1 for os in team.os_list if os.status == "OPEN"),
@@ -1115,7 +1230,6 @@ def team_my(request):
         "teams": teams,
         "stats": stats,
     })
-
 
 @login_required(login_url="login_admin")
 @require_http_methods(["POST"])
@@ -1185,4 +1299,45 @@ def team_my_report(request):
         "teams": teams,
         "stats": stats,
         "generated_at": timezone.localtime(),
+    })
+
+@login_required(login_url="login_admin")
+@require_http_methods(["GET", "POST"])
+def os_status_view(request, pk):
+    os_obj = get_object_or_404(ServiceRequest, pk=pk)
+
+    if _is_requisitante(request.user) and os_obj.created_by_id != request.user.id:
+        messages.error(request, "Você não tem permissão para acessar esta OS.")
+        return redirect("dashboard_requisitante")
+
+    if request.method == "POST":
+        if _is_requisitante(request.user):
+            messages.error(request, "Você não tem permissão para alterar o status desta OS.")
+            return redirect("os_status_view", pk=os_obj.pk)
+
+        novo_status = (request.POST.get("status") or "").strip()
+
+        status_validos = [item[0] for item in ServiceRequest.STATUS_CHOICES]
+        if novo_status not in status_validos:
+            messages.error(request, "Status inválido.")
+            return redirect("os_status_view", pk=os_obj.pk)
+
+        os_obj.status = novo_status
+        os_obj.save(update_fields=["status"])
+
+        messages.success(request, "Status da OS atualizado com sucesso!")
+        return redirect("os_status_view", pk=os_obj.pk)
+
+    prazo_formatado = _formatar_prazo_data(os_obj.created_at, os_obj.due_at)
+    endereco_completo = _montar_endereco_os(os_obj)
+    anexos = _obter_anexos_os(os_obj)
+    observacoes = _obter_observacoes_os(os_obj)
+
+    return render(request, "os/os_status_view.html", {
+        "os": os_obj,
+        "prazo_formatado": prazo_formatado or "—",
+        "endereco_completo": endereco_completo or "—",
+        "anexos": anexos,
+        "observacoes": observacoes or "—",
+        "status_choices": ServiceRequest.STATUS_CHOICES,
     })
