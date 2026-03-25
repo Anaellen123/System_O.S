@@ -121,6 +121,8 @@ class ServiceRequest(models.Model):
         verbose_name="Número da OS",
     )
 
+    solution_taken = models.TextField("Solução tomada", blank=True, null=True)
+    finished_in_days = models.PositiveIntegerField("Finalizado em quantos dias", blank=True, null=True)
     person_type = models.CharField(max_length=2, choices=PERSON_TYPE_CHOICES)
     document = models.CharField(max_length=18)
     full_name = models.CharField(max_length=120)

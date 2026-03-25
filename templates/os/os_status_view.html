@@ -122,40 +122,69 @@
     display:flex;
     align-items:center;
     background:#d3d3d3;
-    border: 1px solid #8e8e8e;
+    border:1px solid #8e8e8e;
     border-radius:12px;
     padding:10px 12px;
   }
 
-  .status-form{
+  .status-form-wrap{
     display:flex;
-    gap:10px;
-    align-items:center;
-    flex-wrap:wrap;
+    flex-direction:column;
+    gap:14px;
   }
 
-  .status-select{
-    min-width:220px;
-    height:44px;
+  .status-topbar{
+    display:grid;
+    grid-template-columns: minmax(260px, 320px) auto;
+    gap:12px;
+    align-items:end;
+  }
+
+  .status-select,
+  .status-input,
+  .status-textarea{
+    width:100%;
     border-radius:12px;
     border:1px solid #cbd5e1;
-    padding:0 12px;
     background:#fff;
     color:#0f172a;
     font-size:14px;
+    transition:border-color .18s ease, box-shadow .18s ease;
+  }
+
+  .status-select:focus,
+  .status-input:focus,
+  .status-textarea:focus{
+    outline:none;
+    border-color:#3b82f6;
+    box-shadow:0 0 0 3px rgba(59,130,246,.12);
+  }
+
+  .status-select,
+  .status-input{
+    height:46px;
+    padding:0 12px;
     font-weight:600;
   }
 
+  .status-textarea{
+    min-height:120px;
+    padding:12px;
+    resize:vertical;
+    font-weight:500;
+  }
+
   .save-btn{
-    height:44px;
+    height:46px;
     border:none;
     border-radius:12px;
-    padding:0 16px;
+    padding:0 18px;
     background:#2563eb;
     color:#fff;
     font-weight:700;
     cursor:pointer;
     transition:.18s ease;
+    white-space:nowrap;
   }
 
   .save-btn:hover{
@@ -163,12 +192,45 @@
     transform:translateY(-1px);
   }
 
+  .finish-fields{
+    display:none;
+  }
+
+  .finish-fields.show{
+    display:block;
+  }
+
+  .finish-card{
+    background:#ffffff;
+    border:1px solid #dbe4f0;
+    border-radius:14px;
+    padding:14px;
+  }
+
+  .finish-card-title{
+    font-size:13px;
+    font-weight:800;
+    color:#2563eb;
+    margin:0 0 12px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+
+  .finish-grid{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 240px;
+    gap:12px;
+    align-items:start;
+  }
+
   .attachments-grid{
     display:grid;
-    border: 1px solid #8e8e8e;
-    border-radius: 5px;
+    border:1px solid #8e8e8e;
+    border-radius:5px;
     grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));
     gap:12px;
+    padding:12px;
+    background:#d3d3d3;
   }
 
   .attachment-card{
@@ -228,15 +290,21 @@
     border-color:#94a3b8;
   }
 
-  .action-btn.primary{
-    background:#eff6ff;
-    color:#2563eb;
-    border-color:#93c5fd;
-  }
-
   @media (max-width: 768px){
     .os-grid{
-      grid-template-columns: 1fr;
+      grid-template-columns:1fr;
+    }
+
+    .status-topbar{
+      grid-template-columns:1fr;
+    }
+
+    .finish-grid{
+      grid-template-columns:1fr;
+    }
+
+    .save-btn{
+      width:100%;
     }
   }
 </style>
@@ -277,16 +345,56 @@
 
       <div class="field full">
         <span class="field-label">Mudança de Status</span>
-        <form method="post" class="status-form">
+
+        <form method="post" class="status-form-wrap" id="statusForm">
           {% csrf_token %}
-          <select name="status" class="status-select">
-            {% for value, label in status_choices %}
-              <option value="{{ value }}" {% if os.status == value %}selected{% endif %}>
-                {{ label }}
-              </option>
-            {% endfor %}
-          </select>
-          <button type="submit" class="save-btn">Salvar status</button>
+
+          <div class="status-topbar">
+            <div>
+              <select name="status" id="statusSelect" class="status-select">
+                {% for value, label in status_choices %}
+                  <option value="{{ value }}" {% if os.status == value %}selected{% endif %}>
+                    {{ label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <button type="submit" class="save-btn">Salvar status</button>
+            </div>
+          </div>
+
+          <div id="finishFields" class="finish-fields">
+            <div class="finish-card">
+              <p class="finish-card-title">Dados obrigatórios para finalização</p>
+
+              <div class="finish-grid">
+                <div>
+                  <label class="field-label" for="solutionTaken">Solução tomada</label>
+                  <textarea
+                    name="solution_taken"
+                    id="solutionTaken"
+                    class="status-textarea"
+                    placeholder="Descreva a solução tomada..."
+                  >{{ os.solution_taken|default_if_none:"" }}</textarea>
+                </div>
+
+                <div>
+                  <label class="field-label" for="finishedInDays">Finalizado em quantos dias</label>
+                  <input
+                    type="number"
+                    min="0"
+                    name="finished_in_days"
+                    id="finishedInDays"
+                    class="status-input"
+                    value="{{ os.finished_in_days|default_if_none:'' }}"
+                    placeholder="Ex: 3"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
         </form>
       </div>
 
@@ -355,12 +463,13 @@
     </div>
 
     <div class="top-actions">
-        <button type="button" class="action-btn" onclick="fecharAbaOuVoltar()">
-            Fechar aba
-        </button>
+      <button type="button" class="action-btn" onclick="fecharAbaOuVoltar()">
+        Fechar aba
+      </button>
     </div>
   </div>
 </div>
+
 <script>
   function fecharAbaOuVoltar() {
     try {
@@ -383,6 +492,23 @@
       }
     }
   }
+
+  const statusSelect = document.getElementById("statusSelect");
+  const finishFields = document.getElementById("finishFields");
+  const solutionTaken = document.getElementById("solutionTaken");
+  const finishedInDays = document.getElementById("finishedInDays");
+
+  function toggleFinishFields() {
+    const isDone = statusSelect.value === "DONE";
+
+    finishFields.classList.toggle("show", isDone);
+
+    solutionTaken.required = isDone;
+    finishedInDays.required = isDone;
+  }
+
+  statusSelect.addEventListener("change", toggleFinishFields);
+  toggleFinishFields();
 </script>
-      
+
 {% endblock %}

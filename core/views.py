@@ -1339,14 +1339,43 @@ def os_status_view(request, pk):
             return redirect("os_status_view", pk=os_obj.pk)
 
         novo_status = (request.POST.get("status") or "").strip()
+        solution_taken = (request.POST.get("solution_taken") or "").strip()
+        finished_in_days = (request.POST.get("finished_in_days") or "").strip()
 
         status_validos = [item[0] for item in ServiceRequest.STATUS_CHOICES]
         if novo_status not in status_validos:
             messages.error(request, "Status inválido.")
             return redirect("os_status_view", pk=os_obj.pk)
 
+        if novo_status == "DONE":
+            if not solution_taken:
+                messages.error(request, "Preencha o campo Solução tomada para finalizar a O.S.")
+                return redirect("os_status_view", pk=os_obj.pk)
+
+            if not finished_in_days:
+                messages.error(request, "Preencha em quantos dias a O.S foi finalizada.")
+                return redirect("os_status_view", pk=os_obj.pk)
+
+            try:
+                finished_in_days_int = int(finished_in_days)
+                if finished_in_days_int < 0:
+                    raise ValueError
+            except ValueError:
+                messages.error(request, "O campo 'em quantos dias finalizou' deve ser um número válido.")
+                return redirect("os_status_view", pk=os_obj.pk)
+
+            os_obj.status = novo_status
+            os_obj.solution_taken = solution_taken
+            os_obj.finished_in_days = finished_in_days_int
+            os_obj.save(update_fields=["status", "solution_taken", "finished_in_days"])
+
+            messages.success(request, "Status da OS atualizado com sucesso!")
+            return redirect("os_status_view", pk=os_obj.pk)
+
         os_obj.status = novo_status
-        os_obj.save(update_fields=["status"])
+        os_obj.solution_taken = None
+        os_obj.finished_in_days = None
+        os_obj.save(update_fields=["status", "solution_taken", "finished_in_days"])
 
         messages.success(request, "Status da OS atualizado com sucesso!")
         return redirect("os_status_view", pk=os_obj.pk)
