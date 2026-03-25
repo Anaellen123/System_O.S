@@ -122,15 +122,7 @@
       <div class="os-card-body">
         <div class="field">
           <label>Tipo de Serviço *</label>
-          <select id="id_service_type" name="service_type" required>
-            <option value="">Selecione...</option>
-            <option value="Coleta de entulho">Coleta de entulho</option>
-            <option value="Reparo de iluminação">Reparo de iluminação</option>
-            <option value="Limpeza urbana">Limpeza urbana</option>
-            <option value="Roçagem e capinação">Roçagem e capinação</option>
-            <option value="Poda de árvore">Poda de árvore</option>
-            <option value="Sinalização">Sinalização</option>
-          </select>
+          {{ form.service_type }}
         </div>
 
         <div class="field">

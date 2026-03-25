@@ -4,7 +4,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group
 from django.utils import timezone
 
-from .models import ServiceRequest, Team
+from .models import ServiceRequest, Team, ServiceType
 
 User = get_user_model()
 
@@ -21,6 +21,16 @@ class ServiceRequestForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"rows": 4}),
             "notes": forms.Textarea(attrs={"rows": 3}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        service_types = ServiceType.objects.filter(is_active=True).order_by("name")
+        self.fields["service_type"].widget = forms.Select(
+            choices=[("", "Selecione...")] + [
+                (item.name, item.name) for item in service_types
+            ]
+        )
 
 
 class ServiceRequestUpdateForm(forms.ModelForm):
@@ -49,6 +59,13 @@ class ServiceRequestUpdateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        service_types = ServiceType.objects.filter(is_active=True).order_by("name")
+        self.fields["service_type"].widget = forms.Select(
+            choices=[("", "Selecione...")] + [
+                (item.name, item.name) for item in service_types
+            ]
+        )
 
         self.fields["assigned_to"].required = False
         self.fields["assigned_to"].queryset = (
@@ -191,3 +208,18 @@ class TeamCreateForm(forms.Form):
                 )
 
         return cleaned
+
+
+class ServiceTypeForm(forms.ModelForm):
+    class Meta:
+        model = ServiceType
+        fields = ["name", "is_active"]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Digite o nome do tipo de serviço",
+            }),
+            "is_active": forms.CheckboxInput(attrs={
+                "class": "form-check-input",
+            }),
+        }

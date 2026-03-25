@@ -33,6 +33,8 @@ urlpatterns = [
     # ===== USUÁRIOS (SOMENTE SUPERUSER) =====
     path("dashboard/usuarios/", views.users_list, name="users_list"),
     path("users/<int:user_id>/role/", views.user_role_update, name="user_role_update"),
+    path("configuracoes/tipos-servico/", views.service_type_dashboard, name="service_type_dashboard"),
+    path("configuracoes/tipos-servico/<int:pk>/excluir/", views.service_type_delete, name="service_type_delete"),
 
     # ===== SOLICITAÇÕES / O.S =====
     path("dashboard/solicitacoes/", views.requests_list, name="requests_list"),

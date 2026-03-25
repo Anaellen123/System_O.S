@@ -57,6 +57,20 @@ def attachment_upload_to(instance, filename):
     return f"service_requests/{os_number}/{new_name}"
 
 
+class ServiceType(models.Model):
+    name = models.CharField("Nome do serviço", max_length=120, unique=True)
+    is_active = models.BooleanField("Ativo", default=True)
+    created_at = models.DateTimeField("Criado em", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Tipo de serviço"
+        verbose_name_plural = "Tipos de serviço"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class Team(models.Model):
     PRIORITY_LOW = "LOW"
     PRIORITY_MEDIUM = "MEDIUM"

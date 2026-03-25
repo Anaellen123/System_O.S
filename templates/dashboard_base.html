@@ -128,12 +128,10 @@
       {% endif %}
 
       {% if perms.core.tab_requests %}
-        <a class="menu-item {% if request.resolver_match.url_name == 'requests_list' or request.resolver_match.url_name == 'request_detail' %}active{% endif %}"
-           href="{% url 'requests_list' %}">
-          <span class="menu-left">
-            <i class="bi bi-tools"></i>
-            <span>Serviços</span>
-          </span>
+        <a class="menu-item {% if request.resolver_match.url_name == 'service_type_dashboard' %}active{% endif %}"
+          href="{% url 'service_type_dashboard' %}">
+          <i class="bi bi-tools"></i>
+          <span>Serviços</span>
         </a>
       {% endif %}
 

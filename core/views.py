@@ -28,6 +28,7 @@ from .forms import (
     UserRegisterForm,
     UserRoleForm,
     TeamCreateForm,
+    ServiceTypeForm,
 )
 from .models import (
     ServiceRequest,
@@ -35,6 +36,7 @@ from .models import (
     UserProfile,
     Team,
     TeamMember,
+    ServiceType,
 )
 
 User = get_user_model()
@@ -820,12 +822,31 @@ def requests_list(request):
     q = request.GET.get("q", "").strip()
     if q:
         qs = qs.filter(
-            Q(full_name__icontains=q)
+            Q(os_number__icontains=q)
+            | Q(full_name__icontains=q)
             | Q(document__icontains=q)
             | Q(phone__icontains=q)
+            | Q(neighborhood__icontains=q)
+            | Q(service_type__icontains=q)
         )
 
-    return render(request, "requests_list.html", {"requests": qs})
+    total = qs.count()
+    ativas = qs.exclude(status="DONE").count()
+
+    vencidas = qs.filter(
+        status__in=["OPEN", "IN_PROGRESS"],
+        created_at__lt=timezone.now() - timedelta(days=30)
+    ).count()
+
+    context = {
+        "os_list": qs,
+        "total": total,
+        "ativas": ativas,
+        "vencidas": vencidas,
+        "status_atual": status or "todas",
+    }
+
+    return render(request, "os_list.html", context)
 
 
 @login_required(login_url="login_admin")
@@ -1231,6 +1252,7 @@ def team_my(request):
         "stats": stats,
     })
 
+
 @login_required(login_url="login_admin")
 @require_http_methods(["POST"])
 def team_remove_os(request, team_id, os_id):
@@ -1301,6 +1323,7 @@ def team_my_report(request):
         "generated_at": timezone.localtime(),
     })
 
+
 @login_required(login_url="login_admin")
 @require_http_methods(["GET", "POST"])
 def os_status_view(request, pk):
@@ -1341,3 +1364,85 @@ def os_status_view(request, pk):
         "observacoes": observacoes or "—",
         "status_choices": ServiceRequest.STATUS_CHOICES,
     })
+
+
+@login_required(login_url="login_admin")
+@require_http_methods(["GET", "POST"])
+def service_type_dashboard(request):
+    if _is_requisitante(request.user):
+        messages.error(request, "Você não tem permissão para acessar esta área.")
+        return redirect("dashboard_requisitante")
+
+    if request.method == "POST":
+        form = ServiceTypeForm(request.POST)
+        if form.is_valid():
+            nome = (form.cleaned_data.get("name") or "").strip()
+
+            if not nome:
+                messages.error(request, "Informe o nome do tipo de serviço.")
+            elif ServiceType.objects.filter(name__iexact=nome).exists():
+                messages.error(request, "Já existe um tipo de serviço com este nome.")
+            else:
+                obj = form.save(commit=False)
+                obj.name = nome
+
+                if hasattr(obj, "is_active"):
+                    obj.is_active = True
+
+                obj.save()
+                messages.success(request, "Tipo de serviço cadastrado com sucesso.")
+                return redirect("service_type_dashboard")
+        else:
+            messages.error(request, "Revise os campos e tente novamente.")
+    else:
+        form = ServiceTypeForm()
+
+    service_types = ServiceType.objects.all().order_by("name")
+
+    total_os = (
+        ServiceRequest.objects
+        .exclude(service_type__isnull=True)
+        .exclude(service_type__exact="")
+        .count()
+    )
+
+    ranking_qs = (
+        ServiceRequest.objects
+        .exclude(service_type__isnull=True)
+        .exclude(service_type__exact="")
+        .values("service_type")
+        .annotate(total=Count("id"))
+        .order_by("-total", "service_type")[:3]
+    )
+
+    top_services = []
+    for row in ranking_qs:
+        quantidade = row["total"]
+        percentual = round((quantidade / total_os) * 100) if total_os > 0 else 0
+
+        top_services.append({
+            "name": row["service_type"],
+            "count": quantidade,
+            "percent": percentual,
+        })
+
+    return render(request, "service_types.html", {
+        "form": form,
+        "service_types": service_types,
+        "top_services": top_services,
+        "top_services_json": json.dumps(top_services, ensure_ascii=False),
+    })
+    
+@login_required(login_url="login_admin")
+@require_http_methods(["POST"])
+def service_type_delete(request, pk):
+    if _is_requisitante(request.user):
+        messages.error(request, "Você não tem permissão para excluir tipos de serviço.")
+        return redirect("dashboard_requisitante")
+
+    obj = get_object_or_404(ServiceType, pk=pk)
+    nome = obj.name
+    obj.delete()
+
+    messages.success(request, f'Tipo de serviço "{nome}" excluído com sucesso.')
+    return redirect("service_type_dashboard")
