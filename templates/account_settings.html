@@ -1,0 +1,799 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Configurações{% endblock %}
+{% block page_title %}Configurações{% endblock %}
+
+{% block content %}
+<style>
+  .settings-wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .settings-page-head{
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .settings-page-title{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .settings-page-icon{
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(37,99,235,.15), rgba(96,165,250,.18));
+    color: #2563eb;
+    border: 1px solid rgba(37,99,235,.14);
+    box-shadow: 0 12px 24px rgba(37,99,235,.10);
+    font-size: 24px;
+    flex: 0 0 auto;
+  }
+
+  .settings-page-head h2{
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text, #111827);
+    letter-spacing: -0.02em;
+  }
+
+  .settings-page-head p{
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .messages-box{
+    margin-bottom: 18px;
+  }
+
+  .msg-item{
+    padding: 14px 16px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, .04);
+  }
+
+  .msg-item.success{
+    background:#dcfce7;
+    border:1px solid #bbf7d0;
+    color:#166534;
+  }
+
+  .msg-item.error{
+    background:#fee2e2;
+    border:1px solid #fecaca;
+    color:#991b1b;
+  }
+
+  .settings-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    align-items: start;
+  }
+
+  .settings-card{
+    position: relative;
+    background: var(--card, #fff);
+    border: 1px solid var(--line, #e5e7eb);
+    border-radius: 24px;
+    box-shadow: 0 16px 36px rgba(2, 6, 23, .07);
+    overflow: hidden;
+  }
+
+  .settings-card::before{
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 5px;
+    background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);
+  }
+
+  .settings-card-header{
+    padding: 22px 22px 18px;
+    border-bottom: 1px solid var(--line, #e5e7eb);
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  .settings-card-header .icon-wrap{
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(96,165,250,.18));
+    color: #2563eb;
+    border: 1px solid rgba(37,99,235,.12);
+    font-size: 18px;
+    flex: 0 0 auto;
+  }
+
+  .settings-card-header h3{
+    margin:0;
+    font-size:20px;
+    font-weight:800;
+    color: var(--text, #111827);
+    letter-spacing: -0.01em;
+  }
+
+  .settings-card-body{
+    padding: 22px;
+  }
+
+  .card-intro{
+    margin: 0 0 18px;
+    color:#64748b;
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  .form-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap: 7px;
+  }
+
+  .field.full{
+    grid-column: 1 / -1;
+  }
+
+  .field label{
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--muted, #6b7280);
+    letter-spacing: .01em;
+  }
+
+  .input-wrap{
+    position: relative;
+  }
+
+  .input-icon{
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 16px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .field input{
+    width:100%;
+    height:52px;
+    border:1px solid var(--line, #d1d5db);
+    border-radius: 14px;
+    padding: 0 14px 0 42px;
+    background: linear-gradient(180deg, #fbfdff, #f8fafc);
+    color: var(--text, #111827);
+    outline:none;
+    transition: .2s ease;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+
+  .field input.has-toggle{
+    padding-right: 48px;
+  }
+
+  .field input:focus{
+    border-color:#2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .10);
+    background: #fff;
+  }
+
+  .field input::placeholder{
+    color:#9ca3af;
+  }
+
+  .field input.is-valid{
+    border-color:#16a34a;
+    box-shadow: 0 0 0 4px rgba(22,163,74,.10);
+  }
+
+  .field input.is-invalid{
+    border-color:#ef4444;
+    box-shadow: 0 0 0 4px rgba(239,68,68,.10);
+  }
+
+  .field small{
+    color:#6b7280;
+    font-size:12px;
+    line-height: 1.4;
+  }
+
+  .toggle-password{
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    border-radius: 8px;
+  }
+
+  .toggle-password:hover{
+    color: #2563eb;
+    background: rgba(37,99,235,.08);
+  }
+
+  .toggle-password i{
+    position: static;
+    transform: none;
+    pointer-events: none;
+  }
+
+  .input-error{
+    border:1px solid #ef4444 !important;
+    background:#fef2f2 !important;
+  }
+
+  .error-text{
+    font-size:12px;
+    color:#dc2626;
+    font-weight:700;
+    line-height:1.35;
+    margin-top:2px;
+  }
+
+  .live-msg{
+    font-size:12px;
+    font-weight:700;
+    line-height:1.35;
+    min-height:16px;
+    margin-top:2px;
+  }
+
+  .live-msg.ok{
+    color:#166534;
+  }
+
+  .live-msg.err{
+    color:#dc2626;
+  }
+
+  .actions{
+    margin-top: 20px;
+    display:flex;
+    justify-content:flex-end;
+  }
+
+  .btn-save{
+    border:0;
+    min-width: 170px;
+    height:48px;
+    padding: 0 20px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 14px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color:#fff;
+    box-shadow: 0 12px 24px rgba(37, 99, 235, .22);
+    transition: .2s ease;
+  }
+
+  .btn-save:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 16px 28px rgba(37, 99, 235, .26);
+  }
+
+  .helper-box{
+    margin-top: 18px;
+    border: 1px solid rgba(37,99,235,.14);
+    background: linear-gradient(180deg, rgba(37,99,235,.05), rgba(37,99,235,.02));
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .helper-box i{
+    color: #2563eb;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+
+  .helper-box strong{
+    display:block;
+    font-size:13px;
+    color: var(--text, #111827);
+    margin-bottom:2px;
+  }
+
+  .helper-box span{
+    font-size:12px;
+    color:#64748b;
+    line-height:1.45;
+  }
+
+  @media (max-width: 900px){
+    .settings-grid,
+    .form-grid{
+      grid-template-columns: 1fr;
+    }
+
+    .settings-card-body,
+    .settings-card-header{
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .settings-page-head h2{
+      font-size: 24px;
+    }
+  }
+
+  body.theme-dark .settings-page-head h2,
+  body.theme-dark .settings-card-header h3,
+  body.theme-dark .helper-box strong{
+    color: #e5e7eb;
+  }
+
+  body.theme-dark .settings-page-head p,
+  body.theme-dark .field label,
+  body.theme-dark .field small,
+  body.theme-dark .helper-box span{
+    color: #94a3b8;
+  }
+
+  body.theme-dark .settings-card{
+    background: #0f172a;
+    border-color: rgba(148,163,184,.18);
+    box-shadow: 0 16px 36px rgba(0,0,0,.24);
+  }
+
+  body.theme-dark .settings-card-header{
+    border-bottom-color: rgba(148,163,184,.18);
+  }
+
+  body.theme-dark .field input{
+    background:#0b1220;
+    color:#e5e7eb;
+    border-color: rgba(148,163,184,.22);
+  }
+
+  body.theme-dark .field input:focus{
+    background:#0f172a;
+  }
+
+  body.theme-dark .toggle-password{
+    color: #94a3b8;
+  }
+
+  body.theme-dark .toggle-password:hover{
+    color: #60a5fa;
+    background: rgba(96,165,250,.10);
+  }
+
+  body.theme-dark .input-error{
+    background: rgba(127, 29, 29, 0.20) !important;
+    border-color: #ef4444 !important;
+  }
+
+  body.theme-dark .error-text{
+    color:#fca5a5;
+  }
+
+  body.theme-dark .live-msg.ok{
+    color:#86efac;
+  }
+
+  body.theme-dark .live-msg.err{
+    color:#fca5a5;
+  }
+
+  body.theme-dark .helper-box{
+    border-color: rgba(59,130,246,.20);
+    background: linear-gradient(180deg, rgba(37,99,235,.10), rgba(37,99,235,.03));
+  }
+</style>
+
+<div class="settings-wrap">
+
+  <div class="settings-page-head">
+    <div class="settings-page-title">
+      <div class="settings-page-icon">
+        <i class="bi bi-gear-fill"></i>
+      </div>
+      <div>
+        <h2>Configurações da Conta</h2>
+        <p>Atualize seus dados pessoais e altere sua senha de acesso com segurança.</p>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+    <div class="messages-box">
+      {% for message in messages %}
+        <div class="msg-item {% if message.tags == 'success' %}success{% else %}error{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="settings-grid">
+
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="icon-wrap">
+          <i class="bi bi-person-lines-fill"></i>
+        </div>
+        <h3>Dados Pessoais</h3>
+      </div>
+
+      <div class="settings-card-body">
+        <p class="card-intro">
+          Mantenha suas informações atualizadas para garantir o correto funcionamento do sistema.
+        </p>
+
+        <form method="post" id="profileForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="profile">
+
+          <div class="form-grid">
+
+            <div class="field full">
+              <label>Nome de usuário / nome completo</label>
+              <div class="input-wrap">
+                <i class="bi bi-person input-icon"></i>
+                <input
+                  type="text"
+                  name="username"
+                  value="{{ form_data.username|default:user_obj.username }}"
+                  class="{% if form_errors.username %}input-error{% endif %}"
+                  placeholder="Digite seu nome completo"
+                  required
+                >
+              </div>
+              {% if form_errors.username %}
+                <span class="error-text">{{ form_errors.username }}</span>
+              {% else %}
+                <small>Este campo será usado como nome do usuário no sistema.</small>
+              {% endif %}
+            </div>
+
+            <div class="field">
+              <label>CPF</label>
+              <div class="input-wrap">
+                <i class="bi bi-card-text input-icon"></i>
+                <input
+                  type="text"
+                  id="profile_cpf"
+                  name="cpf"
+                  value="{{ form_data.cpf|default:profile.cpf }}"
+                  class="{% if form_errors.cpf %}input-error{% endif %}"
+                  placeholder="Digite seu CPF"
+                  required
+                >
+              </div>
+              <span id="cpf-live-msg" class="live-msg"></span>
+              {% if form_errors.cpf %}
+                <span class="error-text">{{ form_errors.cpf }}</span>
+              {% endif %}
+            </div>
+
+            <div class="field">
+              <label>Email</label>
+              <div class="input-wrap">
+                <i class="bi bi-envelope input-icon"></i>
+                <input
+                  type="email"
+                  id="profile_email"
+                  name="email"
+                  value="{{ form_data.email|default:user_obj.email }}"
+                  class="{% if form_errors.email %}input-error{% endif %}"
+                  placeholder="Digite seu email"
+                  required
+                >
+              </div>
+              <span id="email-live-msg" class="live-msg"></span>
+              {% if form_errors.email %}
+                <span class="error-text">{{ form_errors.email }}</span>
+              {% endif %}
+            </div>
+
+          </div>
+
+          <div class="helper-box">
+            <i class="bi bi-info-circle-fill"></i>
+            <div>
+              <strong>Dica</strong>
+              <span>Use um email válido e mantenha o CPF correto para evitar problemas no acesso e nas solicitações.</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn-save">
+              <i class="bi bi-check-lg"></i> Salvar dados
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="icon-wrap">
+          <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <h3>Alterar Senha</h3>
+      </div>
+
+      <div class="settings-card-body">
+        <p class="card-intro">
+          Escolha uma senha forte para aumentar a segurança da sua conta.
+        </p>
+
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="password">
+
+          <div class="form-grid">
+
+            <div class="field full">
+              <label>Senha atual</label>
+              <div class="input-wrap">
+                <i class="bi bi-lock input-icon"></i>
+                <input
+                  type="password"
+                  id="current_password"
+                  name="current_password"
+                  class="has-toggle"
+                  placeholder="Digite sua senha atual"
+                  required
+                >
+                <button type="button" class="toggle-password" data-target="current_password" aria-label="Mostrar ou ocultar senha">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="field full">
+              <label>Nova senha</label>
+              <div class="input-wrap">
+                <i class="bi bi-key input-icon"></i>
+                <input
+                  type="password"
+                  id="new_password1"
+                  name="new_password1"
+                  class="has-toggle"
+                  placeholder="Digite a nova senha"
+                  required
+                >
+                <button type="button" class="toggle-password" data-target="new_password1" aria-label="Mostrar ou ocultar senha">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="field full">
+              <label>Confirmar nova senha</label>
+              <div class="input-wrap">
+                <i class="bi bi-shield-check input-icon"></i>
+                <input
+                  type="password"
+                  id="new_password2"
+                  name="new_password2"
+                  class="has-toggle"
+                  placeholder="Confirme a nova senha"
+                  required
+                >
+                <button type="button" class="toggle-password" data-target="new_password2" aria-label="Mostrar ou ocultar senha">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="helper-box">
+            <i class="bi bi-shield-check"></i>
+            <div>
+              <strong>Segurança</strong>
+              <span>Prefira uma senha com letras maiúsculas, minúsculas, números e caracteres especiais.</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn-save">
+              <i class="bi bi-arrow-repeat"></i> Alterar senha
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll(".toggle-password").forEach(btn => {
+    btn.addEventListener("click", function () {
+      const targetId = this.getAttribute("data-target");
+      const input = document.getElementById(targetId);
+      const icon = this.querySelector("i");
+
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+      } else {
+        input.type = "password";
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
+      }
+    });
+  });
+
+  const cpfInput = document.getElementById("profile_cpf");
+  const emailInput = document.getElementById("profile_email");
+  const cpfMsg = document.getElementById("cpf-live-msg");
+  const emailMsg = document.getElementById("email-live-msg");
+
+  function onlyDigits(value) {
+    return (value || "").replace(/\D/g, "");
+  }
+
+  function applyCpfMask(value) {
+    const digits = onlyDigits(value).slice(0, 11);
+    return digits
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1-$2");
+  }
+
+  function setValid(input, msgEl, msg) {
+    input.classList.remove("is-invalid");
+    input.classList.add("is-valid");
+    msgEl.className = "live-msg ok";
+    msgEl.textContent = msg || "";
+  }
+
+  function setInvalid(input, msgEl, msg) {
+    input.classList.remove("is-valid");
+    input.classList.add("is-invalid");
+    msgEl.className = "live-msg err";
+    msgEl.textContent = msg || "";
+  }
+
+  function clearState(input, msgEl) {
+    input.classList.remove("is-valid", "is-invalid");
+    msgEl.className = "live-msg";
+    msgEl.textContent = "";
+  }
+
+  function validateEmailFormat(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  let validateTimer;
+  let cpfRequestId = 0;
+  let emailRequestId = 0;
+
+  function validateCpfLive() {
+    const cpf = onlyDigits(cpfInput.value);
+
+    if (!cpf) {
+      clearState(cpfInput, cpfMsg);
+      return;
+    }
+
+    if (cpf.length < 11) {
+      setInvalid(cpfInput, cpfMsg, "CPF incompleto.");
+      return;
+    }
+
+    const requestId = ++cpfRequestId;
+
+    fetch(`/api/check-cpf/?cpf=${cpf}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Erro ao validar CPF.");
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (requestId !== cpfRequestId) return;
+
+        if (data.exists) {
+          setInvalid(cpfInput, cpfMsg, "Este CPF já está em uso.");
+        } else {
+          setValid(cpfInput, cpfMsg, "CPF disponível.");
+        }
+      })
+      .catch(() => {
+        if (requestId !== cpfRequestId) return;
+        clearState(cpfInput, cpfMsg);
+      });
+  }
+
+  function validateEmailLive() {
+    const email = (emailInput.value || "").trim().toLowerCase();
+
+    if (!email) {
+      clearState(emailInput, emailMsg);
+      return;
+    }
+
+    if (!validateEmailFormat(email)) {
+      setInvalid(emailInput, emailMsg, "Digite um email válido.");
+      return;
+    }
+
+    const requestId = ++emailRequestId;
+
+    fetch(`/api/check-email-exists/?email=${encodeURIComponent(email)}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Erro ao validar email.");
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (requestId !== emailRequestId) return;
+
+        if (data.exists) {
+          setInvalid(emailInput, emailMsg, "Este email já está em uso.");
+        } else {
+          setValid(emailInput, emailMsg, "Email disponível.");
+        }
+      })
+      .catch(() => {
+        if (requestId !== emailRequestId) return;
+        clearState(emailInput, emailMsg);
+      });
+  }
+
+  cpfInput.addEventListener("input", function () {
+    this.value = applyCpfMask(this.value);
+    clearTimeout(validateTimer);
+    validateTimer = setTimeout(() => {
+      validateCpfLive();
+    }, 350);
+  });
+
+  emailInput.addEventListener("input", function () {
+    clearTimeout(validateTimer);
+    validateTimer = setTimeout(() => {
+      validateEmailLive();
+    }, 350);
+  });
+</script>
+{% endblock %}

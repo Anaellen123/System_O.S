@@ -48,20 +48,46 @@
         <form method="post" action="{% url 'login_admin' %}" class="login-form">
           {% csrf_token %}
 
+          {% if login_form.non_field_errors %}
+            <div class="error-msg error-box">
+              {% for error in login_form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
           <label class="field-label">Email</label>
           <div class="field">
             <span class="field-ico">✉</span>
-            <input name="username" type="email" placeholder="seu@email.com" required>
+            <input
+              name="username"
+              type="email"
+              placeholder="seu@email.com"
+              required
+              value="{{ login_data.username|default:'' }}"
+            >
           </div>
+          {% if login_form.username.errors %}
+            <div class="error-msg">{{ login_form.username.errors.0 }}</div>
+          {% endif %}
 
           <label class="field-label">Senha</label>
           <div class="field field-password">
-            <input id="id_password" name="password" type="password" placeholder="••••••••" required>
+            <input
+              id="id_password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              required
+            >
 
             <button type="button" class="toggle-pass" data-toggle="#id_password" aria-label="Mostrar ou ocultar senha">
               <i class="bi bi-eye"></i>
             </button>
           </div>
+          {% if login_form.password.errors %}
+            <div class="error-msg">{{ login_form.password.errors.0 }}</div>
+          {% endif %}
 
           <div style="margin-top:10px; text-align:right;">
             <button type="button"
@@ -98,43 +124,106 @@
         <form method="post" action="{% url 'register' %}" class="login-form">
           {% csrf_token %}
 
-          <label class="field-label">Usuário</label>
+          {% if form.non_field_errors %}
+            <div class="error-msg error-box">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <label class="field-label">Nome Completo</label>
           <div class="field">
             <span class="field-ico">
               <i class="bi bi-person-fill"></i>
             </span>
-            <input name="username" type="text" placeholder="Digite seu usuário" required value="{{ register_data.username|default:'' }}">
+            <input
+              name="username"
+              type="text"
+              placeholder="Digite seu nome completo"
+              required
+              value="{{ register_data.username|default:'' }}"
+            >
           </div>
+          {% if form.username.errors %}
+            <div class="error-msg">{{ form.username.errors.0 }}</div>
+          {% endif %}
 
           <label class="field-label">Email</label>
           <div class="field">
             <span class="field-ico">✉</span>
-            <input name="email" type="email" placeholder="seu@email.com" required value="{{ register_data.email|default:'' }}">
+            <input
+              name="email"
+              type="email"
+              placeholder="seu@email.com"
+              required
+              value="{{ register_data.email|default:'' }}"
+            >
           </div>
+          {% if form.email.errors %}
+            <div class="error-msg">{{ form.email.errors.0 }}</div>
+          {% endif %}
+
+          <label class="field-label">CPF</label>
+          <div class="field">
+            <span class="field-ico">
+              <i class="bi bi-credit-card-2-front-fill"></i>
+            </span>
+            <input
+              id="cpf"
+              name="cpf"
+              type="text"
+              placeholder="000.000.000-00"
+              required
+              maxlength="14"
+              value="{{ register_data.cpf|default:'' }}"
+            >
+          </div>
+          {% if form.cpf.errors %}
+            <div class="error-msg">{{ form.cpf.errors.0 }}</div>
+          {% endif %}
 
           <label class="field-label">Senha</label>
           <div class="field field-password">
             <span class="field-ico">
               <i class="bi bi-file-lock2"></i>
             </span>
-            <input id="id_password1" name="password1" type="password" placeholder="Crie uma senha" required>
+            <input
+              id="id_password1"
+              name="password1"
+              type="password"
+              placeholder="Crie uma senha"
+              required
+            >
 
             <button type="button" class="toggle-pass" data-toggle="#id_password1" aria-label="Mostrar ou ocultar senha">
               <i class="bi bi-eye"></i>
             </button>
           </div>
+          {% if form.password1.errors %}
+            <div class="error-msg">{{ form.password1.errors.0 }}</div>
+          {% endif %}
 
           <label class="field-label">Confirmar senha</label>
           <div class="field field-password">
             <span class="field-ico">
               <i class="bi bi-file-lock2"></i>
             </span>
-            <input id="id_password2" name="password2" type="password" placeholder="Confirme sua senha" required>
+            <input
+              id="id_password2"
+              name="password2"
+              type="password"
+              placeholder="Confirme sua senha"
+              required
+            >
 
             <button type="button" class="toggle-pass" data-toggle="#id_password2" aria-label="Mostrar ou ocultar senha">
               <i class="bi bi-eye"></i>
             </button>
           </div>
+          {% if form.password2.errors %}
+            <div class="error-msg">{{ form.password2.errors.0 }}</div>
+          {% endif %}
 
           <div style="margin-top:8px; padding:10px 12px; border-radius:12px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; font-size:13px; line-height:1.5;">
             Após o cadastro, sua conta ficará aguardando confirmação.
@@ -167,11 +256,28 @@
         <form method="post" action="{% url 'forgot_password' %}" class="login-form">
           {% csrf_token %}
 
+          {% if forgot_form.non_field_errors %}
+            <div class="error-msg error-box">
+              {% for error in forgot_form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
           <label class="field-label">Email cadastrado</label>
           <div class="field">
             <span class="field-ico">✉</span>
-            <input name="email" type="email" placeholder="seu@email.com" required>
+            <input
+              name="email"
+              type="email"
+              placeholder="seu@email.com"
+              required
+              value="{{ forgot_data.email|default:'' }}"
+            >
           </div>
+          {% if forgot_form.email.errors %}
+            <div class="error-msg">{{ forgot_form.email.errors.0 }}</div>
+          {% endif %}
 
           <button class="btn-primary" type="submit">
             Enviar link de recuperação
@@ -194,6 +300,25 @@
   </section>
 
 </main>
+
+<style>
+  .error-msg {
+    margin-top: 6px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #dc2626;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .error-box {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+  }
+</style>
 
 <script>
 function hideAllBoxes() {

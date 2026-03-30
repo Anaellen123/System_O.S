@@ -5,6 +5,7 @@ urlpatterns = [
     # ===== PÁGINAS PÚBLICAS =====
     path("", views.index, name="index"),
     path("solicitar-servico/", views.solicitar_servico, name="solicitar_servico"),
+    path("configuracoes/", views.account_settings, name="account_settings"),
 
     # ===== PÁGINAS INTERNAS =====
     path("equipe/", views.team_list, name="team_list"),
@@ -23,15 +24,20 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("esqueci-senha/", views.forgot_password_request, name="forgot_password"),
     path("redefinir-senha/<uidb64>/<token>/", views.reset_password_confirm, name="reset_password_confirm"),
+    path("lgpd/", views.lgpd_consent, name="lgpd_consent"),
+    path("api/check-email-exists/", views.api_check_email_exists, name="api_check_email_exists"),
     
     # ===== DASHBOARD (ÁREA INTERNA) =====
     path("dashboard/", views.dashboard, name="dashboard"),
     path("minhas-os/", views.team_my, name="team_my"),
     path("minha-equipe/relatorio/", views.team_my_report, name="team_my_report"),
-    
 
     # ===== USUÁRIOS (SOMENTE SUPERUSER) =====
     path("dashboard/usuarios/", views.users_list, name="users_list"),
+
+    # 🔥 NOVA ROTA CRIAR USUÁRIO
+    path("dashboard/usuarios/criar/", views.user_create, name="user_create"),
+
     path("users/<int:user_id>/role/", views.user_role_update, name="user_role_update"),
     path("configuracoes/tipos-servico/", views.service_type_dashboard, name="service_type_dashboard"),
     path("configuracoes/tipos-servico/<int:pk>/excluir/", views.service_type_delete, name="service_type_delete"),
@@ -64,6 +70,6 @@ urlpatterns = [
     # ===== DASHBOARD REQUISITANTE =====
     path("meu-painel/", views.dashboard_requisitante, name="dashboard_requisitante"),
 
-    # === Impressões =======
+    # ===== IMPRESSÕES =====
     path("os/<int:pk>/imprimir/", views.os_print, name="os_print"),
 ]

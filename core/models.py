@@ -18,7 +18,7 @@ class UserProfile(models.Model):
         related_name="profile",
     )
 
-    cpf = models.CharField(max_length=14, blank=True)
+    cpf = models.CharField(max_length=14, blank=True, null=True, unique=True)
     birth_date = models.DateField(blank=True, null=True)
 
     cep = models.CharField(max_length=9, blank=True)
@@ -28,6 +28,10 @@ class UserProfile(models.Model):
     city = models.CharField(max_length=120, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # LGPD
+    lgpd_accepted = models.BooleanField(default=False)
+    lgpd_accepted_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return f"Perfil - {self.user.username}"

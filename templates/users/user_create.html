@@ -1,0 +1,710 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Criar Usuário{% endblock %}
+{% block page_title %}Criar Usuário{% endblock %}
+
+{% block content %}
+
+<style>
+  .user-create-wrap{
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .card-form{
+    position: relative;
+    background: var(--card, #ffffff);
+    border: 1px solid var(--line, #e5e7eb);
+    border-radius: 26px;
+    padding: 32px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+
+  .card-form::before{
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);
+  }
+
+  .card-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line, #e5e7eb);
+  }
+
+  .card-title-wrap{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .card-badge{
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(37,99,235,.16), rgba(96,165,250,.18));
+    color: #2563eb;
+    border: 1px solid rgba(37,99,235,.12);
+    box-shadow: 0 12px 24px rgba(37,99,235,.10);
+    font-size: 22px;
+    flex: 0 0 auto;
+  }
+
+  .card-header h2{
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text, #0f172a);
+    letter-spacing: -0.02em;
+  }
+
+  .card-subtitle{
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  .form-grid{
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .form-group{
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .col-6{
+    grid-column: span 6;
+  }
+
+  .col-12{
+    grid-column: span 12;
+  }
+
+  .form-group label{
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text, #0f172a);
+  }
+
+  .field-wrap{
+    position: relative;
+  }
+
+  .field-icon{
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 17px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .form-control{
+    width: 100%;
+    height: 58px;
+    border-radius: 16px;
+    border: 1px solid #dbe3ee;
+    background: linear-gradient(180deg, #fbfdff, #f8fafc);
+    padding: 0 16px 0 48px;
+    font-size: 15px;
+    color: var(--text, #0f172a);
+    outline: none;
+    transition: .22s ease;
+    box-sizing: border-box;
+    box-shadow: inset 0 1px 2px rgba(15,23,42,.03);
+  }
+
+  .form-control.has-toggle{
+    padding-right: 50px;
+  }
+
+  .form-control::placeholder{
+    color: #94a3b8;
+  }
+
+  .form-control:hover{
+    border-color: #c7d2e2;
+    background: #fff;
+  }
+
+  .form-control:focus{
+    border-color: #3b82f6;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+  }
+
+  .form-control.is-valid{
+    border-color: #16a34a;
+    box-shadow: 0 0 0 4px rgba(22,163,74,.10);
+  }
+
+  .form-control.is-invalid{
+    border-color: #dc2626;
+    box-shadow: 0 0 0 4px rgba(220,38,38,.10);
+  }
+
+  .form-hint{
+    font-size: 12px;
+    color: #64748b;
+    margin-top: -1px;
+  }
+
+  .live-msg{
+    font-size: 13px;
+    font-weight: 600;
+    min-height: 18px;
+    margin-top: 2px;
+  }
+
+  .live-msg.ok{
+    color: #16a34a;
+  }
+
+  .live-msg.err{
+    color: #dc2626;
+  }
+
+  .error{
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .toggle-password{
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 3;
+    transition: .2s ease;
+  }
+
+  .toggle-password:hover{
+    background: rgba(37,99,235,.08);
+    color: #2563eb;
+  }
+
+  .password-row{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .security-box{
+    margin-top: 22px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(37,99,235,.14);
+    background: linear-gradient(180deg, rgba(37,99,235,.06), rgba(37,99,235,.02));
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .security-box i{
+    color: #2563eb;
+    font-size: 18px;
+    margin-top: 2px;
+  }
+
+  .security-box strong{
+    display: block;
+    color: var(--text, #0f172a);
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .security-box span{
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.45;
+  }
+
+  .form-actions{
+    margin-top: 26px;
+  }
+
+  .btn-save{
+    width: 100%;
+    height: 58px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    border: none;
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+    transition: .22s ease;
+    box-shadow: 0 14px 28px rgba(37,99,235,.18);
+  }
+
+  .btn-save:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 18px 30px rgba(37,99,235,.24);
+  }
+
+  .btn-save:disabled{
+    opacity: .75;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  body.theme-dark .card-form{
+    background: var(--card, #111827);
+    border-color: rgba(255,255,255,.08);
+    box-shadow: 0 18px 40px rgba(0,0,0,.28);
+  }
+
+  body.theme-dark .card-header{
+    border-bottom-color: rgba(255,255,255,.08);
+  }
+
+  body.theme-dark .card-header h2,
+  body.theme-dark .form-group label,
+  body.theme-dark .security-box strong{
+    color: #e5e7eb;
+  }
+
+  body.theme-dark .card-subtitle,
+  body.theme-dark .form-hint,
+  body.theme-dark .security-box span{
+    color: #94a3b8;
+  }
+
+  body.theme-dark .form-control{
+    background: rgba(255,255,255,.03);
+    border-color: rgba(255,255,255,.08);
+    color: #e5e7eb;
+  }
+
+  body.theme-dark .form-control:hover,
+  body.theme-dark .form-control:focus{
+    background: rgba(255,255,255,.05);
+  }
+
+  body.theme-dark .form-control::placeholder{
+    color: #94a3b8;
+  }
+
+  @media (max-width: 920px){
+    .col-6,
+    .col-12{
+      grid-column: span 12;
+    }
+
+    .password-row{
+      grid-template-columns: 1fr;
+    }
+
+    .card-form{
+      padding: 24px;
+      border-radius: 22px;
+    }
+
+    .card-header h2{
+      font-size: 24px;
+    }
+  }
+</style>
+
+<div class="user-create-wrap">
+  <div class="card-form">
+
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <div class="card-badge">
+          <i class="bi bi-person-plus-fill"></i>
+        </div>
+        <div>
+          <h2>Novo Usuário</h2>
+          <p class="card-subtitle">Preencha os dados abaixo para cadastrar um novo usuário no sistema.</p>
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" id="userCreateForm" novalidate>
+      {% csrf_token %}
+
+      <div class="form-grid">
+
+        <div class="form-group col-6">
+          <label for="id_cpf">CPF</label>
+          <div class="field-wrap">
+            <i class="bi bi-card-text field-icon"></i>
+            <input
+              id="id_cpf"
+              type="text"
+              name="cpf"
+              class="form-control"
+              placeholder="Digite o CPF"
+              value="{{ form_data.cpf|default:'' }}"
+              maxlength="14"
+              autocomplete="off"
+              required
+            >
+          </div>
+          <span class="form-hint">Informe apenas os dados do novo usuário.</span>
+          <span id="cpf-live-msg" class="live-msg"></span>
+          {% if form_errors.cpf %}
+            <span class="error">{{ form_errors.cpf }}</span>
+          {% endif %}
+        </div>
+
+        <div class="form-group col-6">
+          <label for="id_username">Nome Completo</label>
+          <div class="field-wrap">
+            <i class="bi bi-person field-icon"></i>
+            <input
+              id="id_username"
+              type="text"
+              name="username"
+              class="form-control"
+              placeholder="Digite o nome completo"
+              value="{{ form_data.username|default:'' }}"
+              required
+            >
+          </div>
+          {% if form_errors.username %}
+            <span class="error">{{ form_errors.username }}</span>
+          {% endif %}
+        </div>
+
+        <div class="form-group col-6">
+          <label for="id_email">Email</label>
+          <div class="field-wrap">
+            <i class="bi bi-envelope field-icon"></i>
+            <input
+              id="id_email"
+              type="email"
+              name="email"
+              class="form-control"
+              placeholder="Digite o email"
+              value="{{ form_data.email|default:'' }}"
+              autocomplete="off"
+              required
+            >
+          </div>
+          <span id="email-live-msg" class="live-msg"></span>
+          {% if form_errors.email %}
+            <span class="error">{{ form_errors.email }}</span>
+          {% endif %}
+        </div>
+
+        <div class="col-6" style="display:flex;align-items:flex-end;">
+          <div class="form-group" style="width:100%;">
+            <label for="id_password1">Senha</label>
+            <div class="field-wrap">
+              <i class="bi bi-lock field-icon"></i>
+              <input
+                id="id_password1"
+                type="password"
+                name="password1"
+                class="form-control has-toggle"
+                placeholder="Digite a senha"
+              >
+              <button type="button" class="toggle-password" data-target="id_password1" aria-label="Mostrar ou ocultar senha">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            {% if form_errors.password1 %}
+              <span class="error">{{ form_errors.password1 }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="password-row">
+            <div class="form-group">
+              <label for="id_password2">Confirmar Senha</label>
+              <div class="field-wrap">
+                <i class="bi bi-shield-lock field-icon"></i>
+                <input
+                  id="id_password2"
+                  type="password"
+                  name="password2"
+                  class="form-control has-toggle"
+                  placeholder="Confirme a senha"
+                >
+                <button type="button" class="toggle-password" data-target="id_password2" aria-label="Mostrar ou ocultar senha">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              <span id="password-live-msg" class="live-msg"></span>
+              {% if form_errors.password2 %}
+                <span class="error">{{ form_errors.password2 }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% if form_errors.general %}
+          <div class="form-group col-12">
+            <span class="error">{{ form_errors.general }}</span>
+          </div>
+        {% endif %}
+
+      </div>
+
+      <div class="security-box">
+        <i class="bi bi-shield-check"></i>
+        <div>
+          <strong>Cadastro seguro</strong>
+          <span>CPF e email são verificados em tempo real para evitar duplicidade no sistema.</span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-save" id="submitBtn">
+          <i class="bi bi-check-lg"></i> Salvar Usuário
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+  const cpfInput = document.getElementById("id_cpf");
+  const emailInput = document.getElementById("id_email");
+  const password1Input = document.getElementById("id_password1");
+  const password2Input = document.getElementById("id_password2");
+  const form = document.getElementById("userCreateForm");
+
+  const cpfMsg = document.getElementById("cpf-live-msg");
+  const emailMsg = document.getElementById("email-live-msg");
+  const passwordMsg = document.getElementById("password-live-msg");
+
+  let cpfExists = false;
+  let emailExists = false;
+
+  function onlyDigits(value) {
+    return (value || "").replace(/\D/g, "");
+  }
+
+  function applyCpfMask(value) {
+    const digits = onlyDigits(value).slice(0, 11);
+    return digits
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1-$2");
+  }
+
+  function setValid(input, msgEl, msg) {
+    input.classList.remove("is-invalid");
+    input.classList.add("is-valid");
+    msgEl.className = "live-msg ok";
+    msgEl.textContent = msg || "";
+  }
+
+  function setInvalid(input, msgEl, msg) {
+    input.classList.remove("is-valid");
+    input.classList.add("is-invalid");
+    msgEl.className = "live-msg err";
+    msgEl.textContent = msg || "";
+  }
+
+  function clearState(input, msgEl) {
+    input.classList.remove("is-valid", "is-invalid");
+    msgEl.className = "live-msg";
+    msgEl.textContent = "";
+  }
+
+  function validateEmailFormat(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  cpfInput.addEventListener("input", function () {
+    this.value = applyCpfMask(this.value);
+    const digits = onlyDigits(this.value);
+
+    cpfExists = false;
+
+    if (!digits) {
+      clearState(cpfInput, cpfMsg);
+      return;
+    }
+
+    if (digits.length < 11) {
+      setInvalid(cpfInput, cpfMsg, "CPF incompleto.");
+      return;
+    }
+
+    fetch(`/api/check-cpf-exists/?cpf=${digits}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.ok && data.exists) {
+          cpfExists = true;
+          setInvalid(cpfInput, cpfMsg, "Este CPF já está cadastrado.");
+        } else if (data.ok) {
+          cpfExists = false;
+          setValid(cpfInput, cpfMsg, "CPF disponível.");
+        } else {
+          setInvalid(cpfInput, cpfMsg, data.message || "CPF inválido.");
+        }
+      })
+      .catch(() => {
+        clearState(cpfInput, cpfMsg);
+      });
+  });
+
+  let emailTimer;
+  emailInput.addEventListener("input", function () {
+    clearTimeout(emailTimer);
+    const email = this.value.trim().toLowerCase();
+
+    emailExists = false;
+
+    if (!email) {
+      clearState(emailInput, emailMsg);
+      return;
+    }
+
+    if (!validateEmailFormat(email)) {
+      setInvalid(emailInput, emailMsg, "Digite um email válido.");
+      return;
+    }
+
+    emailTimer = setTimeout(() => {
+      fetch(`/api/check-email-exists/?email=${encodeURIComponent(email)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.ok && data.exists) {
+            emailExists = true;
+            setInvalid(emailInput, emailMsg, "Este email já está cadastrado.");
+          } else if (data.ok) {
+            emailExists = false;
+            setValid(emailInput, emailMsg, "Email disponível.");
+          } else {
+            setInvalid(emailInput, emailMsg, data.message || "Email inválido.");
+          }
+        })
+        .catch(() => {
+          clearState(emailInput, emailMsg);
+        });
+    }, 350);
+  });
+
+  function validatePasswordsLive() {
+    const p1 = password1Input.value;
+    const p2 = password2Input.value;
+
+    if (!p1 && !p2) {
+      passwordMsg.className = "live-msg";
+      passwordMsg.textContent = "";
+      password1Input.classList.remove("is-valid", "is-invalid");
+      password2Input.classList.remove("is-valid", "is-invalid");
+      return;
+    }
+
+    if (p2 && p1 !== p2) {
+      password1Input.classList.remove("is-valid");
+      password2Input.classList.remove("is-valid");
+      password1Input.classList.add("is-invalid");
+      password2Input.classList.add("is-invalid");
+      passwordMsg.className = "live-msg err";
+      passwordMsg.textContent = "As senhas não coincidem.";
+      return;
+    }
+
+    if (p1 && p2 && p1 === p2) {
+      password1Input.classList.remove("is-invalid");
+      password2Input.classList.remove("is-invalid");
+      password1Input.classList.add("is-valid");
+      password2Input.classList.add("is-valid");
+      passwordMsg.className = "live-msg ok";
+      passwordMsg.textContent = "As senhas coincidem.";
+    }
+  }
+
+  password1Input.addEventListener("input", validatePasswordsLive);
+  password2Input.addEventListener("input", validatePasswordsLive);
+
+  document.querySelectorAll(".toggle-password").forEach(button => {
+    button.addEventListener("click", function () {
+      const targetId = this.getAttribute("data-target");
+      const input = document.getElementById(targetId);
+      const icon = this.querySelector("i");
+
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+      } else {
+        input.type = "password";
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
+      }
+    });
+  });
+
+  form.addEventListener("submit", function (e) {
+    const cpfDigits = onlyDigits(cpfInput.value);
+    const email = emailInput.value.trim();
+    const p1 = password1Input.value;
+    const p2 = password2Input.value;
+
+    if (cpfDigits.length !== 11 || cpfExists) {
+      e.preventDefault();
+      setInvalid(cpfInput, cpfMsg, cpfExists ? "Este CPF já está cadastrado." : "CPF inválido ou incompleto.");
+      cpfInput.focus();
+      return;
+    }
+
+    if (!validateEmailFormat(email) || emailExists) {
+      e.preventDefault();
+      setInvalid(emailInput, emailMsg, emailExists ? "Este email já está cadastrado." : "Digite um email válido.");
+      emailInput.focus();
+      return;
+    }
+
+    if (!p1 || !p2) {
+      e.preventDefault();
+      passwordMsg.className = "live-msg err";
+      passwordMsg.textContent = "Preencha os dois campos de senha.";
+      if (!p1) {
+        password1Input.focus();
+      } else {
+        password2Input.focus();
+      }
+      return;
+    }
+
+    if (p1 !== p2) {
+      e.preventDefault();
+      passwordMsg.className = "live-msg err";
+      passwordMsg.textContent = "As senhas não coincidem.";
+      password2Input.focus();
+    }
+  });
+</script>
+
+{% endblock %}

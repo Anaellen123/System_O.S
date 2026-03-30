@@ -5,30 +5,259 @@
 
 {% block content %}
 
-<div class="users-toolbar">
-  <form method="get" class="users-search-form">
-    <div class="users-search">
-      <i class="bi bi-search users-search-ico"></i>
-      <input
-        type="text"
-        name="q"
-        value="{{ q }}"
-        placeholder="Buscar por nome, email ou usuário..."
-        class="users-search-input"
-      >
-      {% if q %}
-        <a href="{% url 'users_list' %}" class="users-search-clear">limpar</a>
-      {% endif %}
+<style>
+  .users-page{
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .users-card{
+    background: var(--card, #fff);
+    border: 1px solid var(--line, #e5e7eb);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 16px 36px rgba(2, 6, 23, .06);
+  }
+
+  .users-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+    padding:20px 22px;
+    border-bottom:1px solid var(--line, #e5e7eb);
+  }
+
+  .users-head-left{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+
+  .users-head-title{
+    margin:0;
+    font-size:22px;
+    font-weight:800;
+  }
+
+  .users-head-subtitle{
+    font-size:13px;
+    color:#64748b;
+  }
+
+  .users-head-right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-left:auto;
+  }
+
+  .users-total{
+    padding:8px 14px;
+    border-radius:10px;
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    font-size:13px;
+    font-weight:700;
+  }
+
+  /* ===== BUSCA ===== */
+  .users-search-form{
+    display:flex;
+    align-items:center;
+  }
+
+  .users-search{
+    display:flex;
+    align-items:center;
+    border:1px solid #dbe3ee;
+    border-radius:12px;
+    overflow:hidden;
+    background:#fff;
+  }
+
+  .users-search-input{
+    height:42px;
+    border:none;
+    outline:none;
+    padding:0 12px;
+    width:240px;
+    font-size:14px;
+  }
+
+  .users-search-btn{
+    height:42px;
+    width:44px;
+    border:none;
+    background:#2563eb;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:.2s;
+  }
+
+  .users-search-btn:hover{
+    background:#1d4ed8;
+  }
+
+  /* ===== TABELA ===== */
+  .users-table{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  .users-table th{
+    text-align:left;
+    padding:14px 20px;
+    font-size:12px;
+    text-transform:uppercase;
+    color:#64748b;
+    border-bottom:1px solid #e5e7eb;
+  }
+
+  .users-table td{
+    padding:16px 20px;
+    border-bottom:1px solid #f1f5f9;
+  }
+
+  .users-table tr:hover{
+    background:#f8fafc;
+  }
+
+  .users-user{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .users-avatar{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:#2563eb20;
+    color:#2563eb;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+  }
+
+  .users-user-name{
+    font-weight:700;
+  }
+
+  .users-user-login{
+    font-size:12px;
+    color:#64748b;
+  }
+
+  .users-role{
+    padding:6px 10px;
+    border-radius:999px;
+    background:#f1f5f9;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .users-status{
+    display:flex;
+    gap:6px;
+  }
+
+  .users-badge{
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .users-badge--ok{
+    background:#dcfce7;
+    color:#166534;
+  }
+
+  .users-badge--bad{
+    background:#fee2e2;
+    color:#991b1b;
+  }
+
+  .users-badge--info{
+    background:#dbeafe;
+    color:#1d4ed8;
+  }
+
+  .users-actions{
+    display:flex;
+    gap:6px;
+  }
+
+  .users-btn{
+    width:34px;
+    height:34px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .users-btn-edit{
+    background:#2563eb20;
+    color:#2563eb;
+  }
+
+  .users-btn-delete{
+    background:#dc262620;
+    color:#dc2626;
+  }
+
+  .users-empty{
+    text-align:center;
+    padding:30px;
+    color:#64748b;
+  }
+</style>
+
+<div class="users-page">
+
+  <div class="users-card">
+    <div class="users-card-head">
+
+      <div class="users-head-left">
+        <h3 class="users-head-title">Usuários</h3>
+        <div class="users-head-subtitle">Gerencie os usuários do sistema</div>
+      </div>
+
+      <div class="users-head-right">
+
+        <div class="users-total">
+          {{ users|length }} usuários
+        </div>
+
+        <!-- 🔥 BUSCA COM BOTÃO -->
+        <form method="get" class="users-search-form">
+          <div class="users-search">
+            <input
+              type="text"
+              name="q"
+              value="{{ q }}"
+              placeholder="Buscar..."
+              class="users-search-input"
+            >
+            <button type="submit" class="users-search-btn">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </form>
+
+      </div>
+
     </div>
-  </form>
-</div>
 
-<div class="users-card">
-  <div class="users-card-head">
-    Lista de usuários ({{ users|length }})
-  </div>
-
-  <div class="users-table-wrap">
     <table class="users-table">
       <thead>
         <tr>
@@ -44,8 +273,18 @@
         {% for u in users %}
         <tr>
           <td>
-            <div class="users-name">
-              {{ u.get_full_name|default:u.username }}
+            <div class="users-user">
+              <div class="users-avatar">
+                {{ u.username|slice:":1"|upper }}
+              </div>
+              <div>
+                <div class="users-user-name">
+                  {{ u.get_full_name|default:u.username }}
+                </div>
+                <div class="users-user-login">
+                  @{{ u.username }}
+                </div>
+              </div>
             </div>
           </td>
 
@@ -53,40 +292,46 @@
 
           <td>
             {% with g=u.groups.first %}
-              {% if g %}{{ g.name }}{% else %}-{% endif %}
+              <span class="users-role">
+                {% if g %}{{ g.name }}{% else %}-{% endif %}
+              </span>
             {% endwith %}
           </td>
 
           <td>
-            {% if u.is_active %}
-              <span class="users-badge users-badge--ok">Ativo</span>
-            {% else %}
-              <span class="users-badge users-badge--bad">Bloqueado</span>
-            {% endif %}
+            <div class="users-status">
+              {% if u.is_active %}
+                <span class="users-badge users-badge--ok">Ativo</span>
+              {% else %}
+                <span class="users-badge users-badge--bad">Bloqueado</span>
+              {% endif %}
 
-            {% if u.is_superuser %}
-              <span class="users-badge users-badge--info">Superuser</span>
-            {% endif %}
+              {% if u.is_superuser %}
+                <span class="users-badge users-badge--info">Admin</span>
+              {% endif %}
+            </div>
           </td>
 
-          <td class="users-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <a class="btn btn-sm btn-outline-primary" href="{% url 'user_role_update' u.id %}">
-              <i class="bi bi-pencil"></i> 
-            </a>
+          <td>
+            <div class="users-actions">
+              <a class="users-btn users-btn-edit" href="{% url 'user_role_update' u.id %}">
+                <i class="bi bi-pencil"></i>
+              </a>
 
-            {% if request.user.id != u.id %}
-            <form method="post"
-                  action="{% url 'user_delete' u.id %}"
-                  style="margin:0;"
-                  onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-trash"></i> 
-              </button>
-            </form>
-            {% endif %}
+              {% if request.user.id != u.id %}
+              <form method="post"
+                    action="{% url 'user_delete' u.id %}"
+                    onsubmit="return confirm('Tem certeza?');">
+                {% csrf_token %}
+                <button type="submit" class="users-btn users-btn-delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+              {% endif %}
+            </div>
           </td>
         </tr>
+
         {% empty %}
         <tr>
           <td colspan="5" class="users-empty">
@@ -96,7 +341,9 @@
         {% endfor %}
       </tbody>
     </table>
+
   </div>
+
 </div>
 
 {% endblock %}

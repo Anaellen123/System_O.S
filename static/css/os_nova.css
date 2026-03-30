@@ -77,8 +77,13 @@
 .os-grid{
   display:grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  align-items: start;
+  gap: 18px;
+  align-items: stretch;
+}
+
+/* card em largura total */
+.os-card--full{
+  grid-column: 1 / -1;
 }
 
 /* card */
@@ -92,6 +97,9 @@
   backdrop-filter: blur(10px);
 
   transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 .os-card:hover{
   transform: translateY(-1px);
@@ -147,7 +155,11 @@
 
 .os-card-body{
   position: relative;
-  padding: 12px 16px 16px;
+  padding: 16px 18px 18px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  flex: 1;
 }
 
 /* fields */
@@ -155,7 +167,7 @@
   display:flex;
   flex-direction:column;
   gap:8px;
-  margin-bottom: 14px;
+  margin-bottom: 0;
 }
 
 .field label{
@@ -183,8 +195,9 @@
 }
 
 .field textarea{
-  min-height: 120px;
+  min-height: 140px;
   resize: vertical;
+  line-height: 1.5;
 }
 
 .field input::placeholder,
@@ -638,7 +651,13 @@ body.theme-dark .upload-feedback{
    RESPONSIVO
    ========================= */
 @media (max-width: 1100px){
-  .os-grid{ grid-template-columns: 1fr; }
+  .os-grid{
+    grid-template-columns: 1fr;
+  }
+
+  .os-card--full{
+    grid-column: auto;
+  }
 }
 
 @media (max-width: 820px){

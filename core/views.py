@@ -3,6 +3,7 @@ import json
 from urllib.request import urlopen
 
 from django.conf import settings
+from django import forms
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
@@ -41,6 +42,28 @@ from .models import (
 
 User = get_user_model()
 
+class LoginForm(forms.Form):
+    username = forms.EmailField(
+        error_messages={
+            "required": "Informe seu email.",
+            "invalid": "Digite um email válido.",
+        }
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput,
+        error_messages={
+            "required": "Informe sua senha.",
+        }
+    )
+
+
+class ForgotPasswordForm(forms.Form):
+    email = forms.EmailField(
+        error_messages={
+            "required": "Informe seu email.",
+            "invalid": "Digite um email válido.",
+        }
+    )
 
 def _is_requisitante(user) -> bool:
     return user.is_authenticated and user.groups.filter(name__iexact="requisitante").exists()
@@ -177,8 +200,29 @@ def index(request):
 
 
 def solicitar_servico(request):
+    perfil = None
+    nome_usuario = ""
+    cpf_usuario = ""
+
+    if request.user.is_authenticated and _is_requisitante(request.user):
+        perfil = UserProfile.objects.filter(user=request.user).first()
+        nome_usuario = (
+            request.user.get_full_name()
+            or request.user.first_name
+            or request.user.username
+            or ""
+        ).strip()
+        cpf_usuario = _only_digits(getattr(perfil, "cpf", "") or "")
+
     if request.method == "POST":
-        form = ServiceRequestForm(request.POST, request.FILES)
+        post_data = request.POST.copy()
+
+        # Para requisitante, força nome e CPF com os dados do usuário logado
+        if request.user.is_authenticated and _is_requisitante(request.user):
+            post_data["full_name"] = nome_usuario
+            post_data["document"] = cpf_usuario
+
+        form = ServiceRequestForm(post_data, request.FILES)
 
         reg_email = (request.POST.get("reg_email") or "").strip().lower()
         reg_p1 = (request.POST.get("reg_password1") or "").strip()
@@ -191,12 +235,11 @@ def solicitar_servico(request):
                 "created": False,
             })
 
-        person_type = (form.cleaned_data.get("person_type") or "").strip()
         document_digits = _only_digits(form.cleaned_data.get("document") or "")
 
         user_to_link = request.user if request.user.is_authenticated else None
 
-        if person_type == "PF" and len(document_digits) == 11:
+        if len(document_digits) == 11:
             cpf_qs = UserProfile.objects.filter(cpf=document_digits)
 
             if cpf_qs.exists():
@@ -265,7 +308,7 @@ def solicitar_servico(request):
                         user_to_link.groups.add(g)
 
                     profile, _ = UserProfile.objects.get_or_create(user=user_to_link)
-                    if person_type == "PF" and len(document_digits) == 11:
+                    if len(document_digits) == 11:
                         profile.cpf = document_digits
                         profile.save()
 
@@ -291,7 +334,11 @@ def solicitar_servico(request):
         if user_to_link:
             obj.created_by = user_to_link
 
-            if person_type == "PF" and len(document_digits) == 11:
+            if request.user.is_authenticated and _is_requisitante(request.user):
+                obj.full_name = nome_usuario
+                obj.document = cpf_usuario
+
+            if len(document_digits) == 11:
                 prof = UserProfile.objects.filter(user=user_to_link).first()
                 if prof and not prof.cpf:
                     prof.cpf = document_digits
@@ -308,18 +355,34 @@ def solicitar_servico(request):
                 "Solicitação criada com sucesso! Sua conta foi criada e enviamos um link de ativação para seu email."
             )
 
+        form_limpo = ServiceRequestForm()
+
+        if request.user.is_authenticated and _is_requisitante(request.user):
+            form_limpo = ServiceRequestForm(initial={
+                "full_name": nome_usuario,
+                "document": cpf_usuario,
+            })
+
         return render(request, "solicitar_servico.html", {
-            "form": ServiceRequestForm(),
+            "form": form_limpo,
             "created": True,
             "os_created": obj,
         })
 
-    form = ServiceRequestForm()
+    initial = {}
+
+    if request.user.is_authenticated and _is_requisitante(request.user):
+        initial = {
+            "full_name": nome_usuario,
+            "document": cpf_usuario,
+        }
+
+    form = ServiceRequestForm(initial=initial)
+
     return render(request, "solicitar_servico.html", {
         "form": form,
         "created": False,
     })
-
 
 @require_GET
 def api_os_status(request, os_number):
@@ -351,48 +414,90 @@ def api_check_cpf_exists(request):
     exists = UserProfile.objects.filter(cpf=cpf).exists()
     return JsonResponse({"ok": True, "exists": exists})
 
-
 @require_http_methods(["GET", "POST"])
 def register(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
 
+    login_form = LoginForm()
+    forgot_form = ForgotPasswordForm()
+
     if request.method == "POST":
         username = (request.POST.get("username") or "").strip()
         email = (request.POST.get("email") or "").strip().lower()
+        cpf = (request.POST.get("cpf") or "").strip()
         password1 = (request.POST.get("password1") or "").strip()
         password2 = (request.POST.get("password2") or "").strip()
 
-        errors = []
+        cpf_digits = _only_digits(cpf)
+
+        form = UserRegisterForm(request.POST)
+        valid = True
 
         if not username:
-            errors.append("Informe um usuário.")
+            form.add_error("username", "Informe seu nome completo.")
+            valid = False
+        elif User.objects.filter(username__iexact=username).exists():
+            form.add_error("username", "Já existe um usuário cadastrado com este nome.")
+            valid = False
+
         if not email:
-            errors.append("Informe um email.")
-        if not password1 or not password2:
-            errors.append("Informe e confirme a senha.")
+            form.add_error("email", "Informe um email.")
+            valid = False
+        elif User.objects.filter(email__iexact=email).exists():
+            form.add_error("email", "Este email já está cadastrado.")
+            valid = False
+
+        if not cpf:
+            form.add_error("cpf", "Informe o CPF.")
+            valid = False
+        else:
+            if len(cpf_digits) != 11:
+                form.add_error("cpf", "Digite um CPF com 11 dígitos.")
+                valid = False
+            elif not _validate_cpf(cpf_digits):
+                form.add_error("cpf", "CPF inválido.")
+                valid = False
+            elif UserProfile.objects.filter(cpf=cpf_digits).exists() or UserProfile.objects.filter(cpf=cpf).exists():
+                form.add_error("cpf", "Este CPF já está cadastrado.")
+                valid = False
+
+        if not password1:
+            form.add_error("password1", "Informe a senha.")
+            valid = False
+
+        if not password2:
+            form.add_error("password2", "Confirme a senha.")
+            valid = False
+
         if password1 and password2 and password1 != password2:
-            errors.append("As senhas não coincidem.")
+            form.add_error("password2", "As senhas não coincidem.")
+            valid = False
 
-        if username and User.objects.filter(username__iexact=username).exists():
-            errors.append("Este usuário já existe.")
-        if email and User.objects.filter(email__iexact=email).exists():
-            errors.append("Este email já está cadastrado.")
-
-        if password1 and password1 == password2:
+        if password1 and password2 and password1 == password2:
             try:
                 validate_password(password1)
             except ValidationError as e:
-                errors.extend(e.messages)
+                for msg in e.messages:
+                    form.add_error("password1", msg)
+                valid = False
 
-        if errors:
-            for e in errors:
-                messages.error(request, e)
-
+        if not valid:
             return render(request, "login_admin.html", {
                 "show_register": True,
-                "register_data": {"username": username, "email": email},
+                "form": form,
+                "login_form": login_form,
+                "forgot_form": forgot_form,
+                "register_data": {
+                    "username": username,
+                    "email": email,
+                    "cpf": cpf,
+                },
+                "login_data": {},
+                "forgot_data": {},
             })
+
+        user = None
 
         try:
             with transaction.atomic():
@@ -403,37 +508,55 @@ def register(request):
                     is_active=False,
                 )
 
+                partes = username.split(" ", 1)
+                user.first_name = partes[0]
+                user.last_name = partes[1] if len(partes) > 1 else ""
+                user.save()
+
                 g = Group.objects.filter(name__iexact="requisitante").first()
                 if g:
                     user.groups.add(g)
 
-                UserProfile.objects.get_or_create(user=user)
+                profile, _ = UserProfile.objects.get_or_create(user=user)
+                profile.cpf = cpf_digits
+                profile.save()
 
             _send_activation_email(request, user)
 
-            messages.success(
-                request,
-                "Conta criada com sucesso! Enviamos um link de ativação para seu email."
-            )
-            return redirect("login_admin")
+            return render(request, "login_admin.html", {
+                "success_message": "Conta criada com sucesso! Enviamos um link de ativação para seu email.",
+                "form": UserRegisterForm(),
+                "login_form": LoginForm(),
+                "forgot_form": ForgotPasswordForm(),
+                "register_data": {},
+                "login_data": {},
+                "forgot_data": {},
+            })
 
         except Exception as e:
             try:
-                user.delete()
+                if user:
+                    user.delete()
             except Exception:
                 pass
 
-            messages.error(
-                request,
-                f"Não foi possível enviar o email de ativação. Erro: {e}"
-            )
+            form.add_error(None, f"Não foi possível enviar o email de ativação. Erro: {e}")
+
             return render(request, "login_admin.html", {
                 "show_register": True,
-                "register_data": {"username": username, "email": email},
+                "form": form,
+                "login_form": login_form,
+                "forgot_form": forgot_form,
+                "register_data": {
+                    "username": username,
+                    "email": email,
+                    "cpf": cpf,
+                },
+                "login_data": {},
+                "forgot_data": {},
             })
 
     return redirect("login_admin")
-
 
 @require_http_methods(["GET"])
 def activate_account(request, uidb64, token):
@@ -470,22 +593,39 @@ def forgot_password_request(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
 
-    email = (request.POST.get("email") or "").strip().lower()
-    print("EMAIL RECEBIDO PARA RECUPERAÇÃO:", email)
+    form = ForgotPasswordForm(request.POST)
+    register_form = UserRegisterForm()
+    login_form = LoginForm()
 
-    if not email:
-        messages.error(request, "Informe seu email.")
+    email = (request.POST.get("email") or "").strip().lower()
+
+    if not form.is_valid():
         return render(request, "login_admin.html", {
             "show_forgot": True,
+            "forgot_form": form,
+            "form": register_form,
+            "login_form": login_form,
+            "forgot_data": {
+                "email": email,
+            },
+            "register_data": {},
+            "login_data": {},
         })
 
     user = User.objects.filter(email__iexact=email).first()
-    print("USUÁRIO ENCONTRADO:", user)
 
     if not user:
-        messages.error(request, "Nenhum usuário foi encontrado com este email.")
+        form.add_error("email", "Nenhum usuário foi encontrado com este email.")
         return render(request, "login_admin.html", {
             "show_forgot": True,
+            "forgot_form": form,
+            "form": register_form,
+            "login_form": login_form,
+            "forgot_data": {
+                "email": email,
+            },
+            "register_data": {},
+            "login_data": {},
         })
 
     uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -496,8 +636,6 @@ def forgot_password_request(request):
         "token": token,
     })
     reset_link = request.build_absolute_uri(reset_path)
-
-    print("LINK DE RECUPERAÇÃO GERADO:", reset_link)
 
     subject = "Recuperação de senha - Portal de Serviços Urbanos"
     message = (
@@ -511,27 +649,37 @@ def forgot_password_request(request):
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or "no-reply@portaldeservicos.com"
 
     try:
-        resultado = send_mail(
+        send_mail(
             subject,
             message,
             from_email,
             [user.email],
             fail_silently=False,
         )
-        print("EMAIL ENVIADO COM SUCESSO. RESULTADO =", resultado)
-        messages.success(request, "Enviamos o link de recuperação para seu email.")
-        return redirect("login_admin")
 
-    except Exception as e:
-        print("ERRO AO ENVIAR EMAIL:", repr(e))
-        messages.error(
-            request,
-            f"Não foi possível enviar o email de recuperação. Erro: {e}"
-        )
         return render(request, "login_admin.html", {
-            "show_forgot": True,
+            "success_message": "Enviamos o link de recuperação para seu email.",
+            "form": register_form,
+            "login_form": login_form,
+            "forgot_form": ForgotPasswordForm(),
+            "register_data": {},
+            "login_data": {},
+            "forgot_data": {},
         })
 
+    except Exception as e:
+        form.add_error(None, f"Não foi possível enviar o email de recuperação. Erro: {e}")
+        return render(request, "login_admin.html", {
+            "show_forgot": True,
+            "forgot_form": form,
+            "form": register_form,
+            "login_form": login_form,
+            "forgot_data": {
+                "email": email,
+            },
+            "register_data": {},
+            "login_data": {},
+        })
 
 @require_http_methods(["GET", "POST"])
 def reset_password_confirm(request, uidb64, token):
@@ -688,14 +836,29 @@ def users_list(request):
 
 @require_http_methods(["GET", "POST"])
 def login_view(request):
-    list(messages.get_messages(request))
-
     if request.user.is_authenticated:
         return redirect("dashboard")
 
+    register_form = UserRegisterForm()
+    forgot_form = ForgotPasswordForm()
+
     if request.method == "POST":
+        form = LoginForm(request.POST)
+
         username_or_email = (request.POST.get("username") or "").strip()
         password = (request.POST.get("password") or "").strip()
+
+        if not form.is_valid():
+            return render(request, "login_admin.html", {
+                "login_form": form,
+                "form": register_form,
+                "forgot_form": forgot_form,
+                "login_data": {
+                    "username": username_or_email,
+                },
+                "register_data": {},
+                "forgot_data": {},
+            })
 
         user = authenticate(request, username=username_or_email, password=password)
 
@@ -712,17 +875,32 @@ def login_view(request):
             ).first()
 
             if u and not u.is_active:
-                messages.error(request, "Sua conta ainda não foi ativada por email.")
-                return render(request, "login_admin.html")
+                form.add_error(None, "Sua conta ainda não foi ativada por email.")
+            else:
+                form.add_error(None, "Usuário ou senha inválidos.")
 
-            messages.error(request, "Usuário ou senha inválidos.")
-            return render(request, "login_admin.html")
+            return render(request, "login_admin.html", {
+                "login_form": form,
+                "form": register_form,
+                "forgot_form": forgot_form,
+                "login_data": {
+                    "username": username_or_email,
+                },
+                "register_data": {},
+                "forgot_data": {},
+            })
 
         login(request, user)
         return redirect("dashboard")
 
-    return render(request, "login_admin.html")
-
+    return render(request, "login_admin.html", {
+        "form": UserRegisterForm(),
+        "login_form": LoginForm(),
+        "forgot_form": ForgotPasswordForm(),
+        "register_data": {},
+        "login_data": {},
+        "forgot_data": {},
+    })
 
 def logout_view(request):
     logout(request)
@@ -862,11 +1040,35 @@ def request_detail(request, pk):
 
 @login_required(login_url="login_admin")
 def os_create(request):
+    perfil = UserProfile.objects.filter(user=request.user).first()
+    eh_requisitante = _is_requisitante(request.user)
+
+    nome_usuario = (
+        request.user.get_full_name()
+        or request.user.first_name
+        or request.user.username
+        or ""
+    ).strip()
+
+    cpf_usuario = _only_digits(getattr(perfil, "cpf", "") or "")
+
     if request.method == "POST":
-        form = ServiceRequestForm(request.POST, request.FILES)
+        post_data = request.POST.copy()
+
+        if eh_requisitante:
+            post_data["full_name"] = nome_usuario
+            post_data["document"] = cpf_usuario
+
+        form = ServiceRequestForm(post_data, request.FILES)
+
         if form.is_valid():
             obj = form.save(commit=False)
             obj.created_by = request.user
+
+            if eh_requisitante:
+                obj.full_name = nome_usuario
+                obj.document = cpf_usuario
+
             obj.save()
 
             for f in request.FILES.getlist("attachments"):
@@ -877,10 +1079,17 @@ def os_create(request):
         else:
             messages.error(request, "Revise os campos obrigatórios.")
     else:
-        form = ServiceRequestForm()
+        initial = {}
+
+        if eh_requisitante:
+            initial = {
+                "full_name": nome_usuario,
+                "document": cpf_usuario,
+            }
+
+        form = ServiceRequestForm(initial=initial)
 
     return render(request, "os_nova.html", {"form": form})
-
 
 @login_required(login_url="login_admin")
 def os_list(request, status=None):
@@ -1031,52 +1240,39 @@ def _validate_cpf(cpf: str) -> bool:
     return d2 == nums[10]
 
 
-def _validate_cnpj(cnpj: str) -> bool:
-    cnpj = _only_digits(cnpj)
-    if len(cnpj) != 14 or _is_repeated_digits(cnpj):
-        return False
-
-    nums = list(map(int, cnpj))
-
-    w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
-    w2 = [6] + w1
-
-    s1 = sum(nums[i] * w1[i] for i in range(12))
-    d1 = 11 - (s1 % 11)
-    d1 = 0 if d1 >= 10 else d1
-    if d1 != nums[12]:
-        return False
-
-    s2 = sum(nums[i] * w2[i] for i in range(13))
-    d2 = 11 - (s2 % 11)
-    d2 = 0 if d2 == 10 else d2
-    return d2 == nums[13]
-
-
 @require_GET
 def api_validate_document(request):
     value = request.GET.get("value", "")
     digits = _only_digits(value)
 
-    if len(digits) == 11:
-        ok = _validate_cpf(digits)
-        doc_type = "CPF"
-    elif len(digits) == 14:
-        ok = _validate_cnpj(digits)
-        doc_type = "CNPJ"
-    else:
+    if len(digits) != 11:
         return JsonResponse({
             "ok": False,
-            "type": None,
-            "message": "Digite um CPF (11 dígitos) ou CNPJ (14 dígitos)."
+            "type": "CPF",
+            "message": "Digite um CPF com 11 dígitos."
+        }, status=400)
+
+    ok = _validate_cpf(digits)
+
+    if not ok:
+        return JsonResponse({
+            "ok": False,
+            "type": "CPF",
+            "message": "CPF inválido."
+        }, status=400)
+
+    if UserProfile.objects.filter(cpf=digits).exists():
+        return JsonResponse({
+            "ok": False,
+            "type": "CPF",
+            "message": "Este CPF já está cadastrado."
         }, status=400)
 
     return JsonResponse({
-        "ok": ok,
-        "type": doc_type,
-        "message": "Documento válido." if ok else f"{doc_type} inválido."
+        "ok": True,
+        "type": "CPF",
+        "message": "CPF válido."
     })
-
 
 @login_required(login_url="login_admin")
 def team_list(request):
@@ -1475,3 +1671,302 @@ def service_type_delete(request, pk):
 
     messages.success(request, f'Tipo de serviço "{nome}" excluído com sucesso.')
     return redirect("service_type_dashboard")
+
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.hashers import check_password
+
+@login_required(login_url="login_admin")
+@require_http_methods(["GET", "POST"])
+def account_settings(request):
+    user = request.user
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+
+    if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+
+        if action == "profile":
+            username = (request.POST.get("username") or "").strip()
+            email = (request.POST.get("email") or "").strip().lower()
+            cpf = (request.POST.get("cpf") or "").strip()
+            cpf_digits = _only_digits(cpf)
+
+            errors = {}
+
+            # USERNAME
+            if not username:
+                errors["username"] = "Informe o nome de usuário."
+            elif User.objects.filter(username__iexact=username).exclude(id=user.id).exists():
+                errors["username"] = "Já existe outro usuário com este nome."
+
+            # EMAIL
+            if not email:
+                errors["email"] = "Informe seu email."
+            elif User.objects.filter(email__iexact=email).exclude(id=user.id).exists():
+                errors["email"] = "Este email já está cadastrado para outro usuário."
+
+            # CPF
+            if not cpf:
+                errors["cpf"] = "Informe o CPF."
+            else:
+                if len(cpf_digits) != 11:
+                    errors["cpf"] = "Digite um CPF com 11 dígitos."
+                elif not _validate_cpf(cpf_digits):
+                    errors["cpf"] = "CPF inválido."
+                elif UserProfile.objects.filter(cpf=cpf_digits).exclude(user=user).exists():
+                    errors["cpf"] = "Este CPF já está cadastrado para outro usuário."
+
+            if errors:
+                return render(request, "account_settings.html", {
+                    "user_obj": user,
+                    "profile": profile,
+                    "form_errors": errors,
+                    "form_data": {
+                        "username": username,
+                        "email": email,
+                        "cpf": cpf,
+                    }
+                })
+
+            user.username = username
+            user.email = email
+
+            partes = username.split(" ", 1)
+            user.first_name = partes[0]
+            user.last_name = partes[1] if len(partes) > 1 else ""
+
+            user.save()
+
+            profile.cpf = cpf_digits
+            profile.save()
+
+            messages.success(request, "Dados atualizados com sucesso.")
+            return redirect("account_settings")
+
+        elif action == "password":
+            current_password = (request.POST.get("current_password") or "").strip()
+            new_password1 = (request.POST.get("new_password1") or "").strip()
+            new_password2 = (request.POST.get("new_password2") or "").strip()
+
+            password_errors = {}
+
+            if not current_password:
+                password_errors["current_password"] = "Informe sua senha atual."
+            elif not user.check_password(current_password):
+                password_errors["current_password"] = "A senha atual está incorreta."
+
+            if not new_password1:
+                password_errors["new_password1"] = "Informe a nova senha."
+
+            if not new_password2:
+                password_errors["new_password2"] = "Confirme a nova senha."
+
+            if new_password1 and new_password2 and new_password1 != new_password2:
+                password_errors["new_password2"] = "As novas senhas não coincidem."
+
+            if "new_password1" not in password_errors and "new_password2" not in password_errors and new_password1:
+                try:
+                    validate_password(new_password1, user=user)
+                except ValidationError as e:
+                    password_errors["new_password1"] = " ".join(e.messages)
+
+            if password_errors:
+                return render(request, "account_settings.html", {
+                    "user_obj": user,
+                    "profile": profile,
+                    "password_errors": password_errors,
+                    "form_data": {
+                        "username": user.username,
+                        "email": user.email,
+                        "cpf": profile.cpf or "",
+                    }
+                })
+
+            user.set_password(new_password1)
+            user.save()
+            update_session_auth_hash(request, user)
+
+            messages.success(request, "Senha alterada com sucesso.")
+            return redirect("account_settings")
+
+    return render(request, "account_settings.html", {
+        "user_obj": user,
+        "profile": profile,
+        "form_errors": {},
+        "password_errors": {},
+        "form_data": {
+            "username": user.username,
+            "email": user.email,
+            "cpf": profile.cpf or "",
+        }
+    })
+
+@login_required(login_url="login_admin")
+@require_http_methods(["GET", "POST"])
+def lgpd_consent(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        if request.POST.get("accept_lgpd") == "1":
+            profile.lgpd_accepted = True
+            profile.lgpd_accepted_at = timezone.now()
+            profile.save(update_fields=["lgpd_accepted", "lgpd_accepted_at"])
+
+            messages.success(request, "Termo de privacidade aceito com sucesso.")
+            return redirect("dashboard")
+
+        messages.error(request, "Você precisa aceitar o termo para continuar.")
+        return redirect("lgpd_consent")
+
+    return render(request, "lgpd_consent.html", {
+        "lgpd_text": """
+Termo de Consentimento e Privacidade (LGPD)
+
+Nós valorizamos a segurança dos seus dados pessoais e atuamos em total conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Ao realizar este cadastro, coletamos informações essenciais, como nome e e-mail, com a finalidade exclusiva de identificar seu acesso, garantir a segurança da conta e viabilizar a prestação dos nossos serviços de forma personalizada e eficiente.
+
+Informamos que seus dados serão armazenados em ambiente seguro e não serão compartilhados com terceiros para fins comerciais sem a sua autorização expressa. O tratamento desses dados perdurará apenas pelo período necessário para cumprir as finalidades descritas ou para o atendimento de obrigações legais e regulatórias, sendo garantido a você o direito de solicitar a exclusão das informações a qualquer momento.
+
+Ao prosseguir e clicar no botão de finalização do cadastro, você declara estar ciente e concordar com o tratamento de seus dados pessoais nos termos aqui expostos. Ressaltamos que você possui o direito de acessar, corrigir ou revogar este consentimento mediante solicitação direta em nossos canais de atendimento, assegurando total transparência sobre o uso de sua privacidade.
+        """.strip()
+    })
+
+def _must_accept_lgpd(user) -> bool:
+    if not user.is_authenticated:
+        return False
+
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+
+    if not profile.lgpd_accepted or not profile.lgpd_accepted_at:
+        return True
+
+    limite = timezone.now() - timedelta(days=30)
+    return profile.lgpd_accepted_at < limite
+
+@login_required(login_url="login_admin")
+@require_http_methods(["GET", "POST"])
+def user_create(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Você não tem permissão para criar usuários.")
+        return redirect("dashboard")
+
+    context = {
+        "form_errors": {},
+        "form_data": {},
+    }
+
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        email = (request.POST.get("email") or "").strip().lower()
+        cpf = (request.POST.get("cpf") or "").strip()
+        password1 = (request.POST.get("password1") or "").strip()
+        password2 = (request.POST.get("password2") or "").strip()
+
+        cpf_digits = _only_digits(cpf)
+        errors = {}
+
+        # =====================
+        # NOME
+        # =====================
+        if not username:
+            errors["username"] = "Informe o nome completo."
+        elif User.objects.filter(username__iexact=username).exists():
+            errors["username"] = "Já existe um usuário com este nome."
+
+        # =====================
+        # EMAIL
+        # =====================
+        if not email:
+            errors["email"] = "Informe o email."
+        elif User.objects.filter(email__iexact=email).exists():
+            errors["email"] = "Este email já está cadastrado."
+
+        # =====================
+        # CPF
+        # =====================
+        if not cpf:
+            errors["cpf"] = "Informe o CPF."
+        elif len(cpf_digits) != 11:
+            errors["cpf"] = "CPF deve ter 11 dígitos."
+        elif not _validate_cpf(cpf_digits):
+            errors["cpf"] = "CPF inválido."
+        elif UserProfile.objects.filter(cpf=cpf_digits).exists():
+            errors["cpf"] = "Este CPF já está cadastrado."
+
+        # =====================
+        # SENHA
+        # =====================
+        if not password1:
+            errors["password1"] = "Informe a senha."
+        if not password2:
+            errors["password2"] = "Confirme a senha."
+        if password1 and password2 and password1 != password2:
+            errors["password2"] = "As senhas não coincidem."
+
+        if password1 and password2 and password1 == password2:
+            try:
+                validate_password(password1)
+            except ValidationError as e:
+                errors["password1"] = " ".join(e.messages)
+
+        # =====================
+        # ERROS
+        # =====================
+        if errors:
+            context["form_errors"] = errors
+            context["form_data"] = {
+                "username": username,
+                "email": email,
+                "cpf": cpf,
+            }
+            return render(request, "users/user_create.html", context)
+
+        # =====================
+        # CRIAR USUÁRIO
+        # =====================
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password1,
+                    is_active=True,
+                )
+
+                # dividir nome
+                partes = username.split(" ", 1)
+                user.first_name = partes[0]
+                user.last_name = partes[1] if len(partes) > 1 else ""
+                user.save()
+
+                # perfil
+                profile, _ = UserProfile.objects.get_or_create(user=user)
+                profile.cpf = cpf_digits
+                profile.save()
+
+            messages.success(request, "Usuário criado com sucesso!")
+            return redirect("users_list")
+
+        except Exception as e:
+            context["form_errors"] = {
+                "general": f"Erro ao criar usuário: {e}"
+            }
+            context["form_data"] = {
+                "username": username,
+                "email": email,
+                "cpf": cpf,
+            }
+            return render(request, "users/user_create.html", context)
+
+    return render(request, "users/user_create.html", context)
+
+@require_GET
+def api_check_email_exists(request):
+    email = (request.GET.get("email") or "").strip().lower()
+
+    if not email:
+        return JsonResponse(
+            {"ok": False, "exists": False, "message": "Informe um email."},
+            status=400
+        )
+
+    exists = User.objects.filter(email__iexact=email).exists()
+    return JsonResponse({"ok": True, "exists": exists})

@@ -1,0 +1,70 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Termo de Consentimento LGPD{% endblock %}
+{% block page_title %}Termo de Consentimento LGPD{% endblock %}
+
+{% block content %}
+<div style="max-width:900px;margin:30px auto;">
+  <div style="
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:20px;
+      box-shadow:0 10px 30px rgba(0,0,0,.08);
+      overflow:hidden;
+  ">
+    <div style="
+        padding:22px 24px;
+        background:linear-gradient(135deg,#1d4ed8,#2563eb);
+        color:#fff;
+    ">
+      <h2 style="margin:0;font-size:24px;font-weight:800;">
+        Termo de Consentimento e Privacidade (LGPD)
+      </h2>
+      <p style="margin:8px 0 0 0;opacity:.95;">
+        Para continuar utilizando o sistema, confirme seu consentimento.
+      </p>
+    </div>
+
+    <div style="padding:24px;">
+      <div style="
+          white-space:pre-line;
+          font-size:15px;
+          line-height:1.8;
+          color:#374151;
+          background:#f9fafb;
+          border:1px solid #e5e7eb;
+          border-radius:16px;
+          padding:18px;
+          max-height:420px;
+          overflow:auto;
+      ">
+        {{ lgpd_text }}
+      </div>
+
+      <form method="post" style="margin-top:20px;">
+        {% csrf_token %}
+
+        <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:18px;color:#111827;font-size:14px;line-height:1.5;">
+          <input type="checkbox" id="acceptCheck" required style="margin-top:4px;">
+          <span>Declaro que li e concordo com o Termo de Consentimento e Privacidade (LGPD).</span>
+        </label>
+
+        <input type="hidden" name="accept_lgpd" value="1">
+
+        <button id="acceptBtn" type="submit" style="
+            background:#2563eb;
+            color:#fff;
+            border:none;
+            padding:12px 22px;
+            border-radius:12px;
+            font-weight:700;
+            cursor:pointer;
+            box-shadow:0 8px 20px rgba(37,99,235,.22);
+        ">
+          Aceitar e continuar
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

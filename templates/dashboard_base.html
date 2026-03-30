@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="{% static 'css/dashboard_requisitante.css' %}">
   <link rel="stylesheet" href="{% static 'css/os_edit.css' %}">
   <link rel="stylesheet" href="{% static 'css/style-users-list.css' %}">
+  <link rel="stylesheet" href="{% static 'css/os_nova.css' %}">
 </head>
 <body>
 
@@ -19,22 +20,18 @@
 
   <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <!-- Brand -->
     <div class="brand">
       <img class="logo-light" src="{% static 'img/logo-prefeitura-removebg.png' %}" alt="Socorro">
       <img class="logo-dark" src="{% static 'img/login-modo-black.png' %}" alt="Socorro">
     </div>
 
-    <!-- CTA (só aparece se tiver permissão de gerenciar OS) -->
     {% if perms.core.manage_os %}
       <a class="btn-create" href="{% url 'os_create' %}">
         <i class="bi bi-plus-lg"></i> Criar Ordem de Serviço
       </a>
     {% endif %}
 
-    <!-- MENU -->
     <nav class="menu" id="sidebarMenu">
 
       {% if perms.core.tab_dashboard %}
@@ -45,13 +42,24 @@
         </a>
       {% endif %}
 
-      <!-- ORDEM DE SERVIÇO (submenu) -->
+      {% if request.user.is_authenticated %}
+        {% for g in request.user.groups.all %}
+          {% if g.name|lower == 'requisitante' %}
+            <a class="menu-item {% if request.resolver_match.url_name == 'dashboard_requisitante' %}active{% endif %}"
+               href="{% url 'dashboard_requisitante' %}">
+              <i class="bi bi-person"></i>
+              <span>Meu Painel</span>
+            </a>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
       {% if perms.core.tab_os %}
         <div class="menu-accordion
           {% if request.resolver_match.url_name == 'os_list' or request.resolver_match.url_name == 'os_list_status' or request.resolver_match.url_name == 'os_create' or request.resolver_match.url_name == 'os_detail' %}
             is-open
           {% endif %}">
-          <button class="menu-item menu-toggle" type="button" aria-expanded="false">
+          <button class="menu-item menu-toggle" type="button">
             <span class="menu-left">
               <i class="bi bi-clipboard-check"></i>
               <span>Ordem de Serviço</span>
@@ -81,19 +89,48 @@
       {% endif %}
 
       {% if perms.core.tab_users %}
-        <a class="menu-item {% if request.resolver_match.url_name == 'users_list' or request.resolver_match.url_name == 'user_role_update' %}active{% endif %}"
-           href="{% url 'users_list' %}">
-          <i class="bi bi-person-badge"></i>
-          <span>Usuários</span>
-        </a>
-      {% endif %}
+        <div class="menu-accordion
+          {% if request.resolver_match.url_name == 'users_list' or request.resolver_match.url_name == 'user_role_update' or request.resolver_match.url_name == 'user_create' %}
+            is-open
+          {% endif %}">
 
+          <button class="menu-item menu-toggle" type="button">
+            <span class="menu-left">
+              <i class="bi bi-person-badge"></i>
+              <span>Usuários</span>
+            </span>
+            <i class="bi bi-chevron-right menu-caret"></i>
+          </button>
+
+          <ul class="submenu">
+
+            <!-- EDITAR USUÁRIO -->
+            <li>
+              <a class="submenu-item 
+                {% if request.resolver_match.url_name == 'users_list' or request.resolver_match.url_name == 'user_role_update' %}active{% endif %}"
+                href="{% url 'users_list' %}">
+                Editar Usuário
+              </a>
+            </li>
+
+            <!-- CRIAR USUÁRIO -->
+            <li>
+              <a class="submenu-item 
+                {% if request.resolver_match.url_name == 'user_create' %}active{% endif %}"
+                href="{% url 'user_create' %}">
+                Criar Usuário
+              </a>
+            </li>
+
+          </ul>
+        </div>
+      {% endif %}
       {% if perms.core.tab_team %}
         <div class="menu-accordion
           {% if request.resolver_match.url_name == 'team_list' or request.resolver_match.url_name == 'team_create' %}
             is-open
           {% endif %}">
-          <button class="menu-item menu-toggle" type="button" aria-expanded="false">
+          <button class="menu-item menu-toggle" type="button">
             <span class="menu-left">
               <i class="bi bi-people"></i>
               <span>Equipe</span>
@@ -114,7 +151,6 @@
         </div>
       {% endif %}
 
-      <!-- MINHAS O.S (aba própria e só para grupo interno) -->
       {% if request.user.is_authenticated %}
         {% for g in request.user.groups.all %}
           {% if g.name|lower == 'interno' %}
@@ -129,16 +165,15 @@
 
       {% if perms.core.tab_requests %}
         <a class="menu-item {% if request.resolver_match.url_name == 'service_type_dashboard' %}active{% endif %}"
-          href="{% url 'service_type_dashboard' %}">
+           href="{% url 'service_type_dashboard' %}">
           <i class="bi bi-tools"></i>
           <span>Serviços</span>
         </a>
       {% endif %}
 
-      <!-- RELATÓRIOS (submenu) -->
       {% if perms.core.tab_reports %}
         <div class="menu-accordion">
-          <button class="menu-item menu-toggle" type="button" aria-expanded="false">
+          <button class="menu-item menu-toggle" type="button">
             <span class="menu-left">
               <i class="bi bi-bar-chart"></i>
               <span>Relatórios</span>
@@ -154,17 +189,17 @@
         </div>
       {% endif %}
 
-      <!-- DIVISÓRIA -->
       <div class="menu-divider"></div>
 
-      <button class="menu-item menu-theme" id="themeToggle" type="button" aria-pressed="false">
+      <button class="menu-item menu-theme" id="themeToggle" type="button">
         <span class="menu-left">
           <i class="bi bi-sun"></i>
           <span id="themeText">Tema: Claro</span>
         </span>
       </button>
 
-      <a class="menu-item" href="#">
+      <a class="menu-item {% if request.resolver_match.url_name == 'account_settings' %}active{% endif %}"
+         href="{% url 'account_settings' %}">
         <i class="bi bi-gear-wide-connected"></i>
         <span>Configurações</span>
       </a>
@@ -173,9 +208,9 @@
         <i class="bi bi-question-circle"></i>
         <span>Ajuda</span>
       </a>
+
     </nav>
 
-    <!-- FOOTER -->
     <div class="sidebar-bottom">
       <a class="logout" href="{% url 'logout' %}">
         <i class="bi bi-box-arrow-right"></i> Sair
@@ -187,10 +222,9 @@
     </div>
   </aside>
 
-  <!-- CONTEÚDO -->
   <section class="content">
     <header class="topbar">
-      <button class="btn-menu" id="btnMenu" type="button" aria-label="Abrir menu">
+      <button class="btn-menu" id="btnMenu" type="button">
         <i class="bi bi-list"></i>
       </button>
       <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>

@@ -4,8 +4,6 @@
 {% block page_title %}Nova Ordem de Serviço{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'css/os_nova.css' %}">
-
 <div class="os-top">
   <a href="{% url 'dashboard' %}" class="os-back">←</a>
   <div class="os-title">
@@ -28,29 +26,52 @@
       </div>
 
       <div class="os-card-body">
+
         <div class="field">
-          <label>Tipo de Pessoa *</label>
-          <div class="chips" data-target="id_person_type">
-            <button type="button" class="chip is-active" data-value="PF">Pessoa Física</button>
-            <button type="button" class="chip" data-value="PJ">Pessoa Jurídica</button>
-          </div>
-          {{ form.person_type }}
+          <label for="id_document">CPF *</label>
+          <input
+            type="text"
+            name="document"
+            id="id_document"
+            value="{{ form.document.value|default:'' }}"
+            placeholder="000.000.000-00"
+            maxlength="14"
+            {% if request.user.is_authenticated and form.document.value %}readonly{% endif %}
+          >
+          {% if form.document.errors %}
+            <div class="field-error">
+              {{ form.document.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="field">
-          <label>CPF/CNPJ *</label>
-          {{ form.document }}
-        </div>
-
-        <div class="field">
-          <label>Nome Completo *</label>
-          {{ form.full_name }}
+          <label for="id_full_name">Nome Completo *</label>
+          <input
+            type="text"
+            name="full_name"
+            id="id_full_name"
+            value="{{ form.full_name.value|default:'' }}"
+            placeholder="Digite o nome completo"
+            {% if request.user.is_authenticated and form.full_name.value %}readonly{% endif %}
+          >
+          {% if form.full_name.errors %}
+            <div class="field-error">
+              {{ form.full_name.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="field">
           <label>Telefone *</label>
           {{ form.phone }}
+          {% if form.phone.errors %}
+            <div class="field-error">
+              {{ form.phone.errors.0 }}
+            </div>
+          {% endif %}
         </div>
+
       </div>
     </section>
 
@@ -68,18 +89,33 @@
           <div class="field">
             <label>CEP</label>
             {{ form.cep }}
+            {% if form.cep.errors %}
+              <div class="field-error">
+                {{ form.cep.errors.0 }}
+              </div>
+            {% endif %}
           </div>
         </div>
 
         <div class="field">
           <label>Rua / Avenida</label>
           {{ form.street }}
+          {% if form.street.errors %}
+            <div class="field-error">
+              {{ form.street.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="grid-2">
           <div class="field">
             <label>Número</label>
             {{ form.number }}
+            {% if form.number.errors %}
+              <div class="field-error">
+                {{ form.number.errors.0 }}
+              </div>
+            {% endif %}
           </div>
           <div class="field">
             <label>Complemento</label>
@@ -90,12 +126,22 @@
         <div class="field">
           <label>Bairro</label>
           {{ form.neighborhood }}
+          {% if form.neighborhood.errors %}
+            <div class="field-error">
+              {{ form.neighborhood.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="grid-2">
           <div class="field">
             <label>Cidade</label>
             {{ form.city }}
+            {% if form.city.errors %}
+              <div class="field-error">
+                {{ form.city.errors.0 }}
+              </div>
+            {% endif %}
           </div>
           <div class="field">
             <label>UF</label>
@@ -110,12 +156,12 @@
       </div>
     </section>
 
-    <section class="os-card">
+    <section class="os-card os-card--full">
       <div class="os-card-head">
         <div class="os-ico">🧰</div>
         <div>
           <h2>Serviço</h2>
-          <p>Tipo de serviço e canal de atendimento</p>
+          <p>Informe o tipo de serviço, descrição, anexos e observações</p>
         </div>
       </div>
 
@@ -123,11 +169,21 @@
         <div class="field">
           <label>Tipo de Serviço *</label>
           {{ form.service_type }}
+          {% if form.service_type.errors %}
+            <div class="field-error">
+              {{ form.service_type.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="field">
           <label>Descrição *</label>
           {{ form.description }}
+          {% if form.description.errors %}
+            <div class="field-error">
+              {{ form.description.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="field">
@@ -144,10 +200,10 @@
 
           <label for="id_attachments" class="upload-box" id="uploadBox" style="margin-top:8px;">
             <div class="upload-left">
-              <div class="upload-icon" aria-hidden="true">📷</div>
+              <div class="upload-icon">📷</div>
               <div class="upload-texts">
                 <div class="upload-title" id="uploadTitle">Selecionar imagens</div>
-                <div class="upload-sub" id="uploadSub">PNG ou JPG (você pode selecionar várias)</div>
+                <div class="upload-sub" id="uploadSub">PNG ou JPG</div>
               </div>
             </div>
 
@@ -157,45 +213,18 @@
             </div>
           </label>
 
-          <div class="upload-feedback" id="uploadFeedback" aria-live="polite"></div>
+          <div class="upload-feedback" id="uploadFeedback"></div>
           <div class="upload-previews" id="uploadPreviews"></div>
         </div>
 
         <div class="field">
-          <label>Canal de Atendimento *</label>
-          <div class="chips" data-target="id_channel">
-            <button type="button" class="chip is-active" data-value="WHATS">WhatsApp</button>
-            <button type="button" class="chip" data-value="PRES">Presencial</button>
-          </div>
-          <input type="hidden" id="id_channel" name="channel" value="WHATS">
-        </div>
-      </div>
-    </section>
-
-    <section class="os-card">
-      <div class="os-card-head">
-        <div class="os-ico">⚙️</div>
-        <div>
-          <h2>Configurações</h2>
-          <p>Prioridade e observações internas</p>
-        </div>
-      </div>
-
-      <div class="os-card-body">
-        <div class="field">
-          <label>Prioridade *</label>
-          <div class="chips chips-4" data-target="id_priority">
-            <button type="button" class="chip" data-value="LOW">Baixa</button>
-            <button type="button" class="chip is-active" data-value="MED">Média</button>
-            <button type="button" class="chip" data-value="HIGH">Alta</button>
-            <button type="button" class="chip" data-value="URG">Urgente</button>
-          </div>
-          <input type="hidden" id="id_priority" name="priority" value="MED">
-        </div>
-
-        <div class="field">
-          <label>Observações Internas <span class="muted">(Opcional)</span></label>
+          <label>Observações Internas</label>
           {{ form.notes }}
+          {% if form.notes.errors %}
+            <div class="field-error">
+              {{ form.notes.errors.0 }}
+            </div>
+          {% endif %}
         </div>
       </div>
     </section>
@@ -207,74 +236,22 @@
   </div>
 </form>
 
-<script>
-  (function(){
-    const input = document.getElementById("id_attachments");
-    const feedback = document.getElementById("uploadFeedback");
-    const previews = document.getElementById("uploadPreviews");
-    const title = document.getElementById("uploadTitle");
-    const sub = document.getElementById("uploadSub");
-    const count = document.getElementById("uploadCount");
+<style>
+  .field-error{
+    margin-top: 6px;
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
 
-    if(!input) return;
-
-    function clearPreviews(){
-      if(previews) previews.innerHTML = "";
-    }
-
-    function addPreview(file){
-      if(!previews) return;
-
-      const url = URL.createObjectURL(file);
-      const wrap = document.createElement("div");
-      wrap.style.cssText = "width:84px;height:84px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:rgba(255,255,255,.6);box-shadow:var(--shadow-sm);";
-
-      const img = document.createElement("img");
-      img.src = url;
-      img.alt = file.name;
-      img.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
-      img.onload = () => URL.revokeObjectURL(url);
-
-      wrap.appendChild(img);
-      previews.appendChild(wrap);
-    }
-
-    input.addEventListener("change", () => {
-      clearPreviews();
-
-      const files = Array.from(input.files || []);
-
-      if(count){
-        if(files.length){
-          count.hidden = false;
-          count.textContent = String(files.length);
-        }else{
-          count.hidden = true;
-          count.textContent = "0";
-        }
-      }
-
-      if(!files.length){
-        if(title) title.textContent = "Selecionar imagens";
-        if(sub) sub.textContent = "PNG ou JPG (você pode selecionar várias)";
-        if(feedback) feedback.textContent = "";
-        return;
-      }
-
-      if(title) title.textContent = `${files.length} arquivo(s) selecionado(s)`;
-      if(sub) sub.textContent = "Se quiser, você pode trocar as imagens selecionando novamente.";
-
-      const invalid = files.filter(f => !["image/png","image/jpeg"].includes(f.type));
-      if(invalid.length){
-        if(feedback) feedback.textContent = "Alguns arquivos não são PNG/JPG. Remova e selecione apenas imagens.";
-      }else{
-        if(feedback) feedback.textContent = "";
-      }
-
-      files.forEach(addPreview);
-    });
-  })();
-</script>
+  input[readonly]{
+    background: #f8fafc;
+    color: #475569;
+    cursor: not-allowed;
+    opacity: 1;
+  }
+</style>
 
 <script src="{% static 'js/os_nova.js' %}"></script>
 {% endblock %}

@@ -1,8 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const input = document.getElementById("cpf"); // no seu HTML o id é "cpf"
+  const input = document.getElementById("cpf");
   if (!input) return;
 
-  // cria uma mensagem embaixo do input
+  const form = input.closest("form");
+  let cpfValido = false;
+
   const msg = document.createElement("small");
   msg.style.display = "block";
   msg.style.marginTop = "6px";
@@ -10,6 +12,21 @@ document.addEventListener("DOMContentLoaded", () => {
   input.parentElement.appendChild(msg);
 
   const onlyDigits = (s) => (s || "").replace(/\D/g, "");
+
+  function maskCPF(value) {
+    value = onlyDigits(value).slice(0, 11);
+
+    if (value.length > 9) {
+      return value.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2}).*/, "$1.$2.$3-$4");
+    }
+    if (value.length > 6) {
+      return value.replace(/^(\d{3})(\d{3})(\d{1,3}).*/, "$1.$2.$3");
+    }
+    if (value.length > 3) {
+      return value.replace(/^(\d{3})(\d{1,3}).*/, "$1.$2");
+    }
+    return value;
+  }
 
   async function validar(value) {
     const res = await fetch(`/api/validate-document/?value=${encodeURIComponent(value)}`);
@@ -25,36 +42,73 @@ document.addEventListener("DOMContentLoaded", () => {
   async function onCheck() {
     const digits = onlyDigits(input.value);
 
-    // só valida quando tiver tamanho de CPF ou CNPJ
-    if (!(digits.length === 11 || digits.length === 14)) {
+    cpfValido = false;
+
+    if (!digits) {
       setMsg("", true);
+      input.style.borderColor = "";
       return;
     }
 
-    setMsg("Validando...", true);
+    if (digits.length !== 11) {
+      setMsg("CPF deve ter 11 dígitos.", false);
+      input.style.borderColor = "crimson";
+      return;
+    }
+
+    setMsg("Validando CPF...", true);
 
     try {
       const { res, data } = await validar(input.value);
 
-      if (!res.ok) {
-        setMsg(data.message || "Documento inválido.", false);
+      if (!res.ok || !data.ok) {
+        setMsg(data.message || "CPF inválido.", false);
+        input.style.borderColor = "crimson";
+        cpfValido = false;
         return;
       }
 
-      setMsg(data.message, data.ok);
+      setMsg(data.message || "CPF válido.", true);
+      input.style.borderColor = "green";
+      cpfValido = true;
 
-      // opcional: marca visual no input
-      input.style.borderColor = data.ok ? "green" : "crimson";
     } catch (e) {
       console.error(e);
-      setMsg("Erro ao validar. Tente novamente.", false);
+      setMsg("Erro ao validar CPF.", false);
+      input.style.borderColor = "crimson";
+      cpfValido = false;
     }
   }
 
-  input.addEventListener("blur", onCheck);
   input.addEventListener("input", () => {
-    // limpa a cor enquanto digita
+    input.value = maskCPF(input.value);
     input.style.borderColor = "";
     msg.textContent = "";
+    cpfValido = false;
   });
+
+  input.addEventListener("blur", onCheck);
+
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      const digits = onlyDigits(input.value);
+
+      if (digits.length !== 11) {
+        e.preventDefault();
+        setMsg("Informe um CPF válido com 11 dígitos.", false);
+        input.style.borderColor = "crimson";
+        input.focus();
+        return;
+      }
+
+      if (!cpfValido) {
+        e.preventDefault();
+        await onCheck();
+
+        if (!cpfValido) {
+          input.focus();
+        }
+      }
+    });
+  }
 });

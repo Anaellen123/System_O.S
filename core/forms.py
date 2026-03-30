@@ -13,7 +13,7 @@ class ServiceRequestForm(forms.ModelForm):
     class Meta:
         model = ServiceRequest
         fields = [
-            "person_type", "document", "full_name", "phone",
+            "document", "full_name", "phone",
             "cep", "street", "number", "neighborhood", "city",
             "service_type", "description", "notes",
         ]
@@ -21,6 +21,14 @@ class ServiceRequestForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"rows": 4}),
             "notes": forms.Textarea(attrs={"rows": 3}),
         }
+
+    def clean_document(self):
+        cpf = "".join(filter(str.isdigit, self.cleaned_data.get("document", "")))
+
+        if len(cpf) != 11:
+            raise forms.ValidationError("CPF inválido. Deve conter 11 dígitos.")
+
+        return cpf
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -47,7 +55,7 @@ class ServiceRequestUpdateForm(forms.ModelForm):
     class Meta:
         model = ServiceRequest
         fields = [
-            "person_type", "document", "full_name", "phone",
+            "document", "full_name", "phone",
             "cep", "street", "number", "neighborhood", "city",
             "service_type", "description", "notes",
             "status", "assigned_to", "team",
@@ -76,7 +84,7 @@ class ServiceRequestUpdateForm(forms.ModelForm):
         self.fields["team"].required = False
         self.fields["team"].queryset = Team.objects.all().order_by("-created_at", "name")
 
-        self.fields["person_type"].disabled = True
+        # 🔥 agora só bloqueia os campos corretos
         self.fields["document"].disabled = True
         self.fields["full_name"].disabled = True
 
@@ -88,12 +96,45 @@ class ServiceRequestUpdateForm(forms.ModelForm):
             self.fields["prazo_dias"].initial = max(diferenca, 0)
 
 
-class UserRegisterForm(UserCreationForm):
-    email = forms.EmailField(required=True, label="Email")
+class UserRegisterForm(forms.Form):
+    username = forms.CharField(
+        required=True,
+        error_messages={
+            "required": "Informe um usuário.",
+        }
+    )
 
-    class Meta:
-        model = User
-        fields = ["username", "email", "password1", "password2"]
+    email = forms.EmailField(
+        required=True,
+        error_messages={
+            "required": "Informe um email.",
+            "invalid": "Digite um email válido.",
+        }
+    )
+
+    cpf = forms.CharField(
+        required=True,
+        max_length=14,
+        error_messages={
+            "required": "Informe o CPF.",
+        }
+    )
+
+    password1 = forms.CharField(
+        required=True,
+        widget=forms.PasswordInput,
+        error_messages={
+            "required": "Informe a senha.",
+        }
+    )
+
+    password2 = forms.CharField(
+        required=True,
+        widget=forms.PasswordInput,
+        error_messages={
+            "required": "Confirme a senha.",
+        }
+    )
 
 
 class UserRoleForm(forms.ModelForm):
