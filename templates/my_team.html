@@ -1,104 +1,117 @@
 {% extends "dashboard_base.html" %}
 
-{% block title %}Minhas O.S{% endblock %}
-{% block page_title %}Minhas O.S{% endblock %}
+{% block title %}Equipe{% endblock %}
+{% block page_title %}Equipe{% endblock %}
 
 {% block content %}
 
 <style>
-.myos-wrap{
-  max-width: 1150px;
+.equipe-wrap{
+  width:100%;
+  max-width:1200px;
 }
 
+/* =========================
+   CARD DA EQUIPE
+========================= */
 .team-card{
-  background:#fff;
-  border:2px solid #cbd5e1;
-  border-radius:16px;
+  background:#ffffff;
+  border:1px solid #dbe3ee;
+  border-radius:18px;
   padding:18px;
   margin-bottom:22px;
-  box-shadow:0 10px 24px rgba(15,23,42,.10);
+  box-shadow:0 10px 28px rgba(15,23,42,.08);
   position:relative;
   overflow:hidden;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 
-.team-card:before{
+.team-card::before{
   content:"";
   position:absolute;
-  left:0;
-  top:0;
-  bottom:0;
-  width:6px;
-  background:#e2e8f0;
+  inset:0 auto 0 0;
+  width:5px;
+  background:linear-gradient(180deg, #3b82f6 0%, #60a5fa 100%);
 }
 
 .team-card:hover{
-  border-color:#94a3b8;
-  box-shadow:0 14px 34px rgba(15,23,42,.14);
-  transform:translateY(-1px);
-  transition:.18s ease;
+  transform:translateY(-2px);
+  box-shadow:0 14px 32px rgba(15,23,42,.12);
+  border-color:#bfd0e4;
 }
 
 .team-head{
   display:flex;
-  justify-content:space-between;
   align-items:flex-start;
-  gap:14px;
-  margin-bottom:12px;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
 }
 
 .team-head-left{
+  min-width:0;
   display:flex;
   flex-direction:column;
   gap:6px;
-  min-width:0;
 }
 
 .team-title{
-  font-size:18px;
+  margin:0;
+  font-size:17px;
   font-weight:800;
   color:#0f172a;
-  line-height:1.3;
+  line-height:1.25;
+  word-break:break-word;
 }
 
 .team-meta{
   font-size:13px;
   color:#64748b;
   text-align:right;
+  line-height:1.5;
 }
 
-.badge{
-  background:#f1f5f9;
-  border:1px solid #e2e8f0;
-  padding:4px 10px;
+.badge-soft{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:28px;
+  padding:5px 12px;
   border-radius:999px;
+  border:1px solid #dbe4ee;
+  background:#f8fafc;
+  color:#475569;
   font-size:12px;
-  font-weight:700;
-  color:#334155;
+  font-weight:800;
+  white-space:nowrap;
 }
 
+/* =========================
+   INTEGRANTES
+========================= */
 .members-wrap{
-  margin:10px 0 14px;
+  margin:8px 0 14px;
   padding:12px;
   border:1px solid #e5e7eb;
   background:#fafafa;
-  border-radius:12px;
+  border-radius:14px;
 }
 
 .members-head{
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  gap:10px;
+  justify-content:space-between;
+  gap:12px;
   margin-bottom:10px;
 }
 
 .members-title{
-  font-size:13px;
-  font-weight:800;
-  color:#0f172a;
   display:flex;
   align-items:center;
   gap:8px;
+  font-size:14px;
+  font-weight:800;
+  color:#0f172a;
 }
 
 .members-grid{
@@ -111,13 +124,16 @@
   display:inline-flex;
   align-items:center;
   gap:8px;
+  min-height:38px;
   padding:7px 10px;
   border-radius:999px;
-  border:1px solid #e2e8f0;
-  background:#fff;
-  font-size:13px;
+  border:1px solid #dbe4ee;
+  background:#ffffff;
   color:#0f172a;
-  line-height:1;
+  font-size:13px;
+  line-height:1.2;
+  max-width:100%;
+  flex-wrap:wrap;
 }
 
 .member-dot{
@@ -125,7 +141,26 @@
   height:8px;
   border-radius:999px;
   background:#94a3b8;
-  display:inline-block;
+  flex:0 0 auto;
+}
+
+.member-text{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  min-width:0;
+}
+
+.member-name{
+  font-weight:700;
+  color:#0f172a;
+  word-break:break-word;
+}
+
+.member-sub{
+  font-size:12px;
+  color:#64748b;
+  word-break:break-all;
 }
 
 .member-role{
@@ -133,9 +168,10 @@
   font-weight:800;
   padding:4px 8px;
   border-radius:999px;
-  border:1px solid #e2e8f0;
+  border:1px solid #dbe4ee;
   background:#f8fafc;
   color:#334155;
+  white-space:nowrap;
 }
 
 .member-role.owner{
@@ -144,40 +180,52 @@
   color:#155e75;
 }
 
-.member-sub{
-  font-size:12px;
-  color:#64748b;
-}
-
+/* =========================
+   FILTROS
+========================= */
 .os-filters{
-  display:flex;
+  display:grid;
+  grid-template-columns:repeat(2, minmax(180px, 220px));
   gap:10px;
-  margin-bottom:10px;
-  flex-wrap:wrap;
+  margin-bottom:12px;
 }
 
 .os-filter-select{
-  max-width:220px;
+  width:100%;
+  min-height:44px;
+  border-radius:14px;
+  border:1px solid #cbd5e1;
+  background:#ffffff;
+  color:#0f172a;
+  padding:0 14px;
+  outline:none;
+  box-shadow:none;
+  transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
 
-/* área com scroll das O.S */
+.os-filter-select:focus{
+  border-color:#60a5fa;
+  box-shadow:0 0 0 3px rgba(59,130,246,.12);
+}
+
+/* =========================
+   TABELA / SCROLL
+========================= */
 .os-scroll{
-  max-height: 260px;
-  overflow-y: auto;
-  overflow-x: auto;
+  max-height:320px;
+  overflow:auto;
   border:1px solid #e5e7eb;
-  border-radius:12px;
-  background:#fff;
+  border-radius:14px;
+  background:#ffffff;
 }
 
-/* scrollbar bonita */
 .os-scroll::-webkit-scrollbar{
   width:10px;
   height:10px;
 }
 
 .os-scroll::-webkit-scrollbar-track{
-  background:#f1f5f9;
+  background:#eef2f7;
   border-radius:999px;
 }
 
@@ -192,47 +240,68 @@
 
 .os-table{
   width:100%;
-  border-collapse:collapse;
-  min-width:920px;
+  min-width:980px;
+  border-collapse:separate;
+  border-spacing:0;
 }
 
-.os-table th{
-  text-align:left;
-  font-size:12px;
-  color:#64748b;
-  padding:10px;
-  border-bottom:1px solid #e5e7eb;
-  background:#f8fafc;
+.os-table thead th{
   position:sticky;
   top:0;
   z-index:2;
+  background:#f8fafc;
+  color:#475569;
+  font-size:12px;
+  font-weight:800;
+  text-align:left;
+  padding:12px 10px;
+  border-bottom:1px solid #e5e7eb;
+  white-space:nowrap;
 }
 
-.os-table td{
+.os-table tbody td{
   padding:12px 10px;
-  border-bottom:1px solid #f1f5f9;
   font-size:14px;
-  vertical-align:middle;
   color:#0f172a;
-  background:#fff;
+  border-bottom:1px solid #eef2f7;
+  vertical-align:middle;
+}
+
+.os-table tbody tr:hover td{
+  background:#f8fbff;
 }
 
 .os-link{
-  font-weight:700;
-  color: #2563eb;
+  display:inline-block;
+  font-weight:800;
+  color:#94a3b8;
   text-decoration:none;
   cursor:default;
+  border-bottom:none !important;
+  box-shadow:none !important;
 }
 
+.os-table td:first-child .os-link{
+  pointer-events:none;
+}
 
+.prazo-text{
+  color:#94a3b8;
+}
+
+/* =========================
+   STATUS
+========================= */
 .status{
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700;
   display:inline-flex;
   align-items:center;
   justify-content:center;
+  min-height:30px;
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
 }
 
 .status.OPEN{
@@ -250,8 +319,11 @@
   color:#166534;
 }
 
+/* =========================
+   AÇÕES
+========================= */
 .os-actions-cell{
-  width:96px;
+  width:130px;
   text-align:center;
 }
 
@@ -262,53 +334,63 @@
   gap:8px;
 }
 
-.os-edit-btn{
-  width:36px;
-  height:36px;
+.os-edit-btn,
+.os-print-btn,
+.os-remove-btn{
+  width:34px;
+  height:34px;
   border-radius:10px;
-  background:#f1f5f9;
-  border:1px solid #dbe4ee;
-  color:#3b82f6;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   text-decoration:none;
-  transition:.15s ease;
+  transition:all .18s ease;
   flex-shrink:0;
 }
 
-.os-edit-btn:hover{
-  background:#eaf1f8;
-  border-color:#cfd8e3;
+.os-edit-btn{
+  background:#eff6ff;
+  border:1px solid #93c5fd;
   color:#2563eb;
 }
 
-.os-edit-btn i{
-  font-size:14px;
-  line-height:1;
+.os-edit-btn:hover{
+  background:#dbeafe;
+  border-color:#60a5fa;
+  color:#1d4ed8;
+  transform:translateY(-1px);
 }
 
 .os-print-btn{
-  width:30px;
-  height:30px;
-  border:none;
-  border-radius:8px;
-  background:#eff6ff;
-  color:#2563eb;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:.18s ease;
-  border:1px solid #93c5fd;
-  padding:0;
-  text-decoration:none;
+  background:#eef2ff;
+  border:1px solid #a5b4fc;
+  color:#4f46e5;
 }
 
 .os-print-btn:hover{
-  background:#dbeafe;
-  border-color:#60a5fa;
+  background:#e0e7ff;
+  border-color:#818cf8;
+  color:#4338ca;
   transform:translateY(-1px);
+}
+
+.os-remove-btn{
+  background:#fdf2f8;
+  border:1px solid #f9a8d4;
+  color:#db2777;
+}
+
+.os-remove-btn:hover{
+  background:#fce7f3;
+  border-color:#f472b6;
+  color:#be185d;
+  transform:translateY(-1px);
+}
+
+.os-edit-btn i,
+.os-remove-btn i{
+  font-size:14px;
+  line-height:1;
 }
 
 .os-print-btn svg{
@@ -318,42 +400,268 @@
 }
 
 .empty{
-  padding:14px;
+  padding:14px 4px;
   color:#64748b;
   font-size:14px;
+}
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+@media (max-width: 992px){
+  .equipe-wrap{
+    max-width:100%;
+  }
+
+  .team-card{
+    padding:16px;
+  }
+
+  .os-filters{
+    grid-template-columns:1fr 1fr;
+  }
 }
 
 @media (max-width: 768px){
   .team-head{
     flex-direction:column;
+    align-items:flex-start;
   }
 
   .team-meta{
     text-align:left;
   }
 
-  .os-scroll{
-    max-height: 240px;
-  }
-
-  .os-filters{
-    flex-direction:column;
-  }
-
-  .os-filter-select{
-    max-width:100%;
-  }
-}
-
-@media (max-width: 640px){
   .members-head{
     flex-direction:column;
     align-items:flex-start;
   }
+
+  .os-filters{
+    grid-template-columns:1fr;
+  }
+
+  .os-scroll{
+    max-height:360px;
+  }
+}
+
+@media (max-width: 576px){
+  .team-card{
+    padding:14px;
+    border-radius:16px;
+  }
+
+  .team-title{
+    font-size:16px;
+  }
+
+  .member-pill{
+    width:100%;
+    border-radius:14px;
+    align-items:flex-start;
+    padding:10px 12px;
+  }
+
+  .member-text{
+    flex-direction:column;
+    gap:2px;
+  }
+
+  .badge-soft{
+    width:auto;
+  }
+
+  .os-actions{
+    gap:6px;
+  }
+
+  .os-edit-btn,
+  .os-print-btn,
+  .os-remove-btn{
+    width:32px;
+    height:32px;
+    border-radius:9px;
+  }
+}
+
+/* =========================
+   MODO ESCURO
+   Compatível com body.theme-dark
+========================= */
+body.theme-dark .team-card{
+  background:#0f172a;
+  border-color:#243244;
+  box-shadow:0 14px 32px rgba(0,0,0,.28);
+}
+
+body.theme-dark .team-card:hover{
+  border-color:#334155;
+  box-shadow:0 18px 38px rgba(0,0,0,.34);
+}
+
+body.theme-dark .team-card::before{
+  background:linear-gradient(180deg, #3b82f6 0%, #22c55e 100%);
+}
+
+body.theme-dark .team-title{
+  color:#f8fafc;
+}
+
+body.theme-dark .team-meta{
+  color:#94a3b8;
+}
+
+body.theme-dark .badge-soft{
+  background:#162132;
+  border-color:#2b3a4d;
+  color:#cbd5e1;
+}
+
+body.theme-dark .members-wrap{
+  background:#111b2b;
+  border-color:#243244;
+}
+
+body.theme-dark .members-title{
+  color:#f8fafc;
+}
+
+body.theme-dark .member-pill{
+  background:#0b1320;
+  border-color:#243244;
+  color:#e2e8f0;
+}
+
+body.theme-dark .member-name{
+  color:#e2e8f0;
+}
+
+body.theme-dark .member-sub{
+  color:#8da2b8;
+}
+
+body.theme-dark .member-role{
+  background:#162132;
+  border-color:#2b3a4d;
+  color:#cbd5e1;
+}
+
+body.theme-dark .member-role.owner{
+  background:rgba(34,197,94,.10);
+  border-color:rgba(34,197,94,.32);
+  color:#86efac;
+}
+
+body.theme-dark .os-filter-select{
+  background:#0f172a;
+  color:#e2e8f0;
+  border-color:#2b3a4d;
+}
+
+body.theme-dark .os-filter-select:focus{
+  border-color:#3b82f6;
+  box-shadow:0 0 0 3px rgba(59,130,246,.18);
+}
+
+body.theme-dark .os-scroll{
+  background:#0b1320;
+  border-color:#243244;
+}
+
+body.theme-dark .os-scroll::-webkit-scrollbar-track{
+  background:#111b2b;
+}
+
+body.theme-dark .os-scroll::-webkit-scrollbar-thumb{
+  background:#334155;
+}
+
+body.theme-dark .os-scroll::-webkit-scrollbar-thumb:hover{
+  background:#475569;
+}
+
+body.theme-dark .os-table thead th{
+  background:#111b2b;
+  color:#9fb0c3;
+  border-bottom-color:#243244;
+}
+
+body.theme-dark .os-table tbody td{
+  background:#0b1320;
+  color:#e2e8f0;
+  border-bottom-color:#1c2a3b;
+}
+
+body.theme-dark .os-table tbody tr:hover td{
+  background:#101a29;
+}
+
+body.theme-dark .os-link{
+  color:#64748b;
+}
+
+body.theme-dark .prazo-text{
+  color:#8da2b8;
+}
+
+body.theme-dark .empty{
+  color:#94a3b8;
+}
+
+body.theme-dark .status.OPEN{
+  background:rgba(245,158,11,.16);
+  color:#fcd34d;
+}
+
+body.theme-dark .status.IN_PROGRESS{
+  background:rgba(59,130,246,.16);
+  color:#93c5fd;
+}
+
+body.theme-dark .status.DONE{
+  background:rgba(34,197,94,.16);
+  color:#86efac;
+}
+
+body.theme-dark .os-edit-btn{
+  background:rgba(37,99,235,.12);
+  border-color:rgba(96,165,250,.38);
+  color:#93c5fd;
+}
+
+body.theme-dark .os-edit-btn:hover{
+  background:rgba(37,99,235,.18);
+  border-color:rgba(96,165,250,.62);
+  color:#bfdbfe;
+}
+
+body.theme-dark .os-print-btn{
+  background:rgba(99,102,241,.12);
+  border-color:rgba(129,140,248,.40);
+  color:#a5b4fc;
+}
+
+body.theme-dark .os-print-btn:hover{
+  background:rgba(99,102,241,.18);
+  border-color:rgba(129,140,248,.65);
+  color:#c7d2fe;
+}
+
+body.theme-dark .os-remove-btn{
+  background:rgba(219,39,119,.10);
+  border-color:rgba(244,114,182,.35);
+  color:#f9a8d4;
+}
+
+body.theme-dark .os-remove-btn:hover{
+  background:rgba(219,39,119,.16);
+  border-color:rgba(244,114,182,.56);
+  color:#fbcfe8;
 }
 </style>
 
-<div class="myos-wrap">
+<div class="equipe-wrap">
 
   {% if teams %}
     {% for team in teams %}
@@ -361,7 +669,7 @@
 
         <div class="team-head">
           <div class="team-head-left">
-            <div class="team-title">{{ team.name }}</div>
+            <h3 class="team-title">{{ team.name }}</h3>
           </div>
 
           <div class="team-meta">
@@ -375,22 +683,22 @@
         <div class="members-wrap">
           <div class="members-head">
             <div class="members-title">
-              <span style="font-size:14px;">👥</span>
+              <i class="bi bi-people-fill"></i>
               Integrantes da equipe
             </div>
-            <div class="badge">{{ team.members.count }} membro(s)</div>
+            <div class="badge-soft">{{ team.members.count }} membro(s)</div>
           </div>
 
           <div class="members-grid">
             {% if team.responsible %}
               <div class="member-pill">
                 <span class="member-dot"></span>
-                <span>
-                  {{ team.responsible.get_full_name|default:team.responsible.username }}
+                <div class="member-text">
+                  <span class="member-name">{{ team.responsible.get_full_name|default:team.responsible.username }}</span>
                   {% if team.responsible.email %}
                     <span class="member-sub">• {{ team.responsible.email }}</span>
                   {% endif %}
-                </span>
+                </div>
                 <span class="member-role owner">Responsável</span>
               </div>
             {% endif %}
@@ -400,12 +708,12 @@
                 {% if not team.responsible or m.user.pk != team.responsible.pk %}
                   <div class="member-pill">
                     <span class="member-dot"></span>
-                    <span>
-                      {{ m.user.get_full_name|default:m.user.username }}
+                    <div class="member-text">
+                      <span class="member-name">{{ m.user.get_full_name|default:m.user.username }}</span>
                       {% if m.user.email %}
                         <span class="member-sub">• {{ m.user.email }}</span>
                       {% endif %}
-                    </span>
+                    </div>
                     <span class="member-role">Membro</span>
                   </div>
                 {% endif %}
@@ -415,16 +723,15 @@
         </div>
 
         {% if team.os_list %}
-
           <div class="os-filters">
-            <select class="form-control os-filter-select filter-status" data-team="{{ team.id }}">
+            <select class="os-filter-select filter-status" data-team="{{ team.id }}">
               <option value="OPEN" selected>Pendentes</option>
               <option value="IN_PROGRESS">Em andamento</option>
               <option value="DONE">Concluídas</option>
               <option value="">Todas</option>
             </select>
 
-            <select class="form-control os-filter-select filter-bairro" data-team="{{ team.id }}">
+            <select class="os-filter-select filter-bairro" data-team="{{ team.id }}">
               <option value="">Todos os bairros</option>
               {% for os in team.os_list %}
                 {% if os.neighborhood %}
@@ -444,7 +751,7 @@
                   <th>Bairro</th>
                   <th>Prazo</th>
                   <th>Status</th>
-                  <th class="os-actions-cell">Ações</th>
+                  <th class="os-actions-cell">Ação</th>
                 </tr>
               </thead>
               <tbody>
@@ -456,10 +763,10 @@
                     <td>
                       <span class="os-link">{{ os.os_number }}</span>
                     </td>
-                    <td>{{ os.service_type }}</td>
+                    <td>{{ os.service_type|default:"—" }}</td>
                     <td>{{ os.full_name|default:"—" }}</td>
                     <td>{{ os.neighborhood|default:"—" }}</td>
-                    <td>{{ os.prazo_formatado|default:"—" }}</td>
+                    <td><span class="prazo-text">{{ os.prazo_formatado|default:"—" }}</span></td>
                     <td>
                       <span class="status {{ os.status }}">
                         {{ os.get_status_display }}
@@ -487,6 +794,17 @@
                             <path d="M7 9V4h10v5M7 14H5a2 2 0 0 1-2-2v-2a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v2a2 2 0 0 1-2 2h-2M7 12h10v8H7v-8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                           </svg>
                         </a>
+
+                        {% if team_remove_os_url_name %}
+                          <a
+                            href="{% url team_remove_os_url_name team.id os.id %}"
+                            class="os-remove-btn"
+                            title="Desvincular O.S da equipe"
+                            aria-label="Desvincular O.S da equipe"
+                          >
+                            <i class="bi bi-x-lg"></i>
+                          </a>
+                        {% endif %}
                       </div>
                     </td>
                   </tr>
@@ -523,7 +841,6 @@ function aplicarFiltros(teamId) {
   rows.forEach(function(row) {
     const rowStatus = row.getAttribute("data-status") || "";
     const rowBairro = row.getAttribute("data-bairro") || "";
-
     let mostrar = true;
 
     if (status && rowStatus !== status) {
