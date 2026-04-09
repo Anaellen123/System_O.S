@@ -1861,43 +1861,35 @@ def user_create(request):
         password2 = (request.POST.get("password2") or "").strip()
 
         cpf_digits = _only_digits(cpf)
+
         errors = {}
 
-        # =====================
-        # NOME
-        # =====================
+        # validações
         if not username:
             errors["username"] = "Informe o nome completo."
         elif User.objects.filter(username__iexact=username).exists():
             errors["username"] = "Já existe um usuário com este nome."
 
-        # =====================
-        # EMAIL
-        # =====================
         if not email:
             errors["email"] = "Informe o email."
         elif User.objects.filter(email__iexact=email).exists():
             errors["email"] = "Este email já está cadastrado."
 
-        # =====================
-        # CPF
-        # =====================
         if not cpf:
             errors["cpf"] = "Informe o CPF."
         elif len(cpf_digits) != 11:
-            errors["cpf"] = "CPF deve ter 11 dígitos."
+            errors["cpf"] = "CPF deve conter 11 dígitos."
         elif not _validate_cpf(cpf_digits):
             errors["cpf"] = "CPF inválido."
         elif UserProfile.objects.filter(cpf=cpf_digits).exists():
             errors["cpf"] = "Este CPF já está cadastrado."
 
-        # =====================
-        # SENHA
-        # =====================
         if not password1:
             errors["password1"] = "Informe a senha."
+
         if not password2:
             errors["password2"] = "Confirme a senha."
+
         if password1 and password2 and password1 != password2:
             errors["password2"] = "As senhas não coincidem."
 
@@ -1907,9 +1899,6 @@ def user_create(request):
             except ValidationError as e:
                 errors["password1"] = " ".join(e.messages)
 
-        # =====================
-        # ERROS
-        # =====================
         if errors:
             context["form_errors"] = errors
             context["form_data"] = {
@@ -1919,9 +1908,6 @@ def user_create(request):
             }
             return render(request, "users/user_create.html", context)
 
-        # =====================
-        # CRIAR USUÁRIO
-        # =====================
         try:
             with transaction.atomic():
                 user = User.objects.create_user(
@@ -1931,13 +1917,19 @@ def user_create(request):
                     is_active=True,
                 )
 
-                # dividir nome
+                # separa nome
                 partes = username.split(" ", 1)
                 user.first_name = partes[0]
                 user.last_name = partes[1] if len(partes) > 1 else ""
+
+                # adiciona ao grupo requisitante (SEM get_or_create)
+                grupo = Group.objects.filter(name__iexact="requisitante").first()
+                if grupo:
+                    user.groups.add(grupo)
+
                 user.save()
 
-                # perfil
+                # cria perfil
                 profile, _ = UserProfile.objects.get_or_create(user=user)
                 profile.cpf = cpf_digits
                 profile.save()
@@ -1970,3 +1962,27 @@ def api_check_email_exists(request):
 
     exists = User.objects.filter(email__iexact=email).exists()
     return JsonResponse({"ok": True, "exists": exists})
+
+@login_required(login_url="login_admin")
+@require_http_methods(["POST"])
+def os_delete(request, pk):
+    os_obj = get_object_or_404(ServiceRequest, pk=pk)
+
+    if _is_requisitante(request.user):
+        messages.error(request, "Você não tem permissão para excluir esta O.S.")
+        return redirect("dashboard_requisitante")
+
+    # apaga anexos físicos, se existirem
+    anexos = ServiceRequestAttachment.objects.filter(request=os_obj)
+    for anexo in anexos:
+        try:
+            if anexo.file:
+                anexo.file.delete(save=False)
+        except Exception:
+            pass
+
+    numero_os = os_obj.os_number
+    os_obj.delete()
+
+    messages.success(request, f"O.S {numero_os} excluída com sucesso.")
+    return redirect("os_list")

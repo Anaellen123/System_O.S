@@ -56,6 +56,7 @@ urlpatterns = [
     # ===== EDIÇÃO / DETALHE DE O.S =====
     path("dashboard/os/<int:pk>/", views.os_detail, name="os_detail"),
     path("os/<int:pk>/visualizar/", views.os_status_view, name="os_status_view"),
+    path('os/<int:pk>/delete/', views.os_delete, name='os_delete'),
 
     # ===== APIS =====
     path("api/cep/<str:cep>/", views.api_cep, name="api_cep"),
