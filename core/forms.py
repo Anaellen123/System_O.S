@@ -10,6 +10,16 @@ User = get_user_model()
 
 
 class ServiceRequestForm(forms.ModelForm):
+    prazo_dias = forms.IntegerField(
+        required=False,
+        min_value=0,
+        label="Prazo em dias",
+        widget=forms.NumberInput(attrs={
+            "class": "form-control",
+            "placeholder": "Digite o prazo em dias",
+        })
+    )
+
     class Meta:
         model = ServiceRequest
         fields = [
@@ -18,8 +28,38 @@ class ServiceRequestForm(forms.ModelForm):
             "service_type", "description", "notes",
         ]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "notes": forms.Textarea(attrs={"rows": 3}),
+            "document": forms.TextInput(attrs={
+                "class": "form-control",
+            }),
+            "full_name": forms.TextInput(attrs={
+                "class": "form-control",
+            }),
+            "phone": forms.TextInput(attrs={
+                "class": "form-control",
+            }),
+            "cep": forms.TextInput(attrs={
+                "class": "form-control",
+            }),
+            "street": forms.TextInput(attrs={
+                "class": "form-control",
+            }),
+            "number": forms.TextInput(attrs={
+                "class": "form-control",
+            }),
+            "neighborhood": forms.TextInput(attrs={
+                "class": "form-control",
+            }),
+            "city": forms.TextInput(attrs={
+                "class": "form-control",
+            }),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "class": "form-control",
+            }),
+            "notes": forms.Textarea(attrs={
+                "rows": 3,
+                "class": "form-control",
+            }),
         }
 
     def clean_document(self):
@@ -30,11 +70,23 @@ class ServiceRequestForm(forms.ModelForm):
 
         return cpf
 
+    def clean_prazo_dias(self):
+        prazo = self.cleaned_data.get("prazo_dias")
+
+        if prazo is None:
+            return None
+
+        if prazo < 0:
+            raise forms.ValidationError("O prazo não pode ser negativo.")
+
+        return prazo
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         service_types = ServiceType.objects.filter(is_active=True).order_by("name")
         self.fields["service_type"].widget = forms.Select(
+            attrs={"class": "form-control"},
             choices=[("", "Selecione...")] + [
                 (item.name, item.name) for item in service_types
             ]
@@ -84,7 +136,6 @@ class ServiceRequestUpdateForm(forms.ModelForm):
         self.fields["team"].required = False
         self.fields["team"].queryset = Team.objects.all().order_by("-created_at", "name")
 
-        # 🔥 agora só bloqueia os campos corretos
         self.fields["document"].disabled = True
         self.fields["full_name"].disabled = True
 

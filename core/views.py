@@ -1,7 +1,7 @@
 from datetime import timedelta
 import json
 from urllib.request import urlopen
-
+import os
 from django.conf import settings
 from django import forms
 from django.contrib import messages
@@ -217,16 +217,11 @@ def solicitar_servico(request):
     if request.method == "POST":
         post_data = request.POST.copy()
 
-        # Para requisitante, força nome e CPF com os dados do usuário logado
         if request.user.is_authenticated and _is_requisitante(request.user):
             post_data["full_name"] = nome_usuario
             post_data["document"] = cpf_usuario
 
         form = ServiceRequestForm(post_data, request.FILES)
-
-        reg_email = (request.POST.get("reg_email") or "").strip().lower()
-        reg_p1 = (request.POST.get("reg_password1") or "").strip()
-        reg_p2 = (request.POST.get("reg_password2") or "").strip()
 
         if not form.is_valid():
             messages.error(request, "Revise os campos obrigatórios.")
@@ -235,8 +230,8 @@ def solicitar_servico(request):
                 "created": False,
             })
 
+        prazo_dias = form.cleaned_data.get("prazo_dias")
         document_digits = _only_digits(form.cleaned_data.get("document") or "")
-
         user_to_link = request.user if request.user.is_authenticated else None
 
         if len(document_digits) == 11:
@@ -248,7 +243,7 @@ def solicitar_servico(request):
                     if not prof or prof.cpf != document_digits:
                         messages.error(
                             request,
-                            "Este CPF já possui cadastro em outra conta. Faça login com a conta correta para concluir."
+                            "Este CPF já possui cadastro em outra conta."
                         )
                         return render(request, "solicitar_servico.html", {
                             "form": form,
@@ -257,79 +252,22 @@ def solicitar_servico(request):
                 else:
                     messages.error(
                         request,
-                        "Este CPF já possui cadastro. Faça login para continuar."
+                        "Este CPF já possui cadastro. Faça login."
                     )
                     return render(request, "solicitar_servico.html", {
                         "form": form,
                         "created": False
                     })
 
-        created_new_user = False
-
-        if not user_to_link:
-            errors = []
-
-            if not reg_email:
-                errors.append("Informe um email para criar a conta.")
-            if not reg_p1 or not reg_p2:
-                errors.append("Informe e confirme a senha.")
-            if reg_p1 and reg_p2 and reg_p1 != reg_p2:
-                errors.append("As senhas não coincidem.")
-
-            if reg_email and User.objects.filter(email__iexact=reg_email).exists():
-                errors.append("Este email já está cadastrado. Faça login e tente novamente.")
-
-            if reg_p1 and (reg_p1 == reg_p2):
-                try:
-                    validate_password(reg_p1)
-                except ValidationError as e:
-                    errors.append("Senha inválida: " + " ".join(e.messages))
-
-            if errors:
-                for e in errors:
-                    messages.error(request, e)
-                return render(request, "solicitar_servico.html", {
-                    "form": form,
-                    "created": False
-                })
-
-            try:
-                with transaction.atomic():
-                    username = _make_unique_username(reg_email)
-                    user_to_link = User.objects.create_user(
-                        username=username,
-                        email=reg_email,
-                        password=reg_p1,
-                        is_active=False,
-                    )
-
-                    g = Group.objects.filter(name__iexact="requisitante").first()
-                    if g:
-                        user_to_link.groups.add(g)
-
-                    profile, _ = UserProfile.objects.get_or_create(user=user_to_link)
-                    if len(document_digits) == 11:
-                        profile.cpf = document_digits
-                        profile.save()
-
-                    created_new_user = True
-
-                _send_activation_email(request, user_to_link)
-
-            except Exception as e:
-                if user_to_link and user_to_link.pk:
-                    user_to_link.delete()
-
-                messages.error(
-                    request,
-                    f"Não foi possível enviar o email de ativação. Erro: {e}"
-                )
-                return render(request, "solicitar_servico.html", {
-                    "form": form,
-                    "created": False
-                })
-
         obj = form.save(commit=False)
+
+        if prazo_dias is None:
+            prazo_dias = _get_service_type_deadline_days(obj.service_type)
+
+        if prazo_dias is not None:
+            obj.due_at = timezone.now() + timedelta(days=int(prazo_dias))
+        else:
+            obj.due_at = None
 
         if user_to_link:
             obj.created_by = user_to_link
@@ -349,11 +287,7 @@ def solicitar_servico(request):
         for f in request.FILES.getlist("attachments"):
             ServiceRequestAttachment.objects.create(request=obj, file=f)
 
-        if created_new_user:
-            messages.success(
-                request,
-                "Solicitação criada com sucesso! Sua conta foi criada e enviamos um link de ativação para seu email."
-            )
+        messages.success(request, "Solicitação criada com sucesso!")
 
         form_limpo = ServiceRequestForm()
 
@@ -1069,6 +1003,16 @@ def os_create(request):
                 obj.full_name = nome_usuario
                 obj.document = cpf_usuario
 
+            prazo_dias = form.cleaned_data.get("prazo_dias")
+
+            if prazo_dias is None:
+                prazo_dias = _get_service_type_deadline_days(obj.service_type)
+
+            if prazo_dias is not None:
+                obj.due_at = timezone.now() + timedelta(days=int(prazo_dias))
+            else:
+                obj.due_at = None
+
             obj.save()
 
             for f in request.FILES.getlist("attachments"):
@@ -1591,6 +1535,72 @@ def os_status_view(request, pk):
     })
 
 
+def _service_type_deadlines_file():
+    return os.path.join(settings.BASE_DIR, "service_type_deadlines.json")
+
+
+def _load_service_type_deadlines():
+    path = _service_type_deadlines_file()
+
+    if not os.path.exists(path):
+        return {}
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _get_service_type_deadline_days(service_type_name):
+    nome = (service_type_name or "").strip()
+    if not nome:
+        return None
+
+    service_type = ServiceType.objects.filter(name__iexact=nome).first()
+    if not service_type:
+        return None
+
+    deadlines_map = _load_service_type_deadlines()
+    prazo = deadlines_map.get(str(service_type.id))
+
+    if prazo in [None, ""]:
+        return None
+
+    try:
+        prazo_int = int(prazo)
+        return prazo_int if prazo_int >= 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _load_service_type_deadlines():
+    path = _service_type_deadlines_file()
+
+    if not os.path.exists(path):
+        return {}
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        if isinstance(data, dict):
+            return data
+        return {}
+    except Exception:
+        return {}
+
+
+def _save_service_type_deadlines(data):
+    path = _service_type_deadlines_file()
+
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
 @login_required(login_url="login_admin")
 @require_http_methods(["GET", "POST"])
 def service_type_dashboard(request):
@@ -1598,16 +1608,73 @@ def service_type_dashboard(request):
         messages.error(request, "Você não tem permissão para acessar esta área.")
         return redirect("dashboard_requisitante")
 
+    deadlines_map = _load_service_type_deadlines()
+
     if request.method == "POST":
         form = ServiceTypeForm(request.POST)
+
         if form.is_valid():
             nome = (form.cleaned_data.get("name") or "").strip()
+            prazo_raw = (request.POST.get("prazo_dias") or "").strip()
 
             if not nome:
                 messages.error(request, "Informe o nome do tipo de serviço.")
             elif ServiceType.objects.filter(name__iexact=nome).exists():
                 messages.error(request, "Já existe um tipo de serviço com este nome.")
             else:
+                prazo_dias = None
+
+                if prazo_raw != "":
+                    try:
+                        prazo_dias = int(prazo_raw)
+                        if prazo_dias < 0:
+                            raise ValueError
+                    except ValueError:
+                        messages.error(request, "O prazo em dias deve ser um número válido maior ou igual a zero.")
+                        service_types_qs = ServiceType.objects.all().order_by("name")
+                        service_types = []
+
+                        for item in service_types_qs:
+                            service_types.append({
+                                "id": item.id,
+                                "name": item.name,
+                                "prazo_dias": deadlines_map.get(str(item.id), ""),
+                            })
+
+                        total_os = (
+                            ServiceRequest.objects
+                            .exclude(service_type__isnull=True)
+                            .exclude(service_type__exact="")
+                            .count()
+                        )
+
+                        ranking_qs = (
+                            ServiceRequest.objects
+                            .exclude(service_type__isnull=True)
+                            .exclude(service_type__exact="")
+                            .values("service_type")
+                            .annotate(total=Count("id"))
+                            .order_by("-total", "service_type")[:3]
+                        )
+
+                        top_services = []
+                        for row in ranking_qs:
+                            quantidade = row["total"]
+                            percentual = round((quantidade / total_os) * 100) if total_os > 0 else 0
+
+                            top_services.append({
+                                "name": row["service_type"],
+                                "count": quantidade,
+                                "percent": percentual,
+                            })
+
+                        return render(request, "service_types.html", {
+                            "form": form,
+                            "service_types": service_types,
+                            "top_services": top_services,
+                            "top_services_json": json.dumps(top_services, ensure_ascii=False),
+                        })
+
                 obj = form.save(commit=False)
                 obj.name = nome
 
@@ -1615,6 +1682,10 @@ def service_type_dashboard(request):
                     obj.is_active = True
 
                 obj.save()
+
+                deadlines_map[str(obj.id)] = prazo_dias if prazo_dias is not None else ""
+                _save_service_type_deadlines(deadlines_map)
+
                 messages.success(request, "Tipo de serviço cadastrado com sucesso.")
                 return redirect("service_type_dashboard")
         else:
@@ -1622,7 +1693,15 @@ def service_type_dashboard(request):
     else:
         form = ServiceTypeForm()
 
-    service_types = ServiceType.objects.all().order_by("name")
+    service_types_qs = ServiceType.objects.all().order_by("name")
+    service_types = []
+
+    for item in service_types_qs:
+        service_types.append({
+            "id": item.id,
+            "name": item.name,
+            "prazo_dias": deadlines_map.get(str(item.id), ""),
+        })
 
     total_os = (
         ServiceRequest.objects
@@ -1667,6 +1746,11 @@ def service_type_delete(request, pk):
 
     obj = get_object_or_404(ServiceType, pk=pk)
     nome = obj.name
+
+    deadlines_map = _load_service_type_deadlines()
+    deadlines_map.pop(str(obj.id), None)
+    _save_service_type_deadlines(deadlines_map)
+
     obj.delete()
 
     messages.success(request, f'Tipo de serviço "{nome}" excluído com sucesso.')
