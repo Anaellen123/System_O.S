@@ -253,7 +253,7 @@
 }
 
 .os-actions-cell{
-  width:74px;
+  width:96px;
   text-align:center;
 }
 
@@ -261,6 +261,33 @@
   display:flex;
   align-items:center;
   justify-content:center;
+  gap:8px;
+}
+
+.os-edit-btn{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  background:#f1f5f9;
+  border:1px solid #dbe4ee;
+  color:#3b82f6;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  transition:.15s ease;
+  flex-shrink:0;
+}
+
+.os-edit-btn:hover{
+  background:#eaf1f8;
+  border-color:#cfd8e3;
+  color:#2563eb;
+}
+
+.os-edit-btn i{
+  font-size:14px;
+  line-height:1;
 }
 
 .os-print-btn{
@@ -429,9 +456,7 @@
                     data-bairro="{{ os.neighborhood|default:''|lower }}"
                   >
                     <td>
-                      <a href="{% url 'os_status_view' os.pk %}" class="os-link">
-                        {{ os.os_number }}
-                      </a>
+                      <span class="os-link">{{ os.os_number }}</span>
                     </td>
                     <td>{{ os.service_type }}</td>
                     <td>{{ os.full_name|default:"—" }}</td>
@@ -444,6 +469,15 @@
                     </td>
                     <td class="os-actions-cell">
                       <div class="os-actions">
+                        <a
+                          href="{% url 'os_status_view' os.pk %}"
+                          class="os-edit-btn"
+                          title="Editar O.S"
+                          aria-label="Editar O.S"
+                        >
+                          <i class="bi bi-pencil"></i>
+                        </a>
+
                         <a
                           href="{% url 'os_print' os.pk %}"
                           target="_blank"

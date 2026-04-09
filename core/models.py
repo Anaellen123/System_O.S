@@ -112,7 +112,7 @@ class ServiceRequest(models.Model):
     ]
 
     STATUS_CHOICES = [
-        ("OPEN", "Aberto"),
+        ("OPEN", "Pendente"),
         ("IN_PROGRESS", "Em andamento"),
         ("DONE", "Concluído"),
     ]
