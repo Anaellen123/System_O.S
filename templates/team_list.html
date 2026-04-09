@@ -205,14 +205,11 @@
   vertical-align:middle;
 }
 
-.os-link{
+.os-number{
   font-weight:700;
-  color:#2563eb;
+  color: #2563eb;
   text-decoration:none;
-}
-
-.os-link:hover{
-  text-decoration:underline;
+  cursor:default;
 }
 
 .status{
@@ -233,7 +230,7 @@
 }
 
 .os-remove-cell{
-  width:92px;
+  width:132px;
   text-align:center;
 }
 
@@ -242,6 +239,32 @@
   align-items:center;
   justify-content:center;
   gap:6px;
+}
+
+.os-edit-btn{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  background:#f1f5f9;
+  border:1px solid #dbe4ee;
+  color:#3b82f6;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  transition:.15s ease;
+  flex-shrink:0;
+}
+
+.os-edit-btn:hover{
+  background:#eaf1f8;
+  border-color:#cfd8e3;
+  color:#2563eb;
+}
+
+.os-edit-btn i{
+  font-size:14px;
+  line-height:1;
 }
 
 .os-remove-form{
@@ -781,9 +804,9 @@ textarea.form-control{
                 data-bairro="{{ os.neighborhood|default:''|lower }}"
               >
                 <td>
-                  <a class="os-link" href="{% url 'os_detail' os.pk %}">
+                  <span class="os-number">
                     {{ os.os_number }}
-                  </a>
+                  </span>
                 </td>
                 <td>{{ os.service_type }}</td>
                 <td>{{ os.neighborhood|default:"—" }}</td>
@@ -795,6 +818,16 @@ textarea.form-control{
                 </td>
                 <td class="os-remove-cell">
                   <div class="os-actions">
+
+                    <a
+                      href="{% url 'os_status_view' os.pk %}"
+                      class="os-edit-btn"
+                      title="Editar O.S"
+                      aria-label="Editar O.S"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </a>
+
                     <a
                       href="{% url 'os_print' os.pk %}"
                       target="_blank"
