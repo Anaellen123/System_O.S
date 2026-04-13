@@ -1,0 +1,685 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Nova Notificação{% endblock %}
+{% block page_title %}Nova Notificação{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+
+<style>
+  .notif-form-wrap{
+    max-width: 980px;
+  }
+
+  .notif-hero{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+
+  .notif-hero-text h2{
+    margin:0;
+    font-size:28px;
+    font-weight:900;
+    letter-spacing:-0.02em;
+    color:var(--text, #0f172a);
+  }
+
+  .notif-hero-text p{
+    margin:8px 0 0;
+    color:var(--muted, #64748b);
+    font-size:14px;
+    line-height:1.6;
+    max-width:700px;
+  }
+
+  .notif-hero-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    min-height:42px;
+    padding:0 14px;
+    border-radius:999px;
+    background:rgba(37,99,235,.10);
+    border:1px solid rgba(37,99,235,.18);
+    color:#1d4ed8;
+    font-size:13px;
+    font-weight:800;
+    white-space:nowrap;
+    box-shadow:0 8px 18px rgba(37,99,235,.10);
+  }
+
+  .notif-form-card{
+    position:relative;
+    background:var(--card, #fff);
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:24px;
+    padding:26px;
+    box-shadow:
+      0 10px 30px rgba(15,23,42,.06),
+      0 2px 6px rgba(15,23,42,.04);
+    backdrop-filter:blur(6px);
+    overflow:hidden;
+  }
+
+  .notif-form-card::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:6px;
+    background:linear-gradient(90deg, #2563eb, #60a5fa, #38bdf8);
+    filter:blur(.3px);
+  }
+
+  .notif-form-card::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:24px;
+    pointer-events:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.42);
+  }
+
+  .notif-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+  }
+
+  .notif-field{
+    margin-bottom:2px;
+  }
+
+  .notif-field.full{
+    grid-column:1 / -1;
+  }
+
+  .notif-label{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+    font-size:13px;
+    font-weight:900;
+    color:#334155;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+  }
+
+  .notif-help{
+    margin-top:8px;
+    color:var(--muted, #64748b);
+    font-size:12.5px;
+    line-height:1.5;
+  }
+
+  .notif-form-card input[type="text"],
+  .notif-form-card input[type="email"],
+  .notif-form-card input[type="number"],
+  .notif-form-card textarea,
+  .notif-form-card select{
+    width:100%;
+    border:1.5px solid rgba(148,163,184,.22);
+    border-radius:14px;
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      linear-gradient(120deg, rgba(37,99,235,.15), rgba(59,130,246,.05)) border-box;
+    color:#0f172a;
+    font-size:14px;
+    padding:13px 14px;
+    box-shadow:0 6px 16px rgba(15,23,42,.04);
+    transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease, background .18s ease;
+  }
+
+  .notif-form-card textarea{
+    min-height:150px;
+    resize:vertical;
+  }
+
+  .notif-form-card input:focus,
+  .notif-form-card textarea:focus,
+  .notif-form-card select:focus{
+    outline:none;
+    border-color:transparent;
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      linear-gradient(120deg, #2563eb, #60a5fa) border-box;
+    box-shadow:0 0 0 3px rgba(37,99,235,.12);
+    transform:translateY(-1px);
+  }
+
+  .notif-form-card input:hover,
+  .notif-form-card textarea:hover,
+  .notif-form-card select:hover{
+    border-color:rgba(37,99,235,.30);
+    box-shadow:0 8px 18px rgba(37,99,235,.06);
+  }
+
+  .notif-section-note{
+    margin:0 0 18px;
+    padding:14px 16px;
+    border-radius:16px;
+    background:linear-gradient(180deg, rgba(239,246,255,.98), rgba(219,234,254,.96));
+    border:1px solid rgba(59,130,246,.16);
+    color:#1e3a8a;
+    font-size:13px;
+    line-height:1.6;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.55);
+  }
+
+  .notif-form-card .errorlist{
+    margin:8px 0 0;
+    padding:0;
+    list-style:none;
+    color:#dc2626;
+    font-size:13px;
+    font-weight:700;
+  }
+
+  .notif-form-card .errorlist li{
+    margin:4px 0 0;
+  }
+
+  .notif-non-field{
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:14px;
+    background:rgba(254,226,226,.85);
+    border:1px solid rgba(239,68,68,.18);
+    color:#b91c1c;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .notif-actions{
+    display:flex;
+    gap:12px;
+    margin-top:24px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .notif-btn{
+    min-height:46px;
+    padding:0 18px;
+    border:none;
+    border-radius:12px;
+    font-weight:800;
+    letter-spacing:.02em;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+    cursor:pointer;
+  }
+
+  .notif-btn:hover{
+    transform:translateY(-1px);
+  }
+
+  .notif-btn-save{
+    background:linear-gradient(135deg, #2563eb, #3b82f6);
+    color:#fff;
+    box-shadow:
+      0 10px 20px rgba(37,99,235,.25),
+      inset 0 1px 0 rgba(255,255,255,.15);
+  }
+
+  .notif-btn-save:hover{
+    box-shadow:
+      0 14px 26px rgba(37,99,235,.28),
+      inset 0 1px 0 rgba(255,255,255,.15);
+  }
+
+  .notif-btn-back{
+    background:#e2e8f0;
+    color:#0f172a;
+    box-shadow:0 8px 18px rgba(15,23,42,.06);
+  }
+
+  .notif-btn-back:hover{
+    background:#cbd5e1;
+  }
+
+  .notif-tip-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+    margin-top:18px;
+  }
+
+  .notif-tip{
+    border:1px solid rgba(148,163,184,.18);
+    background:rgba(248,250,252,.96);
+    border-radius:18px;
+    padding:14px;
+    box-shadow:0 6px 18px rgba(15,23,42,.04);
+  }
+
+  .notif-tip strong{
+    display:block;
+    margin-bottom:6px;
+    color:#0f172a;
+    font-size:13px;
+  }
+
+  .notif-tip span{
+    display:block;
+    color:#64748b;
+    font-size:12.5px;
+    line-height:1.55;
+  }
+
+  /* ================= TOM SELECT ================= */
+  .ts-wrapper{
+    width:100%;
+  }
+
+  .ts-control{
+    min-height:52px;
+    padding:10px 12px !important;
+    border:1.5px solid rgba(148,163,184,.22) !important;
+    border-radius:14px !important;
+    box-shadow:0 6px 16px rgba(15,23,42,.04) !important;
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      linear-gradient(120deg, rgba(37,99,235,.15), rgba(59,130,246,.05)) border-box !important;
+  }
+
+  .ts-wrapper.multi .ts-control,
+  .ts-wrapper.single .ts-control{
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      linear-gradient(120deg, rgba(37,99,235,.15), rgba(59,130,246,.05)) border-box !important;
+  }
+
+  .ts-wrapper.focus .ts-control{
+    border-color:transparent !important;
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      linear-gradient(120deg, #2563eb, #60a5fa) border-box !important;
+    box-shadow:0 0 0 3px rgba(37,99,235,.12) !important;
+  }
+
+  .ts-control > input{
+    font-size:14px !important;
+    color:#0f172a !important;
+    background:transparent !important;
+  }
+
+  .ts-control > input::placeholder{
+    color:#94a3b8 !important;
+    opacity:1 !important;
+  }
+
+  .ts-control .item{
+    background:rgba(37,99,235,.10) !important;
+    color:#1d4ed8 !important;
+    border:1px solid rgba(37,99,235,.14) !important;
+    border-radius:999px !important;
+    padding:6px 10px !important;
+    margin:3px !important;
+    font-size:13px !important;
+    font-weight:700 !important;
+  }
+
+  .ts-dropdown{
+    border:1px solid rgba(148,163,184,.20) !important;
+    border-radius:16px !important;
+    overflow:hidden !important;
+    box-shadow:0 18px 40px rgba(15,23,42,.14) !important;
+    margin-top:8px !important;
+    background:#fff !important;
+  }
+
+  .ts-dropdown-content{
+    background:#fff !important;
+  }
+
+  .ts-dropdown .option,
+  .ts-dropdown .create,
+  .ts-dropdown .no-results{
+    padding:12px 14px !important;
+    font-size:14px !important;
+    background:#fff !important;
+    color:#0f172a !important;
+  }
+
+  .ts-dropdown .option:hover,
+  .ts-dropdown .create:hover{
+    background:rgba(37,99,235,.08) !important;
+    color:#1d4ed8 !important;
+  }
+
+  .ts-dropdown .active{
+    background:rgba(37,99,235,.10) !important;
+    color:#1d4ed8 !important;
+  }
+
+  /* ================= DARK MODE ================= */
+  body.theme-dark .notif-hero-text h2{
+    color:#e2e8f0;
+  }
+
+  body.theme-dark .notif-hero-text p{
+    color:#94a3b8;
+  }
+
+  body.theme-dark .notif-hero-badge{
+    background:rgba(59,130,246,.14);
+    border-color:rgba(96,165,250,.22);
+    color:#93c5fd;
+    box-shadow:0 8px 20px rgba(37,99,235,.16);
+  }
+
+  body.theme-dark .notif-form-card{
+    background:linear-gradient(180deg, rgba(15,23,42,.85), rgba(2,6,23,.92));
+    border:1px solid rgba(148,163,184,.12);
+    box-shadow:0 16px 38px rgba(0,0,0,.26);
+  }
+
+  body.theme-dark .notif-form-card::after{
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  body.theme-dark .notif-label{
+    color:#cbd5e1;
+  }
+
+  body.theme-dark .notif-form-card input[type="text"],
+  body.theme-dark .notif-form-card input[type="email"],
+  body.theme-dark .notif-form-card input[type="number"],
+  body.theme-dark .notif-form-card textarea,
+  body.theme-dark .notif-form-card select{
+    background:
+      linear-gradient(rgba(2,6,23,.88), rgba(2,6,23,.88)) padding-box,
+      linear-gradient(120deg, rgba(96,165,250,.22), rgba(59,130,246,.08)) border-box;
+    color:#e2e8f0;
+    border-color:transparent;
+    box-shadow:none;
+  }
+
+  body.theme-dark .notif-form-card input:hover,
+  body.theme-dark .notif-form-card textarea:hover,
+  body.theme-dark .notif-form-card select:hover{
+    box-shadow:0 0 0 1px rgba(96,165,250,.12);
+  }
+
+  body.theme-dark .notif-form-card input:focus,
+  body.theme-dark .notif-form-card textarea:focus,
+  body.theme-dark .notif-form-card select:focus{
+    background:
+      linear-gradient(rgba(2,6,23,.92), rgba(2,6,23,.92)) padding-box,
+      linear-gradient(120deg, #60a5fa, #3b82f6) border-box;
+    box-shadow:0 0 0 4px rgba(59,130,246,.12);
+  }
+
+  body.theme-dark .notif-help{
+    color:#94a3b8;
+  }
+
+  body.theme-dark .notif-section-note{
+    background:linear-gradient(180deg, rgba(30,41,59,.84), rgba(15,23,42,.92));
+    border-color:rgba(96,165,250,.18);
+    color:#bfdbfe;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+  }
+
+  body.theme-dark .notif-btn-back{
+    background:rgba(51,65,85,.84);
+    color:#e2e8f0;
+  }
+
+  body.theme-dark .notif-btn-back:hover{
+    background:rgba(71,85,105,.94);
+  }
+
+  body.theme-dark .notif-tip{
+    background:rgba(2,6,23,.34);
+    border-color:rgba(148,163,184,.14);
+    box-shadow:none;
+  }
+
+  body.theme-dark .notif-tip strong{
+    color:#e2e8f0;
+  }
+
+  body.theme-dark .notif-tip span{
+    color:#94a3b8;
+  }
+
+  /* TOM SELECT DARK FIX */
+  body.theme-dark .ts-wrapper,
+  body.theme-dark .ts-wrapper.form-control,
+  body.theme-dark .ts-wrapper.multi,
+  body.theme-dark .ts-wrapper.single{
+    color:#e2e8f0 !important;
+  }
+
+  body.theme-dark .ts-control,
+  body.theme-dark .ts-wrapper.multi .ts-control,
+  body.theme-dark .ts-wrapper.single .ts-control{
+    background:
+      linear-gradient(rgba(2,6,23,.88), rgba(2,6,23,.88)) padding-box,
+      linear-gradient(120deg, rgba(96,165,250,.22), rgba(59,130,246,.08)) border-box !important;
+    border-color:transparent !important;
+    box-shadow:none !important;
+  }
+
+  body.theme-dark .ts-wrapper.focus .ts-control{
+    background:
+      linear-gradient(rgba(2,6,23,.92), rgba(2,6,23,.92)) padding-box,
+      linear-gradient(120deg, #60a5fa, #3b82f6) border-box !important;
+    border-color:transparent !important;
+    box-shadow:0 0 0 4px rgba(59,130,246,.12) !important;
+  }
+
+  body.theme-dark .ts-control > input{
+    color:#e2e8f0 !important;
+    background:transparent !important;
+  }
+
+  body.theme-dark .ts-control > input::placeholder{
+    color:#94a3b8 !important;
+    opacity:1 !important;
+  }
+
+  body.theme-dark .ts-control .item{
+    background:rgba(59,130,246,.18) !important;
+    color:#bfdbfe !important;
+    border-color:rgba(96,165,250,.20) !important;
+  }
+
+  body.theme-dark .ts-dropdown{
+    background:#0b1220 !important;
+    border-color:rgba(148,163,184,.18) !important;
+    box-shadow:0 18px 40px rgba(0,0,0,.32) !important;
+  }
+
+  body.theme-dark .ts-dropdown-content{
+    background:#0b1220 !important;
+  }
+
+  body.theme-dark .ts-dropdown .option,
+  body.theme-dark .ts-dropdown .create,
+  body.theme-dark .ts-dropdown .no-results{
+    color:#e2e8f0 !important;
+    background:#0b1220 !important;
+  }
+
+  body.theme-dark .ts-dropdown .option:hover,
+  body.theme-dark .ts-dropdown .create:hover{
+    background:rgba(59,130,246,.14) !important;
+    color:#bfdbfe !important;
+  }
+
+  body.theme-dark .ts-dropdown .active{
+    background:rgba(59,130,246,.16) !important;
+    color:#bfdbfe !important;
+  }
+
+  @media (max-width: 900px){
+    .notif-tip-grid{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width: 768px){
+    .notif-grid{
+      grid-template-columns:1fr;
+    }
+
+    .notif-form-card{
+      padding:18px;
+      border-radius:18px;
+    }
+
+    .notif-form-card::after{
+      border-radius:18px;
+    }
+
+    .notif-actions{
+      flex-direction:column;
+      align-items:stretch;
+    }
+
+    .notif-btn{
+      width:100%;
+    }
+  }
+</style>
+
+<div class="notif-form-wrap">
+  <div class="notif-hero">
+    <div class="notif-hero-text">
+      <h2>Enviar nova notificação</h2>
+      <p>
+        Crie um aviso manual para usuários específicos ou para grupos inteiros do sistema.
+        Use esse espaço para comunicações administrativas, orientações internas ou alertas importantes.
+      </p>
+    </div>
+
+    <div class="notif-hero-badge">
+      <i class="bi bi-megaphone-fill"></i>
+      Envio manual
+    </div>
+  </div>
+
+  <div class="notif-form-card">
+    <div class="notif-section-note">
+      Você pode enviar para <strong>usuários específicos</strong>, para <strong>grupos</strong> ou para ambos.
+      Para evitar erros, selecione pelo menos um destino antes de salvar.
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="notif-grid">
+        <div class="notif-field full">
+          <label class="notif-label" for="{{ form.title.id_for_label }}">
+            <i class="bi bi-type"></i>
+            Título
+          </label>
+          {{ form.title }}
+          {{ form.title.errors }}
+          <div class="notif-help">Use um título curto e claro, por exemplo: manutenção programada, aviso interno, atualização de sistema.</div>
+        </div>
+
+        <div class="notif-field full">
+          <label class="notif-label" for="{{ form.message.id_for_label }}">
+            <i class="bi bi-chat-left-text"></i>
+            Mensagem
+          </label>
+          {{ form.message }}
+          {{ form.message.errors }}
+          <div class="notif-help">Escreva a mensagem completa que aparecerá para os destinatários.</div>
+        </div>
+
+        <div class="notif-field">
+          <label class="notif-label" for="{{ form.users.id_for_label }}">
+            <i class="bi bi-people"></i>
+            Usuários
+          </label>
+          {{ form.users }}
+          {{ form.users.errors }}
+          <div class="notif-help">Pesquise e selecione um ou mais usuários específicos.</div>
+        </div>
+
+        <div class="notif-field">
+          <label class="notif-label" for="{{ form.target_groups.id_for_label }}">
+            <i class="bi bi-diagram-3"></i>
+            Grupos
+          </label>
+          {{ form.target_groups }}
+          {{ form.target_groups.errors }}
+          <div class="notif-help">Pesquise e selecione um ou mais grupos para envio coletivo.</div>
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="notif-non-field">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div class="notif-actions">
+        <button type="submit" class="notif-btn notif-btn-save">
+          <i class="bi bi-send-fill"></i>
+          Salvar notificação
+        </button>
+
+        <a href="{% url 'notifications_list' %}" class="notif-btn notif-btn-back">
+          <i class="bi bi-arrow-left"></i>
+          Voltar
+        </a>
+      </div>
+    </form>
+
+    <div class="notif-tip-grid">
+      <div class="notif-tip">
+        <strong>Envio por usuário</strong>
+        <span>Ideal para avisos direcionados, cobranças específicas ou comunicados individuais.</span>
+      </div>
+
+      <div class="notif-tip">
+        <strong>Envio por grupo</strong>
+        <span>Útil para alcançar rapidamente equipes como interno, requisitante ou gestão.</span>
+      </div>
+
+      <div class="notif-tip">
+        <strong>Mensagem clara</strong>
+        <span>Prefira textos objetivos, com contexto suficiente para o usuário entender a ação esperada.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".tomselect").forEach(function(el) {
+      new TomSelect(el, {
+        plugins: ['remove_button'],
+        create: false,
+        persist: false,
+        hidePlaceholder: true,
+        maxOptions: 500,
+        closeAfterSelect: false,
+        render: {
+          no_results: function() {
+            return '<div class="no-results">Nenhum resultado encontrado</div>';
+          }
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

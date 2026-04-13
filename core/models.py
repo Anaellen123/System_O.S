@@ -3,6 +3,7 @@ from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
 import os
 import uuid
@@ -145,6 +146,7 @@ class ServiceRequest(models.Model):
     due_at = models.DateTimeField("Prazo", null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
+    status_updated_at = models.DateTimeField("Atualizado status em", null=True, blank=True)
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -189,6 +191,17 @@ class ServiceRequest(models.Model):
         ]
 
     def save(self, *args, **kwargs):
+        is_new = not self.pk
+        old_status = None
+
+        if not is_new:
+            old_status = (
+                ServiceRequest.objects
+                .filter(pk=self.pk)
+                .values_list("status", flat=True)
+                .first()
+            )
+
         if not self.os_number:
             today = timezone.localdate()
             date_str = today.strftime("%Y%m%d")
@@ -204,6 +217,13 @@ class ServiceRequest(models.Model):
 
             seq = int(last.split("-")[-1]) + 1 if last else 1
             self.os_number = f"{prefix}{seq:04d}"
+
+        if is_new and not self.status_updated_at:
+            self.status_updated_at = timezone.now()
+        elif old_status and old_status != self.status:
+            self.status_updated_at = timezone.now()
+        elif not self.status_updated_at:
+            self.status_updated_at = timezone.now()
 
         super().save(*args, **kwargs)
 
@@ -239,3 +259,83 @@ class TeamMember(models.Model):
 
     def __str__(self):
         return f"{self.team} - {self.user}"
+
+
+class Notification(models.Model):
+    TYPE_OPEN_10 = "OPEN_10"
+    TYPE_PROGRESS_15 = "IN_PROGRESS_15"
+    TYPE_DONE = "DONE"
+    TYPE_MANUAL = "MANUAL"
+
+    TYPE_CHOICES = [
+        (TYPE_OPEN_10, "O.S pendente há 10 dias"),
+        (TYPE_PROGRESS_15, "O.S em andamento há 15 dias"),
+        (TYPE_DONE, "O.S concluída"),
+        (TYPE_MANUAL, "Manual"),
+    ]
+
+    title = models.CharField("Título", max_length=180)
+    message = models.TextField("Mensagem")
+    notification_type = models.CharField(
+        "Tipo",
+        max_length=20,
+        choices=TYPE_CHOICES,
+        default=TYPE_MANUAL,
+    )
+
+    service_request = models.ForeignKey(
+        ServiceRequest,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+    )
+
+    users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="notifications",
+        blank=True,
+    )
+
+    target_groups = models.ManyToManyField(
+        Group,
+        related_name="notifications",
+        blank=True,
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="notifications_created",
+    )
+
+    event_key = models.CharField(max_length=120, blank=True, null=True, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.title
+
+
+class NotificationRead(models.Model):
+    notification = models.ForeignKey(
+        Notification,
+        on_delete=models.CASCADE,
+        related_name="reads",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notification_reads",
+    )
+    read_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("notification", "user")
+
+    def __str__(self):
+        return f"{self.user} leu {self.notification}"

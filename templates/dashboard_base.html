@@ -17,189 +17,184 @@
 <body>
 
 <div class="app">
-
-  <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <aside class="sidebar">
     <div class="brand">
-      <img class="logo-light" src="{% static 'img/logo-prefeitura-removebg.png' %}" alt="Socorro">
-      <img class="logo-dark" src="{% static 'img/login-modo-black.png' %}" alt="Socorro">
+      <img class="logo-light" src="{% static 'img/logo-prefeitura-removebg.png' %}">
+      <img class="logo-dark" src="{% static 'img/login-modo-black.png' %}">
     </div>
 
     {% if perms.core.manage_os %}
-      <a class="btn-create" href="{% url 'os_create' %}">
-        <i class="bi bi-plus-lg"></i> Criar Ordem de Serviço
-      </a>
+    <a class="btn-create" href="{% url 'os_create' %}">
+      <i class="bi bi-plus-lg"></i> Criar Ordem de Serviço
+    </a>
     {% endif %}
 
-    <nav class="menu" id="sidebarMenu">
+    <nav class="menu">
 
       {% if perms.core.tab_dashboard %}
-        <a class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
-           href="{% url 'dashboard' %}">
-          <i class="bi bi-grid-1x2"></i>
-          <span>Dashboard</span>
+      <a class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+         href="{% url 'dashboard' %}">
+        <i class="bi bi-grid-1x2"></i>
+        <span>Dashboard</span>
+      </a>
+      {% endif %}
+
+      <!-- REQUISITANTE -->
+      {% for g in request.user.groups.all %}
+        {% if g.name|lower == 'requisitante' %}
+        <a class="menu-item {% if request.resolver_match.url_name == 'dashboard_requisitante' %}active{% endif %}"
+           href="{% url 'dashboard_requisitante' %}">
+          <i class="bi bi-person"></i>
+          <span>Meu Painel</span>
         </a>
-      {% endif %}
+        {% endif %}
+      {% endfor %}
 
-      {% if request.user.is_authenticated %}
-        {% for g in request.user.groups.all %}
-          {% if g.name|lower == 'requisitante' %}
-            <a class="menu-item {% if request.resolver_match.url_name == 'dashboard_requisitante' %}active{% endif %}"
-               href="{% url 'dashboard_requisitante' %}">
-              <i class="bi bi-person"></i>
-              <span>Meu Painel</span>
-            </a>
-          {% endif %}
-        {% endfor %}
-      {% endif %}
-
+      <!-- OS -->
       {% if perms.core.tab_os %}
-        <div class="menu-accordion
-          {% if request.resolver_match.url_name == 'os_list' or request.resolver_match.url_name == 'os_list_status' or request.resolver_match.url_name == 'os_create' or request.resolver_match.url_name == 'os_detail' %}
-            is-open
-          {% endif %}">
-          <button class="menu-item menu-toggle" type="button">
-            <span class="menu-left">
-              <i class="bi bi-clipboard-check"></i>
-              <span>Ordem de Serviço</span>
-            </span>
-            <i class="bi bi-chevron-right menu-caret"></i>
-          </button>
+      <div class="menu-accordion
+        {% if request.resolver_match.url_name in 'os_list os_list_status os_create os_detail' %}
+          is-open
+        {% endif %}">
+        
+        <button class="menu-item menu-toggle">
+          <span class="menu-left">
+            <i class="bi bi-clipboard-check"></i>
+            <span>Ordem de Serviço</span>
+          </span>
+          <i class="bi bi-chevron-right menu-caret"></i>
+        </button>
 
-          <ul class="submenu">
-            <li>
-              <a class="submenu-item {% if request.resolver_match.url_name == 'os_list' %}active{% endif %}"
-                 href="{% url 'os_list' %}">Todas</a>
-            </li>
-            <li>
-              <a class="submenu-item {% if request.resolver_match.url_name == 'os_list_status' and request.resolver_match.kwargs.status == 'OPEN' %}active{% endif %}"
-                 href="{% url 'os_list_status' 'OPEN' %}">Pendentes</a>
-            </li>
-            <li>
-              <a class="submenu-item {% if request.resolver_match.url_name == 'os_list_status' and request.resolver_match.kwargs.status == 'IN_PROGRESS' %}active{% endif %}"
-                 href="{% url 'os_list_status' 'IN_PROGRESS' %}">Em Andamento</a>
-            </li>
-            <li>
-              <a class="submenu-item {% if request.resolver_match.url_name == 'os_list_status' and request.resolver_match.kwargs.status == 'DONE' %}active{% endif %}"
-                 href="{% url 'os_list_status' 'DONE' %}">Concluídas</a>
-            </li>
-          </ul>
-        </div>
+        <ul class="submenu">
+          <li><a class="submenu-item {% if request.resolver_match.url_name == 'os_list' %}active{% endif %}"
+                 href="{% url 'os_list' %}">Todas</a></li>
+          <li><a class="submenu-item {% if request.resolver_match.kwargs.status == 'OPEN' %}active{% endif %}"
+                 href="{% url 'os_list_status' 'OPEN' %}">Pendentes</a></li>
+          <li><a class="submenu-item {% if request.resolver_match.kwargs.status == 'IN_PROGRESS' %}active{% endif %}"
+                 href="{% url 'os_list_status' 'IN_PROGRESS' %}">Em Andamento</a></li>
+          <li><a class="submenu-item {% if request.resolver_match.kwargs.status == 'DONE' %}active{% endif %}"
+                 href="{% url 'os_list_status' 'DONE' %}">Concluídas</a></li>
+        </ul>
+      </div>
       {% endif %}
 
+      <!-- USUÁRIOS -->
       {% if perms.core.tab_users %}
-        <div class="menu-accordion
-          {% if request.resolver_match.url_name == 'users_list' or request.resolver_match.url_name == 'user_role_update' or request.resolver_match.url_name == 'user_create' %}
-            is-open
-          {% endif %}">
+      <div class="menu-accordion
+        {% if request.resolver_match.url_name in 'users_list user_role_update user_create' %}
+          is-open
+        {% endif %}">
+        
+        <button class="menu-item menu-toggle">
+          <span class="menu-left">
+            <i class="bi bi-person-badge"></i>
+            <span>Usuários</span>
+          </span>
+          <i class="bi bi-chevron-right"></i>
+        </button>
 
-          <button class="menu-item menu-toggle" type="button">
-            <span class="menu-left">
-              <i class="bi bi-person-badge"></i>
-              <span>Usuários</span>
-            </span>
-            <i class="bi bi-chevron-right menu-caret"></i>
-          </button>
-
-          <ul class="submenu">
-
-            <!-- EDITAR USUÁRIO -->
-            <li>
-              <a class="submenu-item 
-                {% if request.resolver_match.url_name == 'users_list' or request.resolver_match.url_name == 'user_role_update' %}active{% endif %}"
-                href="{% url 'users_list' %}">
-                Editar Usuário
-              </a>
-            </li>
-
-            <!-- CRIAR USUÁRIO -->
-            <li>
-              <a class="submenu-item 
-                {% if request.resolver_match.url_name == 'user_create' %}active{% endif %}"
-                href="{% url 'user_create' %}">
-                Criar Usuário
-              </a>
-            </li>
-
-          </ul>
-        </div>
+        <ul class="submenu">
+          <li><a class="submenu-item {% if request.resolver_match.url_name in 'users_list user_role_update' %}active{% endif %}"
+                 href="{% url 'users_list' %}">Editar Usuário</a></li>
+          <li><a class="submenu-item {% if request.resolver_match.url_name == 'user_create' %}active{% endif %}"
+                 href="{% url 'user_create' %}">Criar Usuário</a></li>
+        </ul>
+      </div>
       {% endif %}
+
+      <!-- EQUIPE -->
       {% if perms.core.tab_team %}
-        <div class="menu-accordion
-          {% if request.resolver_match.url_name == 'team_list' or request.resolver_match.url_name == 'team_create' %}
-            is-open
-          {% endif %}">
-          <button class="menu-item menu-toggle" type="button">
-            <span class="menu-left">
-              <i class="bi bi-people"></i>
-              <span>Equipe</span>
-            </span>
-            <i class="bi bi-chevron-right menu-caret"></i>
-          </button>
+      <div class="menu-accordion
+        {% if request.resolver_match.url_name in 'team_list team_create' %}
+          is-open
+        {% endif %}">
+        
+        <button class="menu-item menu-toggle">
+          <span class="menu-left">
+            <i class="bi bi-people"></i>
+            <span>Equipe</span>
+          </span>
+          <i class="bi bi-chevron-right"></i>
+        </button>
 
-          <ul class="submenu">
-            <li>
-              <a class="submenu-item {% if request.resolver_match.url_name == 'team_list' %}active{% endif %}"
-                 href="{% url 'team_list' %}">Listar equipes</a>
-            </li>
-            <li>
-              <a class="submenu-item {% if request.resolver_match.url_name == 'team_create' %}active{% endif %}"
-                 href="{% url 'team_create' %}">Criar equipes</a>
-            </li>
-          </ul>
-        </div>
+        <ul class="submenu">
+          <li><a class="submenu-item {% if request.resolver_match.url_name == 'team_list' %}active{% endif %}"
+                 href="{% url 'team_list' %}">Listar equipes</a></li>
+          <li><a class="submenu-item {% if request.resolver_match.url_name == 'team_create' %}active{% endif %}"
+                 href="{% url 'team_create' %}">Criar equipes</a></li>
+        </ul>
+      </div>
       {% endif %}
 
-      {% if request.user.is_authenticated %}
-        {% for g in request.user.groups.all %}
-          {% if g.name|lower == 'interno' %}
-            <a class="menu-item {% if request.resolver_match.url_name == 'team_my' %}active{% endif %}"
-               href="{% url 'team_my' %}">
-              <i class="bi bi-clipboard2-data"></i>
-              <span>Minhas O.S</span>
-            </a>
-          {% endif %}
-        {% endfor %}
-      {% endif %}
-
-      {% if perms.core.tab_requests %}
-        <a class="menu-item {% if request.resolver_match.url_name == 'service_type_dashboard' %}active{% endif %}"
-           href="{% url 'service_type_dashboard' %}">
-          <i class="bi bi-tools"></i>
-          <span>Serviços</span>
+      <!-- MINHAS OS (INTERNO) -->
+      {% for g in request.user.groups.all %}
+        {% if g.name|lower == 'interno' %}
+        <a class="menu-item {% if request.resolver_match.url_name == 'team_my' %}active{% endif %}"
+           href="{% url 'team_my' %}">
+          <i class="bi bi-clipboard2-data"></i>
+          <span>Minhas Equipes</span>
         </a>
+        {% endif %}
+      {% endfor %}
+
+      <!-- SERVIÇOS -->
+      {% if perms.core.tab_requests %}
+      <a class="menu-item {% if request.resolver_match.url_name == 'service_type_dashboard' %}active{% endif %}"
+         href="{% url 'service_type_dashboard' %}">
+        <i class="bi bi-tools"></i>
+        <span>Serviços</span>
+      </a>
       {% endif %}
 
-      {% if perms.core.tab_reports %}
-        <div class="menu-accordion">
-          <button class="menu-item menu-toggle" type="button">
-            <span class="menu-left">
-              <i class="bi bi-bar-chart"></i>
-              <span>Relatórios</span>
-            </span>
-            <i class="bi bi-chevron-right menu-caret"></i>
-          </button>
+      <!-- 🔔 NOTIFICAÇÕES -->
+      <a class="menu-item {% if request.resolver_match.url_name == 'notifications_list' %}active{% endif %}"
+         href="{% url 'notifications_list' %}">
+        <i class="bi bi-bell"></i>
+        <span>Notificações</span>
 
-          <ul class="submenu">
-            <li><a class="submenu-item" href="#">Por Período</a></li>
-            <li><a class="submenu-item" href="#">Por Serviço</a></li>
-            <li><a class="submenu-item" href="#">Por Equipe</a></li>
-          </ul>
-        </div>
+        {% if notifications_unread_count > 0 %}
+        <span class="badge bg-danger">{{ notifications_unread_count }}</span>
+        {% endif %}
+      </a>
+
+      {% if request.user.is_superuser %}
+      <a class="menu-item" href="{% url 'notifications_create' %}">
+        <i class="bi bi-megaphone"></i>
+        <span>Criar Notificação</span>
+      </a>
+      {% endif %}
+
+      <!-- RELATÓRIOS -->
+      {% if perms.core.tab_reports %}
+      <div class="menu-accordion">
+        <button class="menu-item menu-toggle">
+          <span class="menu-left">
+            <i class="bi bi-bar-chart"></i>
+            <span>Relatórios</span>
+          </span>
+          <i class="bi bi-chevron-right"></i>
+        </button>
+
+        <ul class="submenu">
+          <li><a class="submenu-item" href="#">Por Período</a></li>
+          <li><a class="submenu-item" href="#">Por Serviço</a></li>
+          <li><a class="submenu-item" href="#">Por Equipe</a></li>
+        </ul>
+      </div>
       {% endif %}
 
       <div class="menu-divider"></div>
 
-      <button class="menu-item menu-theme" id="themeToggle" type="button">
+      <button class="menu-item menu-theme" id="themeToggle">
         <span class="menu-left">
           <i class="bi bi-sun"></i>
           <span id="themeText">Tema: Claro</span>
         </span>
       </button>
 
-      <a class="menu-item {% if request.resolver_match.url_name == 'account_settings' %}active{% endif %}"
-         href="{% url 'account_settings' %}">
+      <a class="menu-item" href="{% url 'account_settings' %}">
         <i class="bi bi-gear-wide-connected"></i>
         <span>Configurações</span>
       </a>
@@ -217,18 +212,25 @@
       </a>
 
       <div class="sidebar-footnote">
-        ©2026 · Desenvolvido por Anaellen Nascimento da silva
+        ©2026 · Desenvolvido por Anaellen
       </div>
     </div>
   </aside>
 
   <section class="content">
     <header class="topbar">
-      <button class="btn-menu" id="btnMenu" type="button">
+      <button class="btn-menu" id="btnMenu">
         <i class="bi bi-list"></i>
       </button>
+
       <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
-      <a class="notif" href="#"><i class="bi bi-bell"></i> Notificações</a>
+
+      <a class="notif" href="{% url 'notifications_list' %}">
+        <i class="bi bi-bell"></i>
+        {% if notifications_unread_count > 0 %}
+          <span style="color:red;">{{ notifications_unread_count }}</span>
+        {% endif %}
+      </a>
     </header>
 
     <div class="page">

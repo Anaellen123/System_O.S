@@ -1,4 +1,8 @@
 from datetime import timedelta
+from django.db.models import Q, Exists, OuterRef
+from django.contrib.auth import get_user_model
+from .models import Notification, NotificationRead, TeamMember
+from .models import Team
 import json
 from urllib.request import urlopen
 import os
@@ -8,6 +12,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.db.models import Q, Count, Exists, OuterRef
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
@@ -19,6 +25,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
+from datetime import datetime, time, timedelta
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.decorators.http import require_http_methods, require_GET
@@ -30,6 +37,7 @@ from .forms import (
     UserRoleForm,
     TeamCreateForm,
     ServiceTypeForm,
+    NotificationCreateForm,
 )
 from .models import (
     ServiceRequest,
@@ -38,9 +46,107 @@ from .models import (
     Team,
     TeamMember,
     ServiceType,
+    Notification,
+    NotificationRead,
 )
 
 User = get_user_model()
+
+def _get_os_team_internal_users(os_obj):
+    """
+    Retorna os usuários internos da equipe da O.S.:
+    - responsável da equipe
+    - membros da equipe
+    """
+    if not getattr(os_obj, "team_id", None):
+        return User.objects.none()
+
+    responsible_ids = []
+    if getattr(os_obj.team, "responsible_id", None):
+        responsible_ids.append(os_obj.team.responsible_id)
+
+    member_ids = list(
+        TeamMember.objects.filter(team=os_obj.team)
+        .values_list("user_id", flat=True)
+    )
+
+    ids = set(responsible_ids + member_ids)
+
+    if not ids:
+        return User.objects.none()
+
+    return User.objects.filter(
+        id__in=ids,
+        is_active=True,
+        groups__name__iexact="interno",
+    ).distinct()
+
+
+
+
+def _create_pending_notification_for_os(os_obj, created_by=None):
+    if not os_obj:
+        return None, False
+
+    if os_obj.status == "DONE":
+        return None, False
+
+    prazo_base = os_obj.due_at
+
+    # se não tiver prazo, cria baseado na criação
+    if not prazo_base:
+        prazo_base = os_obj.created_at + timedelta(days=10)
+
+    # 🔥 GARANTE QUE É DATETIME
+    if isinstance(prazo_base, timezone.datetime):
+        # já é datetime
+        pass
+    else:
+        # se for date, converte para datetime
+        prazo_base = datetime.combine(prazo_base, time(0, 0))
+
+    # 🔥 GARANTE TIMEZONE
+    if timezone.is_naive(prazo_base):
+        prazo_base = timezone.make_aware(
+            prazo_base,
+            timezone.get_current_timezone()
+        )
+
+    agora = timezone.now()
+
+    if prazo_base > agora:
+        return None, False
+
+    internos_da_equipe = _get_os_team_internal_users(os_obj)
+
+    superusers = User.objects.filter(
+        is_superuser=True,
+        is_active=True
+    ).distinct()
+
+    usuarios_destino = User.objects.filter(
+        id__in=list(internos_da_equipe.values_list("id", flat=True)) +
+               list(superusers.values_list("id", flat=True))
+    ).distinct()
+
+    if not usuarios_destino.exists():
+        return None, False
+
+    event_key = f"os_pending_{os_obj.pk}"
+
+    return _create_notification(
+        title=f"O.S. {os_obj.os_number} pendente",
+        message=(
+            f"A ordem de serviço {os_obj.os_number} está pendente.\n"
+            f"Serviço: {os_obj.service_type}\n"
+            f"Status atual: {os_obj.get_status_display()}"
+        ),
+        notification_type=Notification.TYPE_OPEN_10,
+        users=list(usuarios_destino),
+        service_request=os_obj,
+        created_by=created_by,
+        event_key=event_key,
+    )
 
 class LoginForm(forms.Form):
     username = forms.EmailField(
@@ -1076,7 +1182,6 @@ def os_list(request, status=None):
     }
     return render(request, "os_list.html", context)
 
-
 @login_required(login_url="login_admin")
 def os_detail(request, pk):
     os_obj = get_object_or_404(ServiceRequest, pk=pk)
@@ -1090,6 +1195,8 @@ def os_detail(request, pk):
             messages.error(request, "Você não tem permissão para editar esta OS.")
             return redirect("os_detail", pk=os_obj.pk)
 
+        status_anterior = os_obj.status
+
         form = ServiceRequestUpdateForm(request.POST, instance=os_obj)
         if form.is_valid():
             os_edit = form.save(commit=False)
@@ -1102,6 +1209,42 @@ def os_detail(request, pk):
             os_edit.save()
             form.save_m2m()
 
+            # ===============================
+            # NOTIFICAÇÃO DE CONCLUSÃO
+            # Apenas para o requisitante que abriu a O.S
+            # ===============================
+            if status_anterior != "DONE" and os_edit.status == "DONE" and os_edit.created_by:
+                event_key = f"os_done_{os_edit.pk}"
+
+                _create_notification(
+                    title=f"O.S {os_edit.os_number} concluída",
+                    message=(
+                        f"Sua ordem de serviço {os_edit.os_number} foi concluída.\n"
+                        f"Serviço: {os_edit.service_type}\n"
+                        f"Status atual: {os_edit.get_status_display()}"
+                    ),
+                    notification_type="DONE",
+                    users=[os_edit.created_by],
+                    service_request=os_edit,
+                    created_by=request.user,
+                    event_key=event_key,
+                )
+
+            # ===============================
+            # CONTROLE DE PENDÊNCIA
+            # - se concluiu: remove notificação pendente
+            # - se não concluiu: recria a pendência conforme as regras
+            # ===============================
+            Notification.objects.filter(
+                event_key=f"os_pending_{os_edit.pk}"
+            ).delete()
+
+            if os_edit.status != "DONE":
+                _create_pending_notification_for_os(
+                    os_obj=os_edit,
+                    created_by=request.user
+                )
+
             messages.success(request, "OS atualizada com sucesso!")
             return redirect("os_detail", pk=os_obj.pk)
         else:
@@ -1110,13 +1253,17 @@ def os_detail(request, pk):
         form = ServiceRequestUpdateForm(instance=os_obj)
 
     prazo_formatado = _formatar_prazo_data(os_obj.created_at, os_obj.due_at)
+    anexos = _obter_anexos_os(os_obj)
+    endereco_completo = _montar_endereco_os(os_obj)
 
     return render(request, "os_detail.html", {
         "os": os_obj,
         "form": form,
         "prazo_formatado": prazo_formatado,
+        "anexos": anexos,
+        "endereco_completo": endereco_completo or "—",
+        "status_choices": ServiceRequest.STATUS_CHOICES,
     })
-
 
 @login_required(login_url="login_admin")
 def os_print(request, pk):
@@ -2070,3 +2217,185 @@ def os_delete(request, pk):
 
     messages.success(request, f"O.S {numero_os} excluída com sucesso.")
     return redirect("os_list")
+
+def _get_notification_target_users(notification):
+    direct_ids = notification.users.values_list("id", flat=True)
+    group_ids = User.objects.filter(
+        groups__in=notification.target_groups.all(),
+        is_active=True
+    ).values_list("id", flat=True)
+
+    ids = set(direct_ids) | set(group_ids)
+    return User.objects.filter(id__in=ids, is_active=True).distinct()
+
+
+def _create_notification(title, message, notification_type="MANUAL", users=None, groups=None, service_request=None, created_by=None, event_key=None):
+    if event_key:
+        existing = Notification.objects.filter(event_key=event_key).first()
+        if existing:
+            return existing, False
+
+    notification = Notification.objects.create(
+        title=title,
+        message=message,
+        notification_type=notification_type,
+        service_request=service_request,
+        created_by=created_by,
+        event_key=event_key,
+    )
+
+    if users:
+        notification.users.add(*users)
+
+    if groups:
+        notification.target_groups.add(*groups)
+
+    return notification, True
+
+
+def _get_internal_and_superusers():
+    internos = User.objects.filter(
+        groups__name__iexact="interno",
+        is_active=True
+    )
+
+    supers = User.objects.filter(
+        is_superuser=True,
+        is_active=True
+    )
+
+    return User.objects.filter(
+        id__in=list(internos.values_list("id", flat=True)) + list(supers.values_list("id", flat=True))
+    ).distinct()
+
+@login_required(login_url="login_admin")
+def notifications_list(request):
+    unread_subquery = NotificationRead.objects.filter(
+        notification=OuterRef("pk"),
+        user=request.user
+    )
+
+    notifications = (
+        Notification.objects
+        .filter(
+            Q(users=request.user) |
+            Q(target_groups__in=request.user.groups.all())
+        )
+        .select_related("service_request", "service_request__team")
+        .annotate(is_read=Exists(unread_subquery))
+        .distinct()
+        .order_by("-created_at")
+    )
+
+    if request.user.is_superuser:
+        pass
+
+    elif _is_requisitante(request.user):
+        notifications = notifications.exclude(
+            notification_type=Notification.TYPE_OPEN_10
+        )
+
+    elif _is_interno(request.user):
+        team_ids = set()
+
+        team_ids.update(
+            Team.objects.filter(responsible=request.user)
+            .values_list("id", flat=True)
+        )
+
+        team_ids.update(
+            TeamMember.objects.filter(user=request.user)
+            .values_list("team_id", flat=True)
+        )
+
+        notifications = notifications.filter(
+            Q(notification_type=Notification.TYPE_DONE) |
+            Q(notification_type=Notification.TYPE_MANUAL) |
+            (
+                Q(notification_type=Notification.TYPE_OPEN_10) &
+                Q(service_request__team_id__in=team_ids)
+            )
+        )
+
+    return render(request, "notifications/notifications_list.html", {
+        "notifications": notifications,
+    })
+
+@login_required(login_url="login_admin")
+def notification_mark_read(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+
+    can_view = (
+        notification.users.filter(pk=request.user.pk).exists()
+        or notification.target_groups.filter(id__in=request.user.groups.values_list("id", flat=True)).exists()
+    )
+
+    if not can_view:
+        messages.error(request, "Você não tem permissão para acessar esta notificação.")
+        return redirect("notifications_list")
+
+    NotificationRead.objects.get_or_create(
+        notification=notification,
+        user=request.user,
+    )
+
+    messages.success(request, "Notificação marcada como lida.")
+    return redirect("notifications_list")
+
+
+@login_required(login_url="login_admin")
+def notifications_mark_all_read(request):
+    notifications = (
+        Notification.objects
+        .filter(
+            Q(users=request.user) |
+            Q(target_groups__in=request.user.groups.all())
+        )
+        .distinct()
+    )
+
+    existing_ids = set(
+        NotificationRead.objects.filter(
+            user=request.user,
+            notification__in=notifications
+        ).values_list("notification_id", flat=True)
+    )
+
+    to_create = [
+        NotificationRead(notification=n, user=request.user)
+        for n in notifications if n.id not in existing_ids
+    ]
+
+    if to_create:
+        NotificationRead.objects.bulk_create(to_create)
+
+    messages.success(request, "Todas as notificações foram marcadas como lidas.")
+    return redirect("notifications_list")
+
+
+@login_required(login_url="login_admin")
+def notifications_create(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Você não tem permissão para criar notificações.")
+        return redirect("dashboard")
+
+    if request.method == "POST":
+        form = NotificationCreateForm(request.POST)
+        if form.is_valid():
+            notification = form.save(commit=False)
+            notification.notification_type = "MANUAL"
+            notification.created_by = request.user
+            notification.save()
+
+            form.save_m2m()
+
+            messages.success(request, "Notificação criada com sucesso.")
+            return redirect("notifications_list")
+        else:
+            messages.error(request, "Revise os campos e tente novamente.")
+    else:
+        form = NotificationCreateForm()
+
+    return render(request, "notifications/notifications_create.html", {
+        "form": form,
+    })

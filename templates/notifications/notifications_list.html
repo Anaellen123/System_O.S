@@ -1,0 +1,252 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Notificações{% endblock %}
+{% block page_title %}Notificações{% endblock %}
+
+{% block content %}
+<style>
+  .notif-wrap{
+    max-width:1100px;
+  }
+
+  .notif-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+  }
+
+  .notif-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  /* ================= BOTÕES ================= */
+  .notif-btn{
+    min-height:40px;
+    padding:0 16px;
+    border-radius:10px;
+    border:none;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:600;
+    font-size:14px;
+    transition:.2s ease;
+  }
+
+  .notif-btn-primary{
+    background:linear-gradient(135deg,#2563eb,#3b82f6);
+    color:#fff;
+    box-shadow:0 4px 12px rgba(37,99,235,.25);
+  }
+
+  .notif-btn-primary:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 18px rgba(37,99,235,.30);
+  }
+
+  .notif-btn-light{
+    background:#f1f5f9;
+    color:#0f172a;
+  }
+
+  .notif-btn-light:hover{
+    background:#e2e8f0;
+    transform:translateY(-1px);
+  }
+
+  /* ================= LISTA ================= */
+  .notif-list{
+    display:grid;
+    gap:16px;
+  }
+
+  /* ================= CARD ================= */
+  .notif-card{
+    background:var(--card, #fff);
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:16px;
+    padding:18px;
+    transition:.25s ease;
+    position:relative;
+  }
+
+  /* efeito hover elegante */
+  .notif-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 12px 28px rgba(15,23,42,.08);
+  }
+
+  /* destaque suave para não lida */
+  .notif-card.unread{
+    background:linear-gradient(90deg, rgba(37,99,235,.06), transparent);
+    border-left:4px solid #2563eb;
+  }
+
+  .notif-card.read{
+  opacity: 0.95;
+  border: 2px solid #cbd5e1;
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+}
+  /* ================= HEADER ================= */
+  .notif-head{
+    display:flex;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+
+  .notif-title{
+    margin:0;
+    font-size:17px;
+    font-weight:700;
+    color:#0f172a;
+  }
+
+  .notif-date{
+    font-size:12px;
+    color:#94a3b8;
+    margin-top:3px;
+  }
+
+  /* ================= TEXTO ================= */
+  .notif-message{
+    color:#334155;
+    line-height:1.65;
+    white-space:pre-wrap;
+    margin:10px 0 14px;
+  }
+
+  /* ================= BADGE ================= */
+  .notif-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:700;
+  }
+
+  .notif-badge-unread{
+    background:#eff6ff;
+    color:#2563eb;
+  }
+
+  .notif-badge-read{
+    background:#ecfdf5;
+    color:#16a34a;
+  }
+
+  /* ================= EMPTY ================= */
+  .notif-empty{
+    text-align:center;
+    padding:30px;
+    color:#64748b;
+    font-size:14px;
+  }
+
+  /* ================= DARK MODE ================= */
+  body.theme-dark .notif-card{
+    background:rgba(15,23,42,.75);
+    border:1px solid rgba(148,163,184,.15);
+  }
+
+  body.theme-dark .notif-card.unread{
+    background:linear-gradient(90deg, rgba(59,130,246,.12), transparent);
+  }
+
+  body.theme-dark .notif-title{
+    color:#e2e8f0;
+  }
+
+  body.theme-dark .notif-message{
+    color:#cbd5e1;
+  }
+
+  body.theme-dark .notif-date{
+    color:#94a3b8;
+  }
+
+  body.theme-dark .notif-btn-light{
+    background:#1e293b;
+    color:#e2e8f0;
+  }
+
+  body.theme-dark .notif-btn-light:hover{
+    background:#334155;
+  }
+
+  body.theme-dark .notif-card.read{
+  border: 2px solid #475569;
+  background: rgba(30,41,59,.6);
+}
+</style>
+
+<div class="notif-wrap">
+  <div class="notif-topbar">
+    <div>
+      <h2 style="margin:0;">Minhas notificações</h2>
+      <p style="margin:6px 0 0; color:var(--muted);">
+        Acompanhe avisos automáticos e manuais.
+      </p>
+    </div>
+
+    <div class="notif-actions">
+      <a href="{% url 'notifications_mark_all_read' %}" class="notif-btn notif-btn-light">
+        Marcar todas como lidas
+      </a>
+
+      {% if request.user.is_superuser %}
+        <a href="{% url 'notifications_create' %}" class="notif-btn notif-btn-primary">
+          Nova notificação
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="notif-list">
+    {% for n in notifications %}
+      <div class="notif-card {% if n.is_read %}read{% else %}unread{% endif %}">
+        
+        <div class="notif-head">
+          <div>
+            <h3 class="notif-title">{{ n.title }}</h3>
+            <div class="notif-date">{{ n.created_at|date:"d/m/Y H:i" }}</div>
+          </div>
+
+          <div>
+            {% if n.is_read %}
+              <span class="notif-badge notif-badge-read">Lida</span>
+            {% else %}
+              <span class="notif-badge notif-badge-unread">Não lida</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="notif-message">{{ n.message }}</div>
+
+        {% if not n.is_read %}
+          <a href="{% url 'notification_mark_read' n.pk %}" class="notif-btn notif-btn-primary">
+            Marcar como lida
+          </a>
+        {% endif %}
+      </div>
+    {% empty %}
+      <div class="notif-card">
+        <div class="notif-empty">
+          Nenhuma notificação encontrada.
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

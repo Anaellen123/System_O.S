@@ -438,16 +438,6 @@
     </div>
   </div>
 
-  {% if messages %}
-    <div class="messages-box">
-      {% for message in messages %}
-        <div class="msg-item {% if message.tags == 'success' %}success{% else %}error{% endif %}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-
   <div class="settings-grid">
 
     <div class="settings-card">

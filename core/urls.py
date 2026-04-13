@@ -74,4 +74,10 @@ urlpatterns = [
 
     # ===== IMPRESSÕES =====
     path("os/<int:pk>/imprimir/", views.os_print, name="os_print"),
+
+    # ==== Notifications =====
+    path("notificacoes/", views.notifications_list, name="notifications_list"),
+    path("notificacoes/criar/", views.notifications_create, name="notifications_create"),
+    path("notificacoes/<int:pk>/ler/", views.notification_mark_read, name="notification_mark_read"),
+    path("notificacoes/marcar-todas/", views.notifications_mark_all_read, name="notifications_mark_all_read"),
 ]

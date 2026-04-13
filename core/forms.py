@@ -4,7 +4,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group
 from django.utils import timezone
 
-from .models import ServiceRequest, Team, ServiceType
+from .models import ServiceRequest, Team, ServiceType, Notification
 
 User = get_user_model()
 
@@ -113,15 +113,36 @@ class ServiceRequestUpdateForm(forms.ModelForm):
             "status", "assigned_to", "team",
         ]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "notes": forms.Textarea(attrs={"rows": 3}),
+            "description": forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
+            "notes": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
+            "status": forms.Select(attrs={"class": "form-control"}),
+            "assigned_to": forms.Select(attrs={"class": "form-control"}),
+            "team": forms.Select(attrs={"class": "form-control"}),
+            "phone": forms.TextInput(attrs={"class": "form-control"}),
+            "cep": forms.TextInput(attrs={"class": "form-control"}),
+            "street": forms.TextInput(attrs={"class": "form-control"}),
+            "number": forms.TextInput(attrs={"class": "form-control"}),
+            "neighborhood": forms.TextInput(attrs={"class": "form-control"}),
+            "city": forms.TextInput(attrs={"class": "form-control"}),
         }
+
+    def clean_prazo_dias(self):
+        prazo = self.cleaned_data.get("prazo_dias")
+
+        if prazo is None:
+            return None
+
+        if prazo < 0:
+            raise forms.ValidationError("O prazo não pode ser negativo.")
+
+        return prazo
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         service_types = ServiceType.objects.filter(is_active=True).order_by("name")
         self.fields["service_type"].widget = forms.Select(
+            attrs={"class": "form-control"},
             choices=[("", "Selecione...")] + [
                 (item.name, item.name) for item in service_types
             ]
@@ -315,3 +336,50 @@ class ServiceTypeForm(forms.ModelForm):
                 "class": "form-check-input",
             }),
         }
+
+
+class NotificationCreateForm(forms.ModelForm):
+    users = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(is_active=True).order_by("first_name", "username", "email"),
+        required=False,
+        label="Usuários",
+        widget=forms.SelectMultiple(attrs={
+            "class": "form-control tomselect",
+            "placeholder": "Selecione os usuários",
+        }),
+    )
+
+    target_groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.all().order_by("name"),
+        required=False,
+        label="Grupos",
+        widget=forms.SelectMultiple(attrs={
+            "class": "form-control tomselect",
+            "placeholder": "Selecione os grupos",
+        }),
+    )
+
+    class Meta:
+        model = Notification
+        fields = ["title", "message", "users", "target_groups"]
+        widgets = {
+            "title": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Digite o título da notificação",
+            }),
+            "message": forms.Textarea(attrs={
+                "class": "form-control",
+                "rows": 5,
+                "placeholder": "Digite a mensagem da notificação",
+            }),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        users = cleaned.get("users")
+        groups = cleaned.get("target_groups")
+
+        if not users and not groups:
+            raise forms.ValidationError("Selecione ao menos um usuário ou um grupo.")
+
+        return cleaned
