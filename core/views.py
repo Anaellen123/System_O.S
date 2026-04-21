@@ -2399,3 +2399,35 @@ def notifications_create(request):
     return render(request, "notifications/notifications_create.html", {
         "form": form,
     })
+
+@login_required(login_url="login_admin")
+def api_notifications_dropdown(request):
+    unread_subquery = NotificationRead.objects.filter(
+        notification=OuterRef("pk"),
+        user=request.user
+    )
+
+    notifications = (
+        Notification.objects
+        .filter(
+            Q(users=request.user) |
+            Q(target_groups__in=request.user.groups.all())
+        )
+        .select_related("service_request", "service_request__team")
+        .annotate(is_read=Exists(unread_subquery))
+        .distinct()
+        .order_by("-created_at")[:8]
+    )
+
+    data = []
+    for n in notifications:
+        data.append({
+            "id": n.id,
+            "title": n.title or "Notificação",
+            "message": n.message or "",
+            "created_at": n.created_at.strftime("%d/%m/%Y %H:%M") if n.created_at else "",
+            "is_read": bool(n.is_read),
+            "read_url": reverse("notification_mark_read", args=[n.pk]),
+        })
+
+    return JsonResponse({"notifications": data})

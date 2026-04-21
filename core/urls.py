@@ -80,4 +80,6 @@ urlpatterns = [
     path("notificacoes/criar/", views.notifications_create, name="notifications_create"),
     path("notificacoes/<int:pk>/ler/", views.notification_mark_read, name="notification_mark_read"),
     path("notificacoes/marcar-todas/", views.notifications_mark_all_read, name="notifications_mark_all_read"),
+    path("api/notificacoes/dropdown/", views.api_notifications_dropdown, name="api_notifications_dropdown"),
+    
 ]

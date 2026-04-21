@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="{% static 'css/os_edit.css' %}">
   <link rel="stylesheet" href="{% static 'css/style-users-list.css' %}">
   <link rel="stylesheet" href="{% static 'css/os_nova.css' %}">
+
 </head>
 <body>
 
@@ -20,10 +21,10 @@
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <aside class="sidebar">
-    <div class="brand">
-      <img class="logo-light" src="{% static 'img/logo-prefeitura-removebg.png' %}">
-      <img class="logo-dark" src="{% static 'img/login-modo-black.png' %}">
-    </div>
+   <a href="{% url 'dashboard' %}" class="brand">
+    <img class="logo-light" src="{% static 'img/logo-prefeitura-removebg.png' %}">
+    <img class="logo-dark" src="{% static 'img/login-modo-black.png' %}">
+  </a>
 
     {% if perms.core.manage_os %}
     <a class="btn-create" href="{% url 'os_create' %}">
@@ -41,7 +42,6 @@
       </a>
       {% endif %}
 
-      <!-- REQUISITANTE -->
       {% for g in request.user.groups.all %}
         {% if g.name|lower == 'requisitante' %}
         <a class="menu-item {% if request.resolver_match.url_name == 'dashboard_requisitante' %}active{% endif %}"
@@ -52,13 +52,11 @@
         {% endif %}
       {% endfor %}
 
-      <!-- OS -->
       {% if perms.core.tab_os %}
       <div class="menu-accordion
         {% if request.resolver_match.url_name in 'os_list os_list_status os_create os_detail' %}
           is-open
         {% endif %}">
-        
         <button class="menu-item menu-toggle">
           <span class="menu-left">
             <i class="bi bi-clipboard-check"></i>
@@ -80,13 +78,11 @@
       </div>
       {% endif %}
 
-      <!-- USUÁRIOS -->
       {% if perms.core.tab_users %}
       <div class="menu-accordion
         {% if request.resolver_match.url_name in 'users_list user_role_update user_create' %}
           is-open
         {% endif %}">
-        
         <button class="menu-item menu-toggle">
           <span class="menu-left">
             <i class="bi bi-person-badge"></i>
@@ -104,13 +100,11 @@
       </div>
       {% endif %}
 
-      <!-- EQUIPE -->
       {% if perms.core.tab_team %}
       <div class="menu-accordion
         {% if request.resolver_match.url_name in 'team_list team_create' %}
           is-open
         {% endif %}">
-        
         <button class="menu-item menu-toggle">
           <span class="menu-left">
             <i class="bi bi-people"></i>
@@ -128,7 +122,6 @@
       </div>
       {% endif %}
 
-      <!-- MINHAS OS (INTERNO) -->
       {% for g in request.user.groups.all %}
         {% if g.name|lower == 'interno' %}
         <a class="menu-item {% if request.resolver_match.url_name == 'team_my' %}active{% endif %}"
@@ -139,7 +132,6 @@
         {% endif %}
       {% endfor %}
 
-      <!-- SERVIÇOS -->
       {% if perms.core.tab_requests %}
       <a class="menu-item {% if request.resolver_match.url_name == 'service_type_dashboard' %}active{% endif %}"
          href="{% url 'service_type_dashboard' %}">
@@ -148,12 +140,10 @@
       </a>
       {% endif %}
 
-      <!-- 🔔 NOTIFICAÇÕES -->
       <a class="menu-item {% if request.resolver_match.url_name == 'notifications_list' %}active{% endif %}"
          href="{% url 'notifications_list' %}">
         <i class="bi bi-bell"></i>
         <span>Notificações</span>
-
         {% if notifications_unread_count > 0 %}
         <span class="badge bg-danger">{{ notifications_unread_count }}</span>
         {% endif %}
@@ -166,7 +156,6 @@
       </a>
       {% endif %}
 
-      <!-- RELATÓRIOS -->
       {% if perms.core.tab_reports %}
       <div class="menu-accordion">
         <button class="menu-item menu-toggle">
@@ -187,7 +176,7 @@
 
       <div class="menu-divider"></div>
 
-      <button class="menu-item menu-theme" id="themeToggle">
+      <button class="menu-item menu-theme" id="themeToggle" type="button">
         <span class="menu-left">
           <i class="bi bi-sun"></i>
           <span id="themeText">Tema: Claro</span>
@@ -203,7 +192,6 @@
         <i class="bi bi-question-circle"></i>
         <span>Ajuda</span>
       </a>
-
     </nav>
 
     <div class="sidebar-bottom">
@@ -219,18 +207,37 @@
 
   <section class="content">
     <header class="topbar">
-      <button class="btn-menu" id="btnMenu">
+      <button class="btn-menu" id="btnMenu" type="button">
         <i class="bi bi-list"></i>
       </button>
 
       <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
 
-      <a class="notif" href="{% url 'notifications_list' %}">
-        <i class="bi bi-bell"></i>
-        {% if notifications_unread_count > 0 %}
-          <span style="color:red;">{{ notifications_unread_count }}</span>
-        {% endif %}
-      </a>
+      <div class="topbar-notif">
+        <button class="topbar-notif-toggle" id="notifToggle" type="button" aria-label="Abrir notificações">
+          <i class="bi bi-bell"></i>
+          {% if notifications_unread_count > 0 %}
+            <span class="topbar-notif-count" id="notifBadge">{{ notifications_unread_count }}</span>
+          {% else %}
+            <span class="topbar-notif-count" id="notifBadge" style="display:none;">0</span>
+          {% endif %}
+        </button>
+
+        <div class="topbar-notif-dropdown" id="notifDropdown">
+          <div class="topbar-notif-header">
+            <strong>Notificações</strong>
+            <a href="{% url 'notifications_list' %}">Ver todas</a>
+          </div>
+
+          <div class="topbar-notif-items" id="notifList">
+            <div class="topbar-notif-loading">Carregando notificações...</div>
+          </div>
+
+          <div class="topbar-notif-footer">
+            <a href="{% url 'notifications_list' %}">Ir para a central de notificações</a>
+          </div>
+        </div>
+      </div>
     </header>
 
     <div class="page">
@@ -244,6 +251,133 @@
 <script src="{% static 'js/dashboard.js' %}"></script>
 <script src="{% static 'js/theme.js' %}"></script>
 <script src="{% static 'js/os_nova_integracoes.js' %}"></script>
+
+<script>
+(function () {
+  const notifToggle = document.getElementById('notifToggle');
+  const notifDropdown = document.getElementById('notifDropdown');
+  const notifList = document.getElementById('notifList');
+  const notifBadge = document.getElementById('notifBadge');
+  let notificationsLoaded = false;
+
+  if (!notifToggle || !notifDropdown || !notifList) return;
+
+  function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function updateBadge(count) {
+    if (!notifBadge) return;
+
+    if (count > 0) {
+      notifBadge.style.display = 'inline-flex';
+      notifBadge.textContent = count > 99 ? '99+' : count;
+    } else {
+      notifBadge.style.display = 'none';
+      notifBadge.textContent = '0';
+    }
+  }
+
+  function renderNotifications(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+      notifList.innerHTML = '<div class="topbar-notif-empty">Nenhuma notificação encontrada.</div>';
+      updateBadge(0);
+      return;
+    }
+
+    let unreadCount = 0;
+
+    notifList.innerHTML = items.map(function (item) {
+      const title = escapeHtml(item.title || 'Notificação');
+      const message = escapeHtml(item.message || '');
+      const createdAt = escapeHtml(item.created_at || '');
+      const readUrl = item.read_url || "{% url 'notifications_list' %}";
+      const isRead = Boolean(item.is_read);
+
+      if (!isRead) unreadCount++;
+
+      return `
+        <a href="${readUrl}" class="topbar-notif-item ${isRead ? '' : 'unread'}">
+          <div class="topbar-notif-item-title">${title}</div>
+          ${message ? `<div class="topbar-notif-item-text">${message}</div>` : ''}
+          ${createdAt ? `<div class="topbar-notif-item-date">${createdAt}</div>` : ''}
+        </a>
+      `;
+    }).join('');
+
+    updateBadge(unreadCount);
+  }
+
+  function showError() {
+    notifList.innerHTML = '<div class="topbar-notif-error">Não foi possível carregar as notificações.</div>';
+  }
+
+  function loadNotifications() {
+    notifList.innerHTML = '<div class="topbar-notif-loading">Carregando notificações...</div>';
+
+    fetch("{% url 'api_notifications_dropdown' %}", {
+      method: 'GET',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      credentials: 'same-origin'
+    })
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error('Erro ao buscar notificações');
+      }
+      return response.json();
+    })
+    .then(function (data) {
+      if (Array.isArray(data)) {
+        renderNotifications(data);
+      } else if (Array.isArray(data.notifications)) {
+        renderNotifications(data.notifications);
+      } else {
+        showError();
+      }
+    })
+    .catch(function () {
+      showError();
+    });
+  }
+
+  notifToggle.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const isActive = notifDropdown.classList.contains('active');
+
+    if (isActive) {
+      notifDropdown.classList.remove('active');
+    } else {
+      notifDropdown.classList.add('active');
+      if (!notificationsLoaded) {
+        loadNotifications();
+        notificationsLoaded = true;
+      }
+    }
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.topbar-notif')) {
+      notifDropdown.classList.remove('active');
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      notifDropdown.classList.remove('active');
+    }
+  });
+})();
+</script>
 
 </body>
 </html>

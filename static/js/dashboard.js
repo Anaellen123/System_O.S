@@ -32,15 +32,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
   /* =========================
-   *  BOTÕES DE PERÍODO
+   *  BOTÕES DE PERÍODO + DADOS DO GRÁFICO
    * ========================= */
+  let requestsChartInstance = null;
+  let requestsChartLabels = [];
+  let requestsChartData = [];
+
   const periodButtons = document.querySelectorAll(".segmented .seg");
+
+  function updateRequestsChartByPeriod(days) {
+    if (!requestsChartInstance) return;
+
+    const period = parseInt(days, 10);
+    const filteredLabels = requestsChartLabels.slice(-period);
+    const filteredData = requestsChartData.slice(-period);
+
+    requestsChartInstance.data.labels = filteredLabels;
+    requestsChartInstance.data.datasets[0].data = filteredData;
+    requestsChartInstance.update();
+  }
+
   periodButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       periodButtons.forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
-      const days = btn.dataset.period || btn.textContent.trim();
-      console.log("Período selecionado:", days);
+
+      const days = btn.dataset.period || "90";
+      updateRequestsChartByPeriod(days);
     });
   });
 
@@ -83,14 +101,17 @@ document.addEventListener("DOMContentLoaded", function () {
         data = [0, 1, 0, 2, 1, 3, 2];
       }
 
-      new Chart(canvas, {
+      requestsChartLabels = labels;
+      requestsChartData = data;
+
+      requestsChartInstance = new Chart(canvas, {
         type: "line",
         data: {
-          labels,
+          labels: labels.slice(-90),
           datasets: [
             {
               label: "Solicitações",
-              data,
+              data: data.slice(-90),
               fill: true,
               tension: 0.35,
               pointRadius: 3,
@@ -294,4 +315,3 @@ document.addEventListener("DOMContentLoaded", () => {
     if (window.innerWidth >= 821) closeSidebar();
   });
 });
-
