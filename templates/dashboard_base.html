@@ -167,8 +167,13 @@
         </button>
 
         <ul class="submenu">
-          <li><a class="submenu-item" href="#">Por Período</a></li>
-          <li><a class="submenu-item" href="#">Por Serviço</a></li>
+          <li><a class="submenu-item {% if request.resolver_match.url_name == 'report_os_search' %}active{% endif %}" href="{% url 'report_os_search' %}">Relatório de O.S</a></li>
+          <li>
+            <a class="submenu-item {% if request.resolver_match.url_name == 'report_services_search' %}active{% endif %}"
+              href="{% url 'report_services_search' %}">
+              Por Serviço
+            </a>
+          </li>
           <li><a class="submenu-item" href="#">Por Equipe</a></li>
         </ul>
       </div>

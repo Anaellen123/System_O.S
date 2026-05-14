@@ -29,6 +29,10 @@ from datetime import datetime, time, timedelta
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.decorators.http import require_http_methods, require_GET
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from weasyprint import HTML
+from django.db.models import Count, Avg, Q
 
 from .forms import (
     ServiceRequestForm,
@@ -2431,3 +2435,313 @@ def api_notifications_dropdown(request):
         })
 
     return JsonResponse({"notifications": data})
+
+
+@login_required(login_url="login_admin")
+def report_os_search(request):
+    if _is_requisitante(request.user):
+        messages.error(request, "Você não tem permissão para acessar relatórios.")
+        return redirect("dashboard_requisitante")
+
+    return render(request, "reports/os_report_search.html")
+
+
+@login_required(login_url="login_admin")
+def report_os_download(request):
+    if _is_requisitante(request.user):
+        messages.error(request, "Você não tem permissão para gerar relatórios.")
+        return redirect("dashboard_requisitante")
+
+    os_number = (request.GET.get("os_number") or "").strip().upper()
+
+    if not os_number:
+        messages.error(request, "Informe o número da O.S.")
+        return redirect("report_os_search")
+
+    os_obj = (
+        ServiceRequest.objects
+        .select_related("team", "assigned_to", "created_by")
+        .prefetch_related("attachments")
+        .filter(os_number=os_number)
+        .first()
+    )
+
+    if not os_obj:
+        messages.error(request, "O.S não encontrada.")
+        return redirect("report_os_search")
+
+    anexos = list(os_obj.attachments.all())
+
+    data_abertura = timezone.localtime(os_obj.created_at) if os_obj.created_at else None
+
+    data_conclusao = None
+    if os_obj.status == "DONE" and os_obj.status_updated_at:
+        data_conclusao = timezone.localtime(os_obj.status_updated_at)
+
+    prazo_estimado = None
+    if os_obj.due_at:
+        prazo_estimado = timezone.localtime(os_obj.due_at)
+
+    dias_para_conclusao = "—"
+    periodo_execucao = "—"
+
+    if data_abertura and data_conclusao:
+        total_dias = (data_conclusao.date() - data_abertura.date()).days
+        total_dias = max(total_dias, 0)
+        dias_para_conclusao = f"{total_dias} dia" if total_dias == 1 else f"{total_dias} dias"
+        periodo_execucao = f"{total_dias} dia" if total_dias == 1 else f"{total_dias} dias"
+        periodo_execucao += f" (de {data_abertura.strftime('%d/%m/%Y')} a {data_conclusao.strftime('%d/%m/%Y')})"
+    elif os_obj.finished_in_days is not None:
+        total_dias = int(os_obj.finished_in_days)
+        dias_para_conclusao = f"{total_dias} dia" if total_dias == 1 else f"{total_dias} dias"
+        periodo_execucao = dias_para_conclusao
+
+    endereco = ", ".join([
+        p for p in [
+            os_obj.street,
+            f"nº {os_obj.number}" if os_obj.number else "",
+            os_obj.neighborhood,
+            f"{os_obj.city}/SE" if os_obj.city else "",
+        ] if p
+    ]) or "—"
+
+    responsavel = "—"
+    if os_obj.assigned_to:
+        responsavel = os_obj.assigned_to.get_full_name() or os_obj.assigned_to.username
+    elif os_obj.team and os_obj.team.responsible:
+        responsavel = os_obj.team.responsible.get_full_name() or os_obj.team.responsible.username
+
+    equipe_responsavel = os_obj.team.name if os_obj.team else "—"
+
+    foto_antes = anexos[0] if len(anexos) > 0 else None
+    foto_depois = anexos[1] if len(anexos) > 1 else None
+
+    contexto = {
+        "os": os_obj,
+        "data_emissao": timezone.localtime(),
+        "data_abertura": data_abertura,
+        "data_conclusao": data_conclusao,
+        "dias_para_conclusao": dias_para_conclusao,
+        "prazo_estimado": prazo_estimado,
+        "periodo_execucao": periodo_execucao,
+        "endereco": endereco,
+        "bairro": os_obj.neighborhood or "—",
+        "equipe_responsavel": equipe_responsavel,
+        "responsavel": responsavel,
+        "descricao_problema": os_obj.description or "—",
+        "solucao_aplicada": os_obj.solution_taken or os_obj.notes or "—",
+        "observacoes": os_obj.notes or "Serviço executado sem intercorrências.",
+        "foto_antes": foto_antes,
+        "foto_depois": foto_depois,
+        "solicitante_nome": os_obj.full_name or "—",
+        "solicitante_documento": os_obj.document or "—",
+        "solicitante_telefone": os_obj.phone or "—",
+    }
+
+    html_string = render_to_string(
+        "reports/os_report_pdf.html",
+        contexto,
+        request=request
+    )
+
+    pdf_file = HTML(
+        string=html_string,
+        base_url=request.build_absolute_uri("/")
+    ).write_pdf()
+
+    response = HttpResponse(pdf_file, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="relatorio_{os_obj.os_number}.pdf"'
+    return response
+
+@login_required(login_url="login_admin")
+def report_services_search(request):
+    return render(request, "reports/report_services_search.html")
+
+
+@login_required(login_url="login_admin")
+def report_services_download(request, periodo):
+    hoje = timezone.localdate()
+
+    if str(periodo) == "7":
+        data_inicio = hoje - timedelta(days=7)
+        titulo_periodo = "ÚLTIMOS 7 DIAS"
+        nome_arquivo = "relatorio_servicos_7_dias.pdf"
+    elif str(periodo) == "30":
+        data_inicio = hoje - timedelta(days=30)
+        titulo_periodo = "ÚLTIMOS 30 DIAS"
+        nome_arquivo = "relatorio_servicos_30_dias.pdf"
+    else:
+        data_inicio = hoje - timedelta(days=90)
+        titulo_periodo = "ÚLTIMOS 3 MESES"
+        nome_arquivo = "relatorio_servicos_3_meses.pdf"
+
+    qs = ServiceRequest.objects.filter(
+        created_at__date__gte=data_inicio,
+        created_at__date__lte=hoje
+    )
+
+    total_os = qs.count()
+    concluidas = qs.filter(status="DONE").count()
+
+    media_tempo = (
+        qs.filter(finished_in_days__isnull=False)
+        .aggregate(media=Avg("finished_in_days"))
+        .get("media") or 0
+    )
+    media_tempo = round(media_tempo, 1)
+
+    ranking_qs = (
+        qs.exclude(service_type__isnull=True)
+        .exclude(service_type__exact="")
+        .values("service_type")
+        .annotate(total=Count("id"))
+        .order_by("-total", "service_type")
+    )
+
+    ranking = []
+
+    for item in ranking_qs:
+        percentual = round((item["total"] / total_os) * 100, 1) if total_os else 0
+
+        ranking.append({
+            "service_type": item["service_type"],
+            "total": item["total"],
+            "percentual": percentual,
+            "prazo_estimado": 5,
+            "media_real": media_tempo,
+            "percentual_prazo": 0,
+        })
+
+    top3 = ranking[:3]
+
+    maiores_datas = []
+
+    datas_qs = (
+        qs.annotate(data=TruncDate("created_at"))
+        .values("data")
+        .annotate(total=Count("id"))
+        .order_by("-total", "data")[:5]
+    )
+
+    for item in datas_qs:
+        servico_top = (
+            qs.filter(created_at__date=item["data"])
+            .exclude(service_type__isnull=True)
+            .exclude(service_type__exact="")
+            .values("service_type")
+            .annotate(total=Count("id"))
+            .order_by("-total", "service_type")
+            .first()
+        )
+
+        maiores_datas.append({
+            "data": item["data"],
+            "total": item["total"],
+            "servico": servico_top["service_type"] if servico_top else "—",
+        })
+
+    percentual_prazo = 0
+    melhores_servicos = []
+    piores_servicos = []
+
+    servicos_done = (
+        qs.filter(status="DONE")
+        .exclude(service_type__isnull=True)
+        .exclude(service_type__exact="")
+        .values("service_type")
+        .annotate(
+            total=Count("id"),
+            media=Avg("finished_in_days")
+        )
+        .order_by("service_type")
+    )
+
+    for item in servicos_done:
+        nome_servico = item["service_type"]
+
+        total_servico = qs.filter(
+            status="DONE",
+            service_type=nome_servico
+        ).count()
+
+        resolvidos_prazo = qs.filter(
+            status="DONE",
+            service_type=nome_servico,
+            finished_in_days__isnull=False
+        ).count()
+
+        percentual_servico = round(
+            (resolvidos_prazo / total_servico) * 100, 1
+        ) if total_servico else 0
+
+        dados_servico = {
+            "service_type": nome_servico,
+            "percentual_prazo": percentual_servico,
+            "media_real": round(item["media"] or 0, 1),
+        }
+
+        melhores_servicos.append(dados_servico)
+        piores_servicos.append(dados_servico)
+
+    melhores_servicos = sorted(
+        melhores_servicos,
+        key=lambda x: x["percentual_prazo"],
+        reverse=True
+    )[:5]
+
+    piores_servicos = sorted(
+        piores_servicos,
+        key=lambda x: x["percentual_prazo"]
+    )[:5]
+
+    if melhores_servicos:
+        percentual_prazo = melhores_servicos[0]["percentual_prazo"]
+
+    # ======================================
+    # DADOS DO USUÁRIO LOGADO
+    # ======================================
+    profile = UserProfile.objects.filter(user=request.user).first()
+
+    nome_usuario = (
+        f"{request.user.first_name} {request.user.last_name}".strip()
+        or request.user.get_full_name()
+        or request.user.username
+    )
+
+    cargo_usuario = getattr(profile, "cargo_funcao", "") if profile else ""
+    setor_usuario = getattr(profile, "setor", "") if profile else ""
+
+    context = {
+        "periodo": titulo_periodo,
+        "data_emissao": timezone.localtime(),
+        "total_os": total_os,
+        "concluidas": concluidas,
+        "media_tempo": media_tempo,
+        "percentual_prazo": percentual_prazo,
+
+        "ranking": ranking,
+        "top3": top3,
+        "maiores_datas": maiores_datas,
+        "melhores_servicos": melhores_servicos,
+        "piores_servicos": piores_servicos,
+
+        # CAMPOS DO PDF
+        "usuario_nome": nome_usuario,
+        "usuario_cargo": cargo_usuario,
+        "usuario_setor": setor_usuario,
+    }
+
+    html_string = render_to_string(
+        "reports/report_services_pdf.html",
+        context,
+        request=request
+    )
+
+    pdf = HTML(
+        string=html_string,
+        base_url=request.build_absolute_uri("/")
+    ).write_pdf()
+
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{nome_arquivo}"'
+    return response

@@ -1,0 +1,460 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 10mm 12mm 10mm;
+    }
+
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      color:#111;
+      font-size:12px;
+      margin:0;
+      padding:0;
+    }
+
+    .report{
+      border:1px solid #777;
+      padding:10px;
+    }
+
+    .header{
+      width:100%;
+      border-bottom:1px solid #777;
+      padding-bottom:10px;
+      margin-bottom:8px;
+    }
+
+    .header-table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    .logo-cell{
+      width:170px;
+      vertical-align:top;
+      text-align:center;
+    }
+
+    .logo-cell img{
+      max-width:120px;
+      max-height:120px;
+    }
+
+    .title-cell{
+      vertical-align:top;
+      padding-left:10px;
+    }
+
+    .org-title{
+      font-size:20px;
+      font-weight:700;
+      margin:0 0 8px;
+      text-transform:uppercase;
+    }
+
+    .org-sub{
+      font-size:12px;
+      margin:0 0 10px;
+      text-transform:uppercase;
+    }
+
+    .main-title{
+      font-size:18px;
+      font-weight:700;
+      text-align:right;
+      margin:14px 0 10px;
+      text-transform:uppercase;
+    }
+
+    .meta-table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:4px;
+    }
+
+    .meta-table td{
+      font-size:12px;
+      padding:4px 0;
+    }
+
+    .meta-right{
+      text-align:right;
+    }
+
+    .section{
+      border:1px solid #888;
+      margin-top:10px;
+    }
+
+    .section-title{
+      background:#f2f2f2;
+      border-bottom:1px solid #888;
+      text-align:center;
+      font-weight:700;
+      font-size:12px;
+      padding:5px 6px;
+      text-transform:uppercase;
+    }
+
+    .grid-table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    .grid-table td{
+      border-right:1px solid #c5c5c5;
+      border-bottom:1px solid #c5c5c5;
+      padding:10px 12px;
+      vertical-align:top;
+    }
+
+    .grid-table tr:last-child td{
+      border-bottom:none;
+    }
+
+    .grid-table td:last-child{
+      border-right:none;
+    }
+
+    .label{
+      font-size:11px;
+      margin-bottom:6px;
+    }
+
+    .value{
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .status-box{
+      display:inline-block;
+      background:#000;
+      color:#fff;
+      padding:4px 12px;
+      border-radius:2px;
+      font-weight:700;
+      text-transform:uppercase;
+    }
+
+    .text-block{
+      padding:10px 12px;
+      border-top:1px solid #c5c5c5;
+    }
+
+    .text-block:first-of-type{
+      border-top:none;
+    }
+
+    .photo-table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    .photo-table td{
+      width:50%;
+      border-right:1px solid #c5c5c5;
+      padding:10px;
+      vertical-align:top;
+      text-align:center;
+    }
+
+    .photo-table td:last-child{
+      border-right:none;
+    }
+
+    .photo-title{
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
+    .photo-box{
+      width:100%;
+      height:180px;
+      border:1px solid #999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      background:#fafafa;
+    }
+
+    .photo-box img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .photo-empty{
+      color:#666;
+      font-size:11px;
+    }
+
+    .signature-table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    .signature-table td{
+      width:50%;
+      border-right:1px solid #c5c5c5;
+      padding:10px 16px 12px;
+      vertical-align:top;
+    }
+
+    .signature-table td:last-child{
+      border-right:none;
+    }
+
+    .signature-title{
+      text-align:center;
+      font-weight:700;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+
+    .line{
+      border-bottom:1px solid #777;
+      min-height:18px;
+      margin-bottom:8px;
+      padding-bottom:2px;
+    }
+
+    .footer{
+      margin-top:8px;
+      padding-top:6px;
+      border-top:1px solid #777;
+      font-size:11px;
+    }
+
+    .footer-table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    .footer-right{
+      text-align:right;
+    }
+  </style>
+</head>
+<body>
+  <div class="report">
+    <div class="header">
+      <table class="header-table">
+        <tr>
+          <td class="logo-cell">
+            <img src="{% static 'img/logo-prefeitura-removebg.png' %}" alt="Logo Prefeitura">
+          </td>
+          <td class="title-cell">
+            <div class="org-title">PREFEITURA MUNICIPAL DE SOCORRO</div>
+            <div class="org-sub">SECRETARIA DE INFRAESTRUTURA E SERVIÇOS URBANOS</div>
+            <div class="main-title">RELATÓRIO DE ORDEM DE SERVIÇO</div>
+
+            <table class="meta-table">
+              <tr>
+                <td>Data de Emissão: {{ data_emissao|date:"d/m/Y H:i" }}</td>
+                <td class="meta-right">Página: 1 de 1</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">DADOS DA ORDEM DE SERVIÇO</div>
+      <table class="grid-table">
+        <tr>
+          <td>
+            <div class="label">Nº da O.S.:</div>
+            <div class="value">{{ os.os_number }}</div>
+          </td>
+          <td>
+            <div class="label">Data de Abertura:</div>
+            <div class="value">{{ data_abertura|date:"d/m/Y"|default:"—" }}</div>
+          </td>
+          <td>
+            <div class="label">Status:</div>
+            <div class="value">
+              <span class="status-box">{{ os.get_status_display }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="label">Data de Conclusão:</div>
+            <div class="value">
+              {% if data_conclusao %}{{ data_conclusao|date:"d/m/Y" }}{% else %}—{% endif %}
+            </div>
+          </td>
+          <td>
+            <div class="label">Dias para Conclusão:</div>
+            <div class="value">{{ dias_para_conclusao }}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">DADOS DO SOLICITANTE</div>
+      <table class="grid-table">
+        <tr>
+          <td>
+            <div class="label">Nome:</div>
+            <div class="value">{{ solicitante_nome }}</div>
+          </td>
+          <td>
+            <div class="label">CPF:</div>
+            <div class="value">{{ solicitante_documento }}</div>
+          </td>
+          <td>
+            <div class="label">Telefone:</div>
+            <div class="value">{{ solicitante_telefone }}</div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <div class="label">Endereço:</div>
+            <div class="value">{{ endereco }}</div>
+          </td>
+          <td>
+            <div class="label">Bairro:</div>
+            <div class="value">{{ bairro }}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">DADOS DO SERVIÇO</div>
+      <table class="grid-table">
+        <tr>
+          <td>
+            <div class="label">Tipo de Serviço:</div>
+            <div class="value">{{ os.service_type|default:"—" }}</div>
+          </td>
+          <td>
+            <div class="label">Equipe Responsável:</div>
+            <div class="value">{{ equipe_responsavel }}</div>
+          </td>
+          <td>
+            <div class="label">Responsável:</div>
+            <div class="value">{{ responsavel }}</div>
+          </td>
+          <td>
+            <div class="label">Prazo Estimado:</div>
+            <div class="value">
+              {% if prazo_estimado %}{{ prazo_estimado|date:"d/m/Y" }}{% else %}—{% endif %}
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <div class="text-block">
+        <div class="label">Descrição do Problema:</div>
+        <div class="value">{{ descricao_problema }}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">SOLUÇÃO APLICADA</div>
+
+      <div class="text-block">
+        <div class="label">Descrição de como foi realizado o serviço:</div>
+        <div class="value">{{ solucao_aplicada }}</div>
+      </div>
+
+      <table class="grid-table">
+        <tr>
+          <td>
+            <div class="label">Tempo de Execução:</div>
+            <div class="value">{{ periodo_execucao }}</div>
+          </td>
+          <td>
+            <div class="value" style="padding-top:16px;">Serviço concluído em {{ dias_para_conclusao }}.</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">REGISTRO FOTOGRÁFICO</div>
+      <table class="photo-table">
+        <tr>
+          <td>
+            <div class="photo-title">Foto 1 - Antes do Serviço</div>
+            <div class="photo-box">
+              {% if foto_antes and foto_antes.file %}
+                <img src="{{ foto_antes.file.url }}" alt="Foto antes">
+              {% else %}
+                <div class="photo-empty">Sem imagem</div>
+              {% endif %}
+            </div>
+          </td>
+          <td>
+            <div class="photo-title">Foto 2 - Após o Serviço</div>
+            <div class="photo-box">
+              {% if foto_depois and foto_depois.file %}
+                <img src="{{ foto_depois.file.url }}" alt="Foto depois">
+              {% else %}
+                <div class="photo-empty">Sem imagem</div>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">OBSERVAÇÕES</div>
+      <div class="text-block">
+        <div class="value" style="font-weight:400;">{{ observacoes }}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <table class="signature-table">
+        <tr>
+          <td>
+            <div class="signature-title">RESPONSÁVEL PELO SERVIÇO</div>
+            <div>Nome:</div>
+            <div class="line">{{ responsavel }}</div>
+            <div>Assinatura:</div>
+            <div class="line"></div>
+            <div>Data:</div>
+            <div class="line">
+              {% if data_conclusao %}{{ data_conclusao|date:"d/m/Y" }}{% else %}—{% endif %}
+            </div>
+          </td>
+          <td>
+            <div class="signature-title">SOLICITANTE</div>
+            <div>Nome:</div>
+            <div class="line">{{ solicitante_nome }}</div>
+            <div>Assinatura:</div>
+            <div class="line"></div>
+            <div>Data:</div>
+            <div class="line">
+              {% if data_conclusao %}{{ data_conclusao|date:"d/m/Y" }}{% else %}—{% endif %}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="footer">
+      <table class="footer-table">
+        <tr>
+          <td>Praça da Matriz, 49 - Centro - Socorro/SE - CEP: 49160-000</td>
+          <td class="footer-right">www.socorro.se.gov.br</td>
+        </tr>
+        <tr>
+          <td>CNPJ: 13.111.000/0001-32 | Telefone: (79) 3275-1000</td>
+          <td></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

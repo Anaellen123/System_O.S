@@ -1,0 +1,109 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Relatório de O.S{% endblock %}
+{% block page_title %}Gerador de Relatório de O.S{% endblock %}
+
+{% block content %}
+<style>
+  .report-search-wrap{
+    max-width: 700px;
+  }
+
+  .report-search-card{
+    background: #fff;
+    border: 1px solid #dbe2ea;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
+  }
+
+  .report-search-title{
+    margin: 0 0 8px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .report-search-sub{
+    margin: 0 0 18px;
+    color: #64748b;
+    font-size: 14px;
+  }
+
+  .report-label{
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+
+  .report-input{
+    width: 100%;
+    height: 48px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 0 14px;
+    font-size: 15px;
+    outline: none;
+  }
+
+  .report-input:focus{
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+
+  .report-actions{
+    margin-top: 18px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .report-btn{
+    min-height: 46px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .report-btn:hover{
+    background: #1d4ed8;
+  }
+</style>
+
+<div class="report-search-wrap">
+  <div class="report-search-card">
+    <h2 class="report-search-title">Relatório de Ordem de Serviço</h2>
+    <p class="report-search-sub">
+      Digite o número da O.S para gerar o relatório na hora e baixar o PDF.
+    </p>
+
+    <form method="get" action="{% url 'report_os_download' %}">
+      <label class="report-label" for="os_number">Número da O.S</label>
+      <input
+        type="text"
+        name="os_number"
+        id="os_number"
+        class="report-input"
+        placeholder="Ex: OS-20260401-0001"
+        required
+      >
+
+      <div class="report-actions">
+        <button type="submit" class="report-btn">Gerar relatório</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

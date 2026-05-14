@@ -1,0 +1,316 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Relatório por Serviço{% endblock %}
+{% block page_title %}Gerador de Relatório por Serviço{% endblock %}
+
+{% block content %}
+<style>
+:root{
+  --primary:#2563eb;       /* azul do seu sistema */
+  --primary-dark:#1d4ed8;
+  --primary-soft:#eff6ff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#dbeafe;
+}
+
+.report-page{
+  width:100%;
+}
+
+.report-wrap{
+  max-width:920px;
+  margin:0 auto;
+}
+
+.report-card{
+  position:relative;
+  overflow:hidden;
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:24px;
+  padding:34px;
+  box-shadow:0 18px 40px rgba(37,99,235,.10);
+}
+
+.report-card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:6px;
+  background:linear-gradient(90deg,var(--primary),#60a5fa,var(--primary-dark));
+}
+
+.report-header{
+  display:flex;
+  gap:18px;
+  align-items:flex-start;
+  margin-bottom:28px;
+}
+
+.report-icon{
+  width:58px;
+  height:58px;
+  border-radius:18px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  flex-shrink:0;
+  box-shadow:0 12px 24px rgba(37,99,235,.22);
+}
+
+.report-title{
+  margin:0 0 8px;
+  font-size:28px;
+  font-weight:900;
+  color:var(--text);
+}
+
+.report-sub{
+  margin:0;
+  color:var(--muted);
+  line-height:1.6;
+  font-size:15px;
+}
+
+.report-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+}
+
+.report-btn{
+  text-decoration:none;
+  color:var(--text);
+  min-height:140px;
+  padding:22px;
+  border-radius:20px;
+  background:#ffffff;
+  border:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:16px;
+  transition:.25s ease;
+}
+
+.report-btn:hover{
+  transform:translateY(-4px);
+  border-color:var(--primary);
+  background:var(--primary);
+  color:#fff;
+  box-shadow:0 18px 35px rgba(37,99,235,.22);
+}
+
+.report-btn-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.report-btn-icon{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  background:var(--primary-soft);
+  color:var(--primary);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  transition:.25s ease;
+}
+
+.report-btn:hover .report-btn-icon{
+  background:#ffffff;
+  color:var(--primary);
+}
+
+.report-btn-days{
+  font-size:13px;
+  font-weight:800;
+  color:var(--primary);
+}
+
+.report-btn:hover .report-btn-days{
+  color:#dbeafe;
+}
+
+.report-btn-title{
+  display:block;
+  font-size:20px;
+  font-weight:900;
+  line-height:1.2;
+}
+
+.report-btn-desc{
+  display:block;
+  margin-top:6px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--muted);
+}
+
+.report-btn:hover .report-btn-desc{
+  color:#dbeafe;
+}
+
+.report-footer{
+  margin-top:26px;
+  padding:16px 18px;
+  border-radius:16px;
+  background:var(--primary-soft);
+  border:1px solid var(--border);
+  display:flex;
+  gap:10px;
+  align-items:center;
+  color:#1e40af;
+  font-size:14px;
+}
+
+.report-footer i{
+  font-size:18px;
+}
+
+/* dark mode */
+body.dark .report-card,
+[data-theme="dark"] .report-card{
+  background:#0f172a;
+  border-color:#1e293b;
+}
+
+body.dark .report-title,
+[data-theme="dark"] .report-title{
+  color:#f8fafc;
+}
+
+body.dark .report-sub,
+[data-theme="dark"] .report-sub{
+  color:#cbd5e1;
+}
+
+body.dark .report-btn,
+[data-theme="dark"] .report-btn{
+  background:#111827;
+  border-color:#1e3a8a;
+  color:#f8fafc;
+}
+
+body.dark .report-btn:hover,
+[data-theme="dark"] .report-btn:hover{
+  background:var(--primary);
+}
+
+body.dark .report-btn-desc,
+[data-theme="dark"] .report-btn-desc{
+  color:#cbd5e1;
+}
+
+body.dark .report-footer,
+[data-theme="dark"] .report-footer{
+  background:#111827;
+  border-color:#1e3a8a;
+  color:#bfdbfe;
+}
+
+/* responsivo */
+@media(max-width:900px){
+  .report-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:600px){
+  .report-card{
+    padding:24px;
+  }
+
+  .report-header{
+    flex-direction:column;
+  }
+
+  .report-title{
+    font-size:24px;
+  }
+}
+</style>
+
+<div class="report-page">
+  <div class="report-wrap">
+
+    <div class="report-card">
+
+      <div class="report-header">
+        <div class="report-icon">
+          <i class="bi bi-file-earmark-bar-graph"></i>
+        </div>
+
+        <div>
+          <h2 class="report-title">Relatório por Serviço</h2>
+          <p class="report-sub">
+            Escolha o período desejado para gerar automaticamente o relatório em PDF.
+          </p>
+        </div>
+      </div>
+
+      <div class="report-grid">
+
+        <a href="{% url 'report_services_download' '7' %}" target="_blank" class="report-btn">
+          <div class="report-btn-top">
+            <div class="report-btn-icon">
+              <i class="bi bi-calendar-week"></i>
+            </div>
+            <span class="report-btn-days">7 dias</span>
+          </div>
+
+          <div>
+            <span class="report-btn-title">Últimos 7 Dias</span>
+            <span class="report-btn-desc">Resumo rápido das movimentações recentes.</span>
+          </div>
+        </a>
+
+        <a href="{% url 'report_services_download' '30' %}" target="_blank" class="report-btn">
+          <div class="report-btn-top">
+            <div class="report-btn-icon">
+              <i class="bi bi-calendar3"></i>
+            </div>
+            <span class="report-btn-days">30 dias</span>
+          </div>
+
+          <div>
+            <span class="report-btn-title">Últimos 30 Dias</span>
+            <span class="report-btn-desc">Análise mensal completa dos serviços.</span>
+          </div>
+        </a>
+
+        <a href="{% url 'report_services_download' '90' %}" target="_blank" class="report-btn">
+          <div class="report-btn-top">
+            <div class="report-btn-icon">
+              <i class="bi bi-calendar-range"></i>
+            </div>
+            <span class="report-btn-days">90 dias</span>
+          </div>
+
+          <div>
+            <span class="report-btn-title">Últimos 3 Meses</span>
+            <span class="report-btn-desc">Comparativo trimestral e tendências.</span>
+          </div>
+        </a>
+
+      </div>
+
+      <div class="report-footer">
+        <i class="bi bi-info-circle"></i>
+        O PDF será aberto em uma nova aba com os dados atualizados.
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}
