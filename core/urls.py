@@ -68,6 +68,7 @@ urlpatterns = [
     path("api/validate-document/", views.api_validate_document, name="api_validate_document"),
     path("api/os-status/<str:os_number>/", views.api_os_status, name="api_os_status"),
     path("api/check-cpf/", views.api_check_cpf_exists, name="api_check_cpf_exists"),
+    path("api/check-cpf-exists/", views.api_check_cpf_exists, name="api_check_cpf_exists"),
 
     # ===== USERS PERMISSIONS =====
     path("usuarios/<int:user_id>/editar/", views.user_role_update, name="user_role_update"),

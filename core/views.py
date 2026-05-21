@@ -453,10 +453,49 @@ def api_check_cpf_exists(request):
     cpf = _only_digits(request.GET.get("cpf", ""))
 
     if len(cpf) != 11:
-        return JsonResponse({"ok": False, "exists": False, "message": "CPF inválido."}, status=400)
+        return JsonResponse({
+            "ok": False,
+            "exists": False,
+            "message": "CPF inválido."
+        }, status=400)
 
-    exists = UserProfile.objects.filter(cpf=cpf).exists()
-    return JsonResponse({"ok": True, "exists": exists})
+    profile = (
+        UserProfile.objects
+        .filter(cpf=cpf)
+        .select_related("user")
+        .first()
+    )
+
+    if not profile:
+        return JsonResponse({
+            "ok": True,
+            "exists": False
+        })
+
+    user = profile.user
+
+    nome = (
+        user.get_full_name()
+        or user.first_name
+        or user.username
+        or ""
+    )
+
+    telefone = getattr(profile, "phone", "") or ""
+
+    return JsonResponse({
+        "ok": True,
+        "exists": True,
+        "user": {
+            "name": nome,
+            "phone": telefone,
+            "cep": profile.cep or "",
+            "street": profile.street or "",
+            "number": profile.number or "",
+            "neighborhood": profile.neighborhood or "",
+            "city": profile.city or "",
+        }
+    })
 
 @require_http_methods(["GET", "POST"])
 def register(request):
@@ -798,6 +837,7 @@ def user_role_update(request, user_id):
         u.first_name = (request.POST.get("first_name") or "").strip()
         u.last_name = (request.POST.get("last_name") or "").strip()
         u.email = (request.POST.get("email") or "").strip()
+        u.username = f"{u.first_name} {u.last_name}".strip() or u.username
 
         u.is_active = bool(request.POST.get("is_active"))
         u.is_staff = bool(request.POST.get("is_staff"))
@@ -805,6 +845,7 @@ def user_role_update(request, user_id):
         u.save()
 
         profile.cpf = _only_digits(request.POST.get("cpf") or "")
+        profile.phone = (request.POST.get("phone") or "").strip()
 
         birth = (request.POST.get("birth_date") or "").strip()
         profile.birth_date = birth or None
@@ -814,10 +855,15 @@ def user_role_update(request, user_id):
         profile.number = (request.POST.get("number") or "").strip()
         profile.neighborhood = (request.POST.get("neighborhood") or "").strip()
         profile.city = (request.POST.get("city") or "").strip()
+
+        profile.cargo_funcao = (request.POST.get("cargo_funcao") or "").strip()
+        profile.setor = (request.POST.get("setor") or "").strip()
+
         profile.save()
 
         group_id = (request.POST.get("group_id") or "").strip()
         u.groups.clear()
+
         if group_id:
             g = Group.objects.filter(id=group_id).first()
             if g:
@@ -1106,8 +1152,28 @@ def os_create(request):
         form = ServiceRequestForm(post_data, request.FILES)
 
         if form.is_valid():
+            document_digits = _only_digits(form.cleaned_data.get("document") or "")
+
+            if len(document_digits) != 11:
+                form.add_error("document", "Digite um CPF válido com 11 dígitos.")
+                messages.error(request, "CPF inválido.")
+                return render(request, "os_nova.html", {"form": form})
+
+            perfil_cpf = UserProfile.objects.filter(cpf=document_digits).select_related("user").first()
+
+            if not perfil_cpf:
+                form.add_error(
+                    "document",
+                    "CPF não encontrado. Para cadastrar uma O.S com este CPF, primeiro cadastre o usuário no menu Usuários > Criar usuário."
+                )
+                messages.error(
+                    request,
+                    "CPF não encontrado. É preciso cadastrar o usuário antes de criar a O.S."
+                )
+                return render(request, "os_nova.html", {"form": form})
+
             obj = form.save(commit=False)
-            obj.created_by = request.user
+            obj.created_by = perfil_cpf.user
 
             if eh_requisitante:
                 obj.full_name = nome_usuario
@@ -1130,8 +1196,9 @@ def os_create(request):
 
             messages.success(request, f"Ordem criada com sucesso: {obj.os_number}")
             return redirect("os_list")
-        else:
-            messages.error(request, "Revise os campos obrigatórios.")
+
+        messages.error(request, "Revise os campos obrigatórios.")
+
     else:
         initial = {}
 
@@ -1360,7 +1427,7 @@ def api_validate_document(request):
         return JsonResponse({
             "ok": False,
             "type": "CPF",
-            "message": "Este CPF já está cadastrado."
+            "message": "CPF válido."
         }, status=400)
 
     return JsonResponse({
@@ -1636,6 +1703,15 @@ def os_status_view(request, pk):
         status_validos = [item[0] for item in ServiceRequest.STATUS_CHOICES]
         if novo_status not in status_validos:
             messages.error(request, "Status inválido.")
+            return redirect("os_status_view", pk=os_obj.pk)
+
+        # ✅ REGRA:
+        # Se a O.S já estiver concluída, somente admin/superuser pode voltar ou alterar o status
+        if os_obj.status == "DONE" and novo_status != "DONE" and not request.user.is_superuser:
+            messages.error(
+                request,
+                "Esta O.S já foi concluída. Apenas o administrador pode alterar o status novamente."
+            )
             return redirect("os_status_view", pk=os_obj.pk)
 
         if novo_status == "DONE":
@@ -2092,6 +2168,8 @@ def user_create(request):
         username = (request.POST.get("username") or "").strip()
         email = (request.POST.get("email") or "").strip().lower()
         cpf = (request.POST.get("cpf") or "").strip()
+        phone = (request.POST.get("phone") or "").strip()
+
         password1 = (request.POST.get("password1") or "").strip()
         password2 = (request.POST.get("password2") or "").strip()
 
@@ -2099,23 +2177,31 @@ def user_create(request):
 
         errors = {}
 
-        # validações
+        # =========================
+        # VALIDAÇÕES
+        # =========================
+
         if not username:
             errors["username"] = "Informe o nome completo."
+
         elif User.objects.filter(username__iexact=username).exists():
             errors["username"] = "Já existe um usuário com este nome."
 
         if not email:
             errors["email"] = "Informe o email."
+
         elif User.objects.filter(email__iexact=email).exists():
             errors["email"] = "Este email já está cadastrado."
 
         if not cpf:
             errors["cpf"] = "Informe o CPF."
+
         elif len(cpf_digits) != 11:
             errors["cpf"] = "CPF deve conter 11 dígitos."
+
         elif not _validate_cpf(cpf_digits):
             errors["cpf"] = "CPF inválido."
+
         elif UserProfile.objects.filter(cpf=cpf_digits).exists():
             errors["cpf"] = "Este CPF já está cadastrado."
 
@@ -2131,20 +2217,33 @@ def user_create(request):
         if password1 and password2 and password1 == password2:
             try:
                 validate_password(password1)
+
             except ValidationError as e:
                 errors["password1"] = " ".join(e.messages)
 
+        # =========================
+        # ERROS
+        # =========================
+
         if errors:
             context["form_errors"] = errors
+
             context["form_data"] = {
                 "username": username,
                 "email": email,
                 "cpf": cpf,
+                "phone": phone,
             }
+
             return render(request, "users/user_create.html", context)
+
+        # =========================
+        # CRIA USUÁRIO
+        # =========================
 
         try:
             with transaction.atomic():
+
                 user = User.objects.create_user(
                     username=username,
                     email=email,
@@ -2154,36 +2253,76 @@ def user_create(request):
 
                 # separa nome
                 partes = username.split(" ", 1)
+
                 user.first_name = partes[0]
                 user.last_name = partes[1] if len(partes) > 1 else ""
 
-                # adiciona ao grupo requisitante (SEM get_or_create)
-                grupo = Group.objects.filter(name__iexact="requisitante").first()
+                # grupo requisitante
+                grupo = Group.objects.filter(
+                    name__iexact="requisitante"
+                ).first()
+
                 if grupo:
                     user.groups.add(grupo)
 
                 user.save()
 
-                # cria perfil
-                profile, _ = UserProfile.objects.get_or_create(user=user)
+                # =========================
+                # PERFIL
+                # =========================
+
+                profile, _ = UserProfile.objects.get_or_create(
+                    user=user
+                )
+
                 profile.cpf = cpf_digits
+
+                # TELEFONE
+                if hasattr(profile, "phone"):
+                    profile.phone = phone
+
+                elif hasattr(profile, "telefone"):
+                    profile.telefone = phone
+
+                elif hasattr(profile, "celular"):
+                    profile.celular = phone
+
+                elif hasattr(profile, "whatsapp"):
+                    profile.whatsapp = phone
+
                 profile.save()
 
-            messages.success(request, "Usuário criado com sucesso!")
+            messages.success(
+                request,
+                "Usuário criado com sucesso!"
+            )
+
             return redirect("users_list")
 
         except Exception as e:
+
             context["form_errors"] = {
                 "general": f"Erro ao criar usuário: {e}"
             }
+
             context["form_data"] = {
                 "username": username,
                 "email": email,
                 "cpf": cpf,
+                "phone": phone,
             }
-            return render(request, "users/user_create.html", context)
 
-    return render(request, "users/user_create.html", context)
+            return render(
+                request,
+                "users/user_create.html",
+                context
+            )
+
+    return render(
+        request,
+        "users/user_create.html",
+        context
+    )
 
 @require_GET
 def api_check_email_exists(request):

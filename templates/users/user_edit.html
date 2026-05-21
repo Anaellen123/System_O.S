@@ -373,6 +373,17 @@ body.dark .edituser-check,
         </div>
 
         <div>
+          <label class="edituser-lbl">Telefone</label>
+          <input
+            class="edituser-inp"
+            type="text"
+            name="phone"
+            value="{{ profile.phone|default:'' }}"
+            placeholder="(00) 00000-0000"
+          >
+        </div>
+        
+        <div>
           <label class="edituser-lbl">CPF</label>
           <input class="edituser-inp" type="text" name="cpf" value="{{ profile.cpf|default:'' }}" placeholder="000.000.000-00">
         </div>

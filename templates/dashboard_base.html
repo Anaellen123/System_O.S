@@ -28,7 +28,7 @@
 
     {% if perms.core.manage_os %}
     <a class="btn-create" href="{% url 'os_create' %}">
-      <i class="bi bi-plus-lg"></i> Criar Ordem de Serviço
+      <i class="bi bi-plus-lg"></i> Criar Demanda
     </a>
     {% endif %}
 
@@ -60,7 +60,7 @@
         <button class="menu-item menu-toggle">
           <span class="menu-left">
             <i class="bi bi-clipboard-check"></i>
-            <span>Ordem de Serviço</span>
+            <span>Status Demandas</span>
           </span>
           <i class="bi bi-chevron-right menu-caret"></i>
         </button>
@@ -136,7 +136,7 @@
       <a class="menu-item {% if request.resolver_match.url_name == 'service_type_dashboard' %}active{% endif %}"
          href="{% url 'service_type_dashboard' %}">
         <i class="bi bi-tools"></i>
-        <span>Serviços</span>
+        <span>Demandas</span>
       </a>
       {% endif %}
 
@@ -167,14 +167,14 @@
         </button>
 
         <ul class="submenu">
-          <li><a class="submenu-item {% if request.resolver_match.url_name == 'report_os_search' %}active{% endif %}" href="{% url 'report_os_search' %}">Relatório de O.S</a></li>
+          <li><a class="submenu-item {% if request.resolver_match.url_name == 'report_os_search' %}active{% endif %}" href="{% url 'report_os_search' %}">Relatório de demandas</a></li>
           <li>
             <a class="submenu-item {% if request.resolver_match.url_name == 'report_services_search' %}active{% endif %}"
               href="{% url 'report_services_search' %}">
-              Por Serviço
+              Geral
             </a>
           </li>
-          <li><a class="submenu-item" href="#">Por Equipe</a></li>
+          
         </ul>
       </div>
       {% endif %}

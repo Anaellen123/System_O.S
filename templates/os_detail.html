@@ -450,7 +450,18 @@
 
           <div>
             <label>Status</label>
-            {{ form.status }}
+
+            <input 
+              type="text" 
+              value="{{ os.get_status_display }}" 
+              disabled
+            >
+
+            <input 
+              type="hidden" 
+              name="status" 
+              value="{{ os.status }}"
+            >
           </div>
 
           <div>
@@ -499,7 +510,7 @@
           </div>
 
           <div>
-            <label>Tipo de serviço</label>
+            <label>Demanda</label>
             {{ form.service_type }}
           </div>
 

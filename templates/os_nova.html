@@ -38,11 +38,29 @@
             maxlength="14"
             {% if request.user.is_authenticated and form.document.value %}readonly{% endif %}
           >
+
           {% if form.document.errors %}
             <div class="field-error">
               {{ form.document.errors.0 }}
             </div>
           {% endif %}
+
+          <div id="cpf-warning" class="cpf-warning" style="display:none;">
+            <div class="cpf-warning-icon">⚠️</div>
+
+            <div class="cpf-warning-content">
+              <strong>CPF não encontrado no sistema.</strong>
+
+              <p>
+                Para cadastrar esta Ordem de Serviço, primeiro é necessário
+                cadastrar o usuário correspondente a este CPF.
+              </p>
+
+              <span>
+                Vá até o menu <b>Usuários</b> → <b>Criar usuário</b>.
+              </span>
+            </div>
+          </div>
         </div>
 
         <div class="field">
@@ -117,6 +135,7 @@
               </div>
             {% endif %}
           </div>
+
           <div class="field">
             <label>Complemento</label>
             <input type="text" name="complemento" placeholder="Apto, Sala..." />
@@ -143,6 +162,7 @@
               </div>
             {% endif %}
           </div>
+
           <div class="field">
             <label>UF</label>
             <input type="text" name="uf" placeholder="UF" maxlength="2" />
@@ -250,6 +270,72 @@
     color: #475569;
     cursor: not-allowed;
     opacity: 1;
+  }
+
+  .cpf-warning{
+    margin-top: 12px;
+    padding: 14px;
+    border-radius: 14px;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .cpf-warning-icon{
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #fb923c;
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .cpf-warning-content strong{
+    display: block;
+    color: #9a3412;
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+
+  .cpf-warning-content p{
+    margin: 0 0 4px;
+    color: #7c2d12;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .cpf-warning-content span{
+    color: #c2410c;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .cpf-not-found{
+    border-color: #fb923c !important;
+    box-shadow: 0 0 0 4px rgba(251, 146, 60, .18) !important;
+  }
+
+  body.theme-dark .cpf-warning{
+    background: rgba(154, 52, 18, .22);
+    border-color: rgba(251, 146, 60, .45);
+  }
+
+  body.theme-dark .cpf-warning-content strong{
+    color: #fed7aa;
+  }
+
+  body.theme-dark .cpf-warning-content p,
+  body.theme-dark .cpf-warning-content span{
+    color: #fdba74;
   }
 </style>
 

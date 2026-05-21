@@ -132,14 +132,15 @@
     }
 
     .status-box{
-      display:inline-block;
-      background:#000;
-      color:#fff;
-      padding:4px 12px;
-      border-radius:2px;
-      font-weight:700;
-      text-transform:uppercase;
-    }
+  display:inline-block;
+  color:#fff;
+  padding:4px 12px;
+  border-radius:4px;
+  font-weight:700;
+  text-transform:uppercase;
+   background:#16a34a;
+  }
+
 
     .text-block{
       padding:10px 12px;
@@ -250,9 +251,9 @@
             <img src="{% static 'img/logo-prefeitura-removebg.png' %}" alt="Logo Prefeitura">
           </td>
           <td class="title-cell">
-            <div class="org-title">PREFEITURA MUNICIPAL DE SOCORRO</div>
-            <div class="org-sub">SECRETARIA DE INFRAESTRUTURA E SERVIÇOS URBANOS</div>
-            <div class="main-title">RELATÓRIO DE ORDEM DE SERVIÇO</div>
+            <div class="org-title">PREFEITURA MUNICIPAL DE NOSSA SENHORA DO SOCORRO</div>
+            <div class="org-sub">SECRETARIA MUNICIPAL E SERVIÇOS URBANOS</div>
+            <div class="main-title">RELATÓRIO DE DEMANDA</div>
 
             <table class="meta-table">
               <tr>
@@ -266,11 +267,11 @@
     </div>
 
     <div class="section">
-      <div class="section-title">DADOS DA ORDEM DE SERVIÇO</div>
+      <div class="section-title">DADOS DA DEMANDA</div>
       <table class="grid-table">
         <tr>
           <td>
-            <div class="label">Nº da O.S.:</div>
+            <div class="label">Nº da demanda.:</div>
             <div class="value">{{ os.os_number }}</div>
           </td>
           <td>
@@ -328,11 +329,11 @@
     </div>
 
     <div class="section">
-      <div class="section-title">DADOS DO SERVIÇO</div>
+      <div class="section-title">DADOS DA DEMANDA</div>
       <table class="grid-table">
         <tr>
           <td>
-            <div class="label">Tipo de Serviço:</div>
+            <div class="label">Tipo de demanda:</div>
             <div class="value">{{ os.service_type|default:"—" }}</div>
           </td>
           <td>
@@ -362,7 +363,7 @@
       <div class="section-title">SOLUÇÃO APLICADA</div>
 
       <div class="text-block">
-        <div class="label">Descrição de como foi realizado o serviço:</div>
+        <div class="label">Descrição de como foi realizado a demanda:</div>
         <div class="value">{{ solucao_aplicada }}</div>
       </div>
 
@@ -373,7 +374,7 @@
             <div class="value">{{ periodo_execucao }}</div>
           </td>
           <td>
-            <div class="value" style="padding-top:16px;">Serviço concluído em {{ dias_para_conclusao }}.</div>
+            <div class="value" style="padding-top:16px;">Demanda concluída em {{ dias_para_conclusao }}.</div>
           </td>
         </tr>
       </table>
@@ -384,7 +385,7 @@
       <table class="photo-table">
         <tr>
           <td>
-            <div class="photo-title">Foto 1 - Antes do Serviço</div>
+            <div class="photo-title">Foto 1 - Antes da demanda</div>
             <div class="photo-box">
               {% if foto_antes and foto_antes.file %}
                 <img src="{{ foto_antes.file.url }}" alt="Foto antes">
@@ -394,7 +395,7 @@
             </div>
           </td>
           <td>
-            <div class="photo-title">Foto 2 - Após o Serviço</div>
+            <div class="photo-title">Foto 2 - Após a demanda</div>
             <div class="photo-box">
               {% if foto_depois and foto_depois.file %}
                 <img src="{{ foto_depois.file.url }}" alt="Foto depois">
@@ -418,7 +419,7 @@
       <table class="signature-table">
         <tr>
           <td>
-            <div class="signature-title">RESPONSÁVEL PELO SERVIÇO</div>
+            <div class="signature-title">RESPONSÁVEL PELA DEMANDA</div>
             <div>Nome:</div>
             <div class="line">{{ responsavel }}</div>
             <div>Assinatura:</div>

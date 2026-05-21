@@ -306,7 +306,23 @@
     .save-btn{
       width:100%;
     }
+
   }
+
+.status-select:disabled,
+.status-input:disabled,
+.status-textarea:disabled,
+.save-btn:disabled{
+  background:#d3d3d3 !important;
+  border-color:#8e8e8e !important;
+  color:#475569 !important;
+  cursor:not-allowed;
+  box-shadow:none !important;
+}
+
+.save-btn:disabled{
+  opacity:.75;
+}
 </style>
 
 <div class="os-view-wrap">
@@ -314,7 +330,7 @@
 
     <div class="os-head">
       <div>
-        <h2 class="os-title">Ordem de Serviço {{ os.os_number }}</h2>
+        <h2 class="os-title">Demanda {{ os.os_number }}</h2>
         <div class="os-sub">
           Visualização da O.S com alteração permitida somente para o status.
         </div>
@@ -351,17 +367,32 @@
 
           <div class="status-topbar">
             <div>
-              <select name="status" id="statusSelect" class="status-select">
+              <select
+                name="status"
+                id="statusSelect"
+                class="status-select"
+                {% if os.status == "DONE" and not request.user.is_superuser %}disabled{% endif %}
+              >
                 {% for value, label in status_choices %}
                   <option value="{{ value }}" {% if os.status == value %}selected{% endif %}>
                     {{ label }}
                   </option>
                 {% endfor %}
               </select>
+
+              {% if os.status == "DONE" and not request.user.is_superuser %}
+                <input type="hidden" name="status" value="{{ os.status }}">
+              {% endif %}
             </div>
 
             <div>
-              <button type="submit" class="save-btn">Salvar status</button>
+              <button
+                type="submit"
+                class="save-btn"
+                {% if os.status == "DONE" and not request.user.is_superuser %}disabled{% endif %}
+              >
+                Salvar status
+              </button>
             </div>
           </div>
 
@@ -377,6 +408,7 @@
                     id="solutionTaken"
                     class="status-textarea"
                     placeholder="Descreva a solução tomada..."
+                    {% if os.status == "DONE" and not request.user.is_superuser %}disabled{% endif %}
                   >{{ os.solution_taken|default_if_none:"" }}</textarea>
                 </div>
 
@@ -390,6 +422,7 @@
                     class="status-input"
                     value="{{ os.finished_in_days|default_if_none:'' }}"
                     placeholder="Ex: 3"
+                    {% if os.status == "DONE" and not request.user.is_superuser %}disabled{% endif %}
                   >
                 </div>
               </div>
@@ -406,7 +439,7 @@
       </div>
 
       <div class="field">
-        <span class="field-label">Tipo de serviço</span>
+        <span class="field-label">Tipo de demanda</span>
         <div class="readonly-box">
           <div class="field-value">{{ os.service_type|default:"—" }}</div>
         </div>

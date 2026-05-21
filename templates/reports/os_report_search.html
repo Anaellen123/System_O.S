@@ -1,7 +1,7 @@
 {% extends "dashboard_base.html" %}
 
-{% block title %}Relatório de O.S{% endblock %}
-{% block page_title %}Gerador de Relatório de O.S{% endblock %}
+{% block title %}Relatório de Demanda{% endblock %}
+{% block page_title %}Gerador de Relatório de Demanda{% endblock %}
 
 {% block content %}
 <style>
@@ -84,13 +84,13 @@
 
 <div class="report-search-wrap">
   <div class="report-search-card">
-    <h2 class="report-search-title">Relatório de Ordem de Serviço</h2>
+    <h2 class="report-search-title">Relatório de Ordem de Demanda</h2>
     <p class="report-search-sub">
-      Digite o número da O.S para gerar o relatório na hora e baixar o PDF.
+      Digite o número da demanda para gerar o relatório na hora e baixar o PDF.
     </p>
 
     <form method="get" action="{% url 'report_os_download' %}">
-      <label class="report-label" for="os_number">Número da O.S</label>
+      <label class="report-label" for="os_number">Número da Demanda</label>
       <input
         type="text"
         name="os_number"
