@@ -1,316 +1,894 @@
 {% extends "dashboard_base.html" %}
 
-{% block title %}Relatório por Serviço{% endblock %}
-{% block page_title %}Gerador de Relatório por Serviço{% endblock %}
+{% block title %}..{% endblock %}
+{% block page_title %}Gerador de Relatório{% endblock %}
 
 {% block content %}
 <style>
 :root{
-  --primary:#2563eb;       /* azul do seu sistema */
-  --primary-dark:#1d4ed8;
-  --primary-soft:#eff6ff;
-  --text:#0f172a;
-  --muted:#64748b;
-  --border:#dbeafe;
+  --rp-primary:#2563eb;
+  --rp-primary-dark:#1d4ed8;
+  --rp-primary-soft:#eff6ff;
+  --rp-primary-soft-2:#dbeafe;
+  --rp-text:#0f172a;
+  --rp-muted:#64748b;
+  --rp-border:#e2e8f0;
+  --rp-border-blue:#bfdbfe;
+  --rp-card:#ffffff;
+  --rp-bg:#f8fafc;
+  --rp-success:#16a34a;
+  --rp-shadow:0 18px 45px rgba(15,23,42,.08);
 }
 
 .report-page{
   width:100%;
+  padding-bottom:22px;
 }
 
 .report-wrap{
-  max-width:920px;
+  width:100%;
+  max-width:1180px;
   margin:0 auto;
 }
 
 .report-card{
   position:relative;
   overflow:hidden;
-  background:#ffffff;
-  border:1px solid #e5e7eb;
-  border-radius:24px;
-  padding:34px;
-  box-shadow:0 18px 40px rgba(37,99,235,.10);
+  background:
+    radial-gradient(circle at top right, rgba(37,99,235,.10), transparent 30%),
+    var(--rp-card);
+  border:1px solid var(--rp-border);
+  border-radius:28px;
+  padding:0;
+  box-shadow:var(--rp-shadow);
 }
 
-.report-card::before{
+.report-hero{
+  position:relative;
+  padding:34px 34px 28px;
+  border-bottom:1px solid var(--rp-border);
+  background:linear-gradient(135deg,#ffffff 0%,#eff6ff 58%,#dbeafe 100%);
+}
+
+.report-hero::before{
   content:"";
   position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:6px;
-  background:linear-gradient(90deg,var(--primary),#60a5fa,var(--primary-dark));
+  inset:0;
+  background:
+    linear-gradient(90deg,rgba(37,99,235,.12) 1px,transparent 1px),
+    linear-gradient(180deg,rgba(37,99,235,.10) 1px,transparent 1px);
+  background-size:34px 34px;
+  opacity:.28;
+  pointer-events:none;
 }
 
 .report-header{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:22px;
+}
+
+.report-heading{
   display:flex;
   gap:18px;
   align-items:flex-start;
-  margin-bottom:28px;
 }
 
 .report-icon{
-  width:58px;
-  height:58px;
-  border-radius:18px;
-  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  width:62px;
+  height:62px;
+  border-radius:22px;
+  background:linear-gradient(135deg,var(--rp-primary),#60a5fa);
   color:#fff;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:28px;
+  font-size:30px;
   flex-shrink:0;
-  box-shadow:0 12px 24px rgba(37,99,235,.22);
+  box-shadow:0 16px 28px rgba(37,99,235,.24);
 }
 
 .report-title{
   margin:0 0 8px;
-  font-size:28px;
+  font-size:30px;
+  line-height:1.15;
   font-weight:900;
-  color:var(--text);
+  color:var(--rp-text);
+  letter-spacing:-.03em;
 }
 
 .report-sub{
+  max-width:690px;
   margin:0;
-  color:var(--muted);
-  line-height:1.6;
+  color:var(--rp-muted);
+  line-height:1.65;
   font-size:15px;
 }
 
-.report-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:18px;
+.report-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+  padding:10px 14px;
+  border-radius:999px;
+  color:#1e40af;
+  background:#fff;
+  border:1px solid var(--rp-border-blue);
+  font-size:13px;
+  font-weight:900;
+  box-shadow:0 10px 22px rgba(37,99,235,.10);
 }
 
-.report-btn{
-  text-decoration:none;
-  color:var(--text);
-  min-height:140px;
+.report-body{
+  padding:30px 34px 34px;
+}
+
+.period-card{
+  margin-bottom:26px;
   padding:22px;
-  border-radius:20px;
-  background:#ffffff;
-  border:1px solid var(--border);
+  border:1px solid var(--rp-border-blue);
+  border-radius:24px;
+  background:linear-gradient(135deg,#eff6ff,#ffffff);
+}
+
+.section-title{
+  margin:0 0 16px;
+  font-size:18px;
+  font-weight:900;
+  color:var(--rp-text);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.section-title i{
+  color:var(--rp-primary);
+  font-size:20px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+
+.form-group{
   display:flex;
   flex-direction:column;
-  justify-content:space-between;
-  gap:16px;
-  transition:.25s ease;
+  gap:8px;
 }
 
-.report-btn:hover{
-  transform:translateY(-4px);
-  border-color:var(--primary);
-  background:var(--primary);
-  color:#fff;
-  box-shadow:0 18px 35px rgba(37,99,235,.22);
+.form-group label{
+  font-size:13px;
+  font-weight:900;
+  color:var(--rp-text);
 }
 
-.report-btn-top{
+.form-control{
+  width:100%;
+  border:1px solid #cbd5e1;
+  border-radius:16px;
+  padding:13px 14px;
+  font-size:15px;
+  outline:none;
+  background:#fff;
+  color:var(--rp-text);
+  transition:.18s ease;
+}
+
+.form-control:hover{
+  border-color:#93c5fd;
+}
+
+.form-control:focus{
+  border-color:var(--rp-primary);
+  box-shadow:0 0 0 4px rgba(37,99,235,.13);
+}
+
+.options-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+  align-items:start;
+}
+
+.option-box{
+  position:relative;
+  border:1px solid var(--rp-border);
+  border-radius:24px;
+  background:#fff;
+  overflow:hidden;
+  box-shadow:0 10px 25px rgba(15,23,42,.045);
+  transition:.2s ease;
+}
+
+.option-box:hover{
+  transform:translateY(-2px);
+  box-shadow:0 16px 34px rgba(15,23,42,.075);
+  border-color:#bfdbfe;
+}
+
+.option-box::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:5px;
+  height:100%;
+  background:linear-gradient(180deg,var(--rp-primary),#93c5fd);
+  opacity:.95;
+}
+
+.option-box-header{
+  padding:18px 20px 16px 22px;
+  background:linear-gradient(90deg,#f8fafc,#eff6ff);
+  border-bottom:1px solid var(--rp-border);
+}
+
+.option-box-title{
+  margin:0;
+  font-size:16px;
+  font-weight:900;
+  color:var(--rp-text);
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  gap:10px;
 }
 
-.report-btn-icon{
-  width:44px;
-  height:44px;
-  border-radius:14px;
-  background:var(--primary-soft);
-  color:var(--primary);
-  display:flex;
+.option-box-title i{
+  width:34px;
+  height:34px;
+  border-radius:12px;
+  background:#dbeafe;
+  color:var(--rp-primary);
+  display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-size:22px;
-  transition:.25s ease;
-}
-
-.report-btn:hover .report-btn-icon{
-  background:#ffffff;
-  color:var(--primary);
-}
-
-.report-btn-days{
-  font-size:13px;
-  font-weight:800;
-  color:var(--primary);
-}
-
-.report-btn:hover .report-btn-days{
-  color:#dbeafe;
-}
-
-.report-btn-title{
-  display:block;
-  font-size:20px;
-  font-weight:900;
-  line-height:1.2;
-}
-
-.report-btn-desc{
-  display:block;
-  margin-top:6px;
-  font-size:13px;
-  line-height:1.5;
-  color:var(--muted);
-}
-
-.report-btn:hover .report-btn-desc{
-  color:#dbeafe;
-}
-
-.report-footer{
-  margin-top:26px;
-  padding:16px 18px;
-  border-radius:16px;
-  background:var(--primary-soft);
-  border:1px solid var(--border);
-  display:flex;
-  gap:10px;
-  align-items:center;
-  color:#1e40af;
-  font-size:14px;
-}
-
-.report-footer i{
   font-size:18px;
 }
 
-/* dark mode */
+.option-box-body{
+  padding:18px 20px 20px 22px;
+}
+
+.check-list{
+  display:flex;
+  flex-direction:column;
+  gap:11px;
+}
+
+.check-item{
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  padding:12px 13px;
+  border:1px solid var(--rp-border);
+  border-radius:16px;
+  background:#fff;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.check-item:hover{
+  border-color:#93c5fd;
+  background:#f8fbff;
+  transform:translateX(2px);
+}
+
+.check-item input{
+  width:17px;
+  height:17px;
+  margin-top:2px;
+  accent-color:var(--rp-primary);
+  flex-shrink:0;
+}
+
+.check-item:has(input:checked){
+  border-color:#93c5fd;
+  background:linear-gradient(135deg,#eff6ff,#ffffff);
+}
+
+.check-item:has(input:checked)::after{
+  content:"Selecionado";
+  position:absolute;
+  top:10px;
+  right:10px;
+  font-size:10px;
+  font-weight:900;
+  color:#1d4ed8;
+  background:#dbeafe;
+  border:1px solid #bfdbfe;
+  border-radius:999px;
+  padding:3px 7px;
+}
+
+.check-text{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  padding-right:82px;
+}
+
+.check-title{
+  font-size:14px;
+  font-weight:850;
+  color:var(--rp-text);
+  line-height:1.35;
+}
+
+.check-desc{
+  font-size:12px;
+  color:var(--rp-muted);
+  line-height:1.45;
+}
+
+.sub-options{
+  margin-top:15px;
+  padding:15px;
+  border:1px dashed #93c5fd;
+  border-radius:18px;
+  background:#f8fbff;
+}
+
+.sub-options-title{
+  margin:0 0 12px;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  font-weight:900;
+  color:#1e40af;
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.sub-options-title::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:var(--rp-primary);
+}
+
+.actions{
+  position:sticky;
+  bottom:14px;
+  z-index:5;
+  margin-top:30px;
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  flex-wrap:wrap;
+  padding:14px;
+  border:1px solid var(--rp-border);
+  border-radius:22px;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(12px);
+  box-shadow:0 16px 35px rgba(15,23,42,.10);
+}
+
+.btn-clean,
+.btn-report{
+  border:none;
+  border-radius:16px;
+  padding:14px 22px;
+  font-weight:900;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:.2s ease;
+  min-height:48px;
+}
+
+.btn-clean{
+  background:#fff;
+  color:var(--rp-primary);
+  border:1px solid var(--rp-border-blue);
+}
+
+.btn-report{
+  background:linear-gradient(135deg,var(--rp-primary),var(--rp-primary-dark));
+  color:#fff;
+  box-shadow:0 14px 26px rgba(37,99,235,.24);
+}
+
+.btn-report:hover,
+.btn-clean:hover{
+  transform:translateY(-2px);
+}
+
+.btn-clean:hover{
+  background:var(--rp-primary-soft);
+}
+
+.btn-report:hover{
+  filter:brightness(.98);
+}
+
+/* DARK MODE */
 body.dark .report-card,
 [data-theme="dark"] .report-card{
-  background:#0f172a;
+  background:
+    radial-gradient(circle at top right, rgba(37,99,235,.18), transparent 30%),
+    #0f172a;
+  border-color:#1e293b;
+}
+
+body.dark .report-hero,
+[data-theme="dark"] .report-hero{
+  background:linear-gradient(135deg,#0f172a 0%,#111827 62%,#172554 100%);
   border-color:#1e293b;
 }
 
 body.dark .report-title,
-[data-theme="dark"] .report-title{
+body.dark .section-title,
+body.dark .option-box-title,
+body.dark .check-title,
+body.dark .form-group label,
+[data-theme="dark"] .report-title,
+[data-theme="dark"] .section-title,
+[data-theme="dark"] .option-box-title,
+[data-theme="dark"] .check-title,
+[data-theme="dark"] .form-group label{
   color:#f8fafc;
 }
 
 body.dark .report-sub,
-[data-theme="dark"] .report-sub{
+body.dark .check-desc,
+[data-theme="dark"] .report-sub,
+[data-theme="dark"] .check-desc{
   color:#cbd5e1;
 }
 
-body.dark .report-btn,
-[data-theme="dark"] .report-btn{
+body.dark .report-badge,
+[data-theme="dark"] .report-badge{
+  background:#111827;
+  color:#bfdbfe;
+  border-color:#1e3a8a;
+}
+
+body.dark .period-card,
+body.dark .sub-options,
+[data-theme="dark"] .period-card,
+[data-theme="dark"] .sub-options{
   background:#111827;
   border-color:#1e3a8a;
+}
+
+body.dark .option-box,
+[data-theme="dark"] .option-box{
+  background:#0f172a;
+  border-color:#1e293b;
+}
+
+body.dark .option-box-header,
+[data-theme="dark"] .option-box-header{
+  background:linear-gradient(90deg,#111827,#172554);
+  border-color:#1e293b;
+}
+
+body.dark .check-item,
+[data-theme="dark"] .check-item{
+  background:#111827;
+  border-color:#334155;
+}
+
+body.dark .check-item:hover,
+[data-theme="dark"] .check-item:hover{
+  background:#0b1220;
+  border-color:#2563eb;
+}
+
+body.dark .check-item:has(input:checked),
+[data-theme="dark"] .check-item:has(input:checked){
+  background:linear-gradient(135deg,#172554,#111827);
+  border-color:#2563eb;
+}
+
+body.dark .form-control,
+[data-theme="dark"] .form-control{
+  background:#111827;
+  border-color:#334155;
   color:#f8fafc;
 }
 
-body.dark .report-btn:hover,
-[data-theme="dark"] .report-btn:hover{
-  background:var(--primary);
+body.dark .actions,
+[data-theme="dark"] .actions{
+  background:rgba(15,23,42,.88);
+  border-color:#1e293b;
 }
 
-body.dark .report-btn-desc,
-[data-theme="dark"] .report-btn-desc{
-  color:#cbd5e1;
-}
-
-body.dark .report-footer,
-[data-theme="dark"] .report-footer{
+body.dark .btn-clean,
+[data-theme="dark"] .btn-clean{
   background:#111827;
-  border-color:#1e3a8a;
   color:#bfdbfe;
+  border-color:#1e3a8a;
 }
 
-/* responsivo */
-@media(max-width:900px){
-  .report-grid{
+@media(max-width:980px){
+  .report-header{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .options-grid,
+  .form-grid{
     grid-template-columns:1fr;
   }
 }
 
-@media(max-width:600px){
-  .report-card{
-    padding:24px;
+@media(max-width:620px){
+  .report-hero{
+    padding:26px 20px 22px;
   }
 
-  .report-header{
+  .report-body{
+    padding:22px 18px 24px;
+  }
+
+  .report-heading{
     flex-direction:column;
   }
 
   .report-title{
-    font-size:24px;
+    font-size:25px;
+  }
+
+  .period-card{
+    padding:18px;
+  }
+
+  .option-box-header,
+  .option-box-body{
+    padding-left:18px;
+    padding-right:16px;
+  }
+
+  .check-text{
+    padding-right:0;
+  }
+
+  .check-item:has(input:checked)::after{
+    display:none;
+  }
+
+  .actions{
+    position:static;
+    padding:0;
+    border:none;
+    box-shadow:none;
+    background:transparent;
+  }
+
+  .btn-clean,
+  .btn-report{
+    width:100%;
   }
 }
 </style>
 
 <div class="report-page">
   <div class="report-wrap">
-
     <div class="report-card">
 
-      <div class="report-header">
-        <div class="report-icon">
-          <i class="bi bi-file-earmark-bar-graph"></i>
-        </div>
+      <div class="report-hero">
+        <div class="report-header">
+          <div class="report-heading">
+            <div class="report-icon">
+              <i class="bi bi-file-earmark-bar-graph"></i>
+            </div>
 
-        <div>
-          <h2 class="report-title">Relatório por Serviço</h2>
-          <p class="report-sub">
-            Escolha o período desejado para gerar automaticamente o relatório em PDF.
-          </p>
+            <div>
+              <h2 class="report-title">Relatório Geral</h2>
+              <p class="report-sub">
+                Selecione o período e marque exatamente quais informações deseja gerar no relatório em PDF.
+              </p>
+            </div>
+          </div>
+
+          <div class="report-badge">
+            <i class="bi bi-check2-square"></i>
+            Seleção personalizada
+          </div>
         </div>
       </div>
 
-      <div class="report-grid">
+      <div class="report-body">
+        <form method="get" action="{% url 'report_services_download' %}" target="_blank">
 
-        <a href="{% url 'report_services_download' '7' %}" target="_blank" class="report-btn">
-          <div class="report-btn-top">
-            <div class="report-btn-icon">
-              <i class="bi bi-calendar-week"></i>
-            </div>
-            <span class="report-btn-days">7 dias</span>
-          </div>
-
-          <div>
-            <span class="report-btn-title">Últimos 7 Dias</span>
-            <span class="report-btn-desc">Resumo rápido das movimentações recentes.</span>
-          </div>
-        </a>
-
-        <a href="{% url 'report_services_download' '30' %}" target="_blank" class="report-btn">
-          <div class="report-btn-top">
-            <div class="report-btn-icon">
-              <i class="bi bi-calendar3"></i>
-            </div>
-            <span class="report-btn-days">30 dias</span>
-          </div>
-
-          <div>
-            <span class="report-btn-title">Últimos 30 Dias</span>
-            <span class="report-btn-desc">Análise mensal completa dos serviços.</span>
-          </div>
-        </a>
-
-        <a href="{% url 'report_services_download' '90' %}" target="_blank" class="report-btn">
-          <div class="report-btn-top">
-            <div class="report-btn-icon">
+          <div class="period-card">
+            <h3 class="section-title">
               <i class="bi bi-calendar-range"></i>
+              Período do relatório
+            </h3>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="data_inicio">Data inicial</label>
+                <input type="date" id="data_inicio" name="data_inicio" class="form-control" required>
+              </div>
+
+              <div class="form-group">
+                <label for="data_fim">Data final</label>
+                <input type="date" id="data_fim" name="data_fim" class="form-control" required>
+              </div>
             </div>
-            <span class="report-btn-days">90 dias</span>
           </div>
 
-          <div>
-            <span class="report-btn-title">Últimos 3 Meses</span>
-            <span class="report-btn-desc">Comparativo trimestral e tendências.</span>
+          <h3 class="section-title">
+            <i class="bi bi-sliders"></i>
+            Informações que serão exibidas no relatório
+          </h3>
+
+          <div class="options-grid">
+
+            <!-- TODOS OS SERVIÇOS -->
+            <div class="option-box">
+              <div class="option-box-header">
+                <h4 class="option-box-title">
+                  <i class="bi bi-list-check"></i>
+                  Todos os serviços
+                </h4>
+              </div>
+
+              <div class="option-box-body">
+                <div class="check-list">
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="todos_servicos" checked>
+                    <span class="check-text">
+                      <span class="check-title">Exibir todos os serviços</span>
+                      <span class="check-desc">Gera a tabela com os serviços disponíveis no relatório.</span>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="sub-options">
+                  <p class="sub-options-title">Campos dentro de todos os serviços</p>
+
+                  <div class="check-list">
+                    <label class="check-item">
+                      <input type="checkbox" name="service_fields" value="quantidade_os_periodo" checked>
+                      <span class="check-text">
+                        <span class="check-title">Quantidade de O.S. no período selecionado</span>
+                      </span>
+                    </label>
+
+                    <label class="check-item">
+                      <input type="checkbox" name="service_fields" value="prazo_estimado" checked>
+                      <span class="check-text">
+                        <span class="check-title">Prazo estimado</span>
+                      </span>
+                    </label>
+
+                    <label class="check-item">
+                      <input type="checkbox" name="service_fields" value="prazo_medio_real" checked>
+                      <span class="check-text">
+                        <span class="check-title">Prazo médio real em que foi resolvido</span>
+                      </span>
+                    </label>
+
+                    <label class="check-item">
+                      <input type="checkbox" name="service_fields" value="os_concluidas_dentro_prazo" checked>
+                      <span class="check-text">
+                        <span class="check-title">O.S. concluídas dentro do prazo</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- INDICADORES -->
+            <div class="option-box">
+              <div class="option-box-header">
+                <h4 class="option-box-title">
+                  <i class="bi bi-speedometer2"></i>
+                  Indicadores principais
+                </h4>
+              </div>
+
+              <div class="option-box-body">
+                <div class="check-list">
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="media_tempo_atendimento" checked>
+                    <span class="check-text">
+                      <span class="check-title">Média de tempo de atendimento das O.S.</span>
+                    </span>
+                  </label>
+
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="total_os_periodo" checked>
+                    <span class="check-text">
+                      <span class="check-title">Total de O.S. no período</span>
+                    </span>
+                  </label>
+
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="total_os_concluidas_prazo" checked>
+                    <span class="check-text">
+                      <span class="check-title">Total de O.S. concluídas dentro do prazo</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- SERVIÇOS -->
+            <div class="option-box">
+              <div class="option-box-header">
+                <h4 class="option-box-title">
+                  <i class="bi bi-bar-chart-line"></i>
+                  Serviços e aberturas
+                </h4>
+              </div>
+
+              <div class="option-box-body">
+                <div class="check-list">
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="top_3_servicos_aberturas" checked>
+                    <span class="check-text">
+                      <span class="check-title">Os 3 serviços com mais aberturas</span>
+                    </span>
+                  </label>
+
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="datas_maiores_aberturas" checked>
+                    <span class="check-text">
+                      <span class="check-title">Datas com maiores aberturas de O.S.</span>
+                    </span>
+                  </label>
+
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="grafico_total_aberturas_periodo" checked>
+                    <span class="check-text">
+                      <span class="check-title">Gráfico com total de abertura de O.S. por período</span>
+                      <span class="check-desc">Até a data de emissão do relatório.</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- RESOLUÇÃO -->
+            <div class="option-box">
+              <div class="option-box-header">
+                <h4 class="option-box-title">
+                  <i class="bi bi-check2-circle"></i>
+                  Retorno de resolução
+                </h4>
+              </div>
+
+              <div class="option-box-body">
+                <div class="check-list">
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="servicos_maior_retorno_resolucao" checked>
+                    <span class="check-text">
+                      <span class="check-title">Serviços com maior retorno de resolução</span>
+                    </span>
+                  </label>
+
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="servicos_menor_retorno_resolucao" checked>
+                    <span class="check-text">
+                      <span class="check-title">Serviços com menor retorno de resolução</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- REGIÕES -->
+            <div class="option-box">
+              <div class="option-box-header">
+                <h4 class="option-box-title">
+                  <i class="bi bi-geo-alt"></i>
+                  Regiões
+                </h4>
+              </div>
+
+              <div class="option-box-body">
+                <div class="form-group" style="margin-bottom:14px;">
+                  <label for="quantidade_regioes">Quantidade de regiões exibidas</label>
+                  <select id="quantidade_regioes" name="quantidade_regioes" class="form-control">
+                    <option value="3">Top 3 regiões</option>
+                    <option value="5" selected>Top 5 regiões</option>
+                    <option value="10">Top 10 regiões</option>
+                    <option value="15">Top 15 regiões</option>
+                    <option value="all">Todas as regiões</option>
+                  </select>
+                </div>
+
+                <div class="check-list">
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="tabela_regioes" checked>
+                    <span class="check-text">
+                      <span class="check-title">Exibir tabela de regiões</span>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="sub-options">
+                  <p class="sub-options-title">Campos dentro da tabela de regiões</p>
+
+                  <div class="check-list">
+                    <label class="check-item">
+                      <input type="checkbox" name="region_fields" value="total_os_aberta_regiao" checked>
+                      <span class="check-text">
+                        <span class="check-title">Total de O.S. abertas na região</span>
+                      </span>
+                    </label>
+
+                    <label class="check-item">
+                      <input type="checkbox" name="region_fields" value="total_porcentagem" checked>
+                      <span class="check-text">
+                        <span class="check-title">Total em porcentagem</span>
+                      </span>
+                    </label>
+
+                    <label class="check-item">
+                      <input type="checkbox" name="region_fields" value="top_3_servicos_requisitados_quantidade" checked>
+                      <span class="check-text">
+                        <span class="check-title">3 serviços mais requisitados e quantidade</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- GRÁFICOS E MÉDIAS POR REGIÃO -->
+            <div class="option-box">
+              <div class="option-box-header">
+                <h4 class="option-box-title">
+                  <i class="bi bi-pie-chart"></i>
+                  Gráficos e médias por região
+                </h4>
+              </div>
+
+              <div class="option-box-body">
+                <div class="check-list">
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="grafico_distribuicao_os_regiao" checked>
+                    <span class="check-text">
+                      <span class="check-title">Distribuição de O.S. por região em gráfico</span>
+                    </span>
+                  </label>
+
+                  <label class="check-item">
+                    <input type="checkbox" name="sections" value="media_resposta_os_regiao" checked>
+                    <span class="check-text">
+                      <span class="check-title">Média de resposta de O.S. por região</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
           </div>
-        </a>
 
-      </div>
+          <div class="actions">
+            <button type="reset" class="btn-clean">
+              <i class="bi bi-arrow-counterclockwise"></i>
+              Limpar seleção
+            </button>
 
-      <div class="report-footer">
-        <i class="bi bi-info-circle"></i>
-        O PDF será aberto em uma nova aba com os dados atualizados.
+            <button type="submit" class="btn-report">
+              <i class="bi bi-file-earmark-pdf"></i>
+              Gerar relatório
+            </button>
+          </div>
+
+        </form>
       </div>
 
     </div>
-
   </div>
 </div>
 {% endblock %}

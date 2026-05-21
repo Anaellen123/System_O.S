@@ -2698,25 +2698,76 @@ def report_services_search(request):
 
 
 @login_required(login_url="login_admin")
-def report_services_download(request, periodo):
-    hoje = timezone.localdate()
+def report_services_download(request):
+    from datetime import datetime
 
-    if str(periodo) == "7":
-        data_inicio = hoje - timedelta(days=7)
-        titulo_periodo = "ÚLTIMOS 7 DIAS"
-        nome_arquivo = "relatorio_servicos_7_dias.pdf"
-    elif str(periodo) == "30":
-        data_inicio = hoje - timedelta(days=30)
-        titulo_periodo = "ÚLTIMOS 30 DIAS"
-        nome_arquivo = "relatorio_servicos_30_dias.pdf"
-    else:
-        data_inicio = hoje - timedelta(days=90)
-        titulo_periodo = "ÚLTIMOS 3 MESES"
-        nome_arquivo = "relatorio_servicos_3_meses.pdf"
+    # ======================================
+    # DADOS VINDOS DO FORMULÁRIO
+    # ======================================
+    data_inicio_str = request.GET.get("data_inicio")
+    data_fim_str = request.GET.get("data_fim")
 
+    sections = request.GET.getlist("sections")
+    service_fields = request.GET.getlist("service_fields")
+    region_fields = request.GET.getlist("region_fields")
+    quantidade_regioes = request.GET.get("quantidade_regioes", "5")
+
+    if not data_inicio_str or not data_fim_str:
+        messages.error(request, "Selecione a data inicial e a data final do relatório.")
+        return redirect("report_services_search")
+
+    try:
+        data_inicio = datetime.strptime(data_inicio_str, "%Y-%m-%d").date()
+        data_fim = datetime.strptime(data_fim_str, "%Y-%m-%d").date()
+    except ValueError:
+        messages.error(request, "Período inválido. Selecione datas válidas.")
+        return redirect("report_services_search")
+
+    if data_inicio > data_fim:
+        messages.error(request, "A data inicial não pode ser maior que a data final.")
+        return redirect("report_services_search")
+
+    # Caso nada venha selecionado, gera tudo por padrão
+    if not sections:
+        sections = [
+            "todos_servicos",
+            "media_tempo_atendimento",
+            "total_os_periodo",
+            "total_os_concluidas_prazo",
+            "top_3_servicos_aberturas",
+            "datas_maiores_aberturas",
+            "grafico_total_aberturas_periodo",
+            "servicos_maior_retorno_resolucao",
+            "servicos_menor_retorno_resolucao",
+            "tabela_regioes",
+            "grafico_distribuicao_os_regiao",
+            "media_resposta_os_regiao",
+        ]
+
+    if not service_fields:
+        service_fields = [
+            "quantidade_os_periodo",
+            "prazo_estimado",
+            "prazo_medio_real",
+            "os_concluidas_dentro_prazo",
+        ]
+
+    if not region_fields:
+        region_fields = [
+            "total_os_aberta_regiao",
+            "total_porcentagem",
+            "top_3_servicos_requisitados_quantidade",
+        ]
+
+    titulo_periodo = f"DE {data_inicio.strftime('%d/%m/%Y')} ATÉ {data_fim.strftime('%d/%m/%Y')}"
+    nome_arquivo = "relatorio_servicos_personalizado.pdf"
+
+    # ======================================
+    # QUERY BASE
+    # ======================================
     qs = ServiceRequest.objects.filter(
         created_at__date__gte=data_inicio,
-        created_at__date__lte=hoje
+        created_at__date__lte=data_fim
     )
 
     total_os = qs.count()
@@ -2729,6 +2780,27 @@ def report_services_download(request, periodo):
     )
     media_tempo = round(media_tempo, 1)
 
+    # ======================================
+    # FUNÇÃO AUXILIAR PARA PRAZO
+    # ======================================
+    def _calcular_prazo_servico(nome_servico):
+        prazo = _get_service_type_deadline_days(nome_servico)
+        return prazo if prazo is not None else 0
+
+    def _os_dentro_do_prazo(os_obj):
+        prazo_estimado = _calcular_prazo_servico(os_obj.service_type)
+
+        if not prazo_estimado:
+            return False
+
+        if os_obj.finished_in_days is None:
+            return False
+
+        return int(os_obj.finished_in_days) <= int(prazo_estimado)
+
+    # ======================================
+    # TODOS OS SERVIÇOS / RANKING
+    # ======================================
     ranking_qs = (
         qs.exclude(service_type__isnull=True)
         .exclude(service_type__exact="")
@@ -2740,19 +2812,67 @@ def report_services_download(request, periodo):
     ranking = []
 
     for item in ranking_qs:
-        percentual = round((item["total"] / total_os) * 100, 1) if total_os else 0
+        nome_servico = item["service_type"]
+        total_servico = item["total"]
+
+        percentual = round((total_servico / total_os) * 100, 1) if total_os else 0
+
+        prazo_estimado = _calcular_prazo_servico(nome_servico)
+
+        media_real = (
+            qs.filter(
+                service_type=nome_servico,
+                finished_in_days__isnull=False
+            )
+            .aggregate(media=Avg("finished_in_days"))
+            .get("media") or 0
+        )
+        media_real = round(media_real, 1)
+
+        os_concluidas_servico = qs.filter(
+            service_type=nome_servico,
+            status="DONE"
+        )
+
+        total_concluidas_servico = os_concluidas_servico.count()
+
+        dentro_prazo_count = 0
+        for os_obj in os_concluidas_servico:
+            if _os_dentro_do_prazo(os_obj):
+                dentro_prazo_count += 1
+
+        percentual_prazo_servico = round(
+            (dentro_prazo_count / total_concluidas_servico) * 100, 1
+        ) if total_concluidas_servico else 0
 
         ranking.append({
-            "service_type": item["service_type"],
-            "total": item["total"],
+            "service_type": nome_servico,
+            "total": total_servico,
             "percentual": percentual,
-            "prazo_estimado": 5,
-            "media_real": media_tempo,
-            "percentual_prazo": 0,
+            "prazo_estimado": prazo_estimado,
+            "media_real": media_real,
+            "dentro_prazo_count": dentro_prazo_count,
+            "percentual_prazo": percentual_prazo_servico,
         })
 
     top3 = ranking[:3]
 
+    # ======================================
+    # TOTAL DE O.S CONCLUÍDAS DENTRO DO PRAZO
+    # ======================================
+    total_concluidas_dentro_prazo = 0
+
+    for os_obj in qs.filter(status="DONE", finished_in_days__isnull=False):
+        if _os_dentro_do_prazo(os_obj):
+            total_concluidas_dentro_prazo += 1
+
+    percentual_prazo = round(
+        (total_concluidas_dentro_prazo / concluidas) * 100, 1
+    ) if concluidas else 0
+
+    # ======================================
+    # DATAS COM MAIORES ABERTURAS
+    # ======================================
     maiores_datas = []
 
     datas_qs = (
@@ -2779,7 +2899,27 @@ def report_services_download(request, periodo):
             "servico": servico_top["service_type"] if servico_top else "—",
         })
 
-    percentual_prazo = 0
+    # ======================================
+    # GRÁFICO DE ABERTURAS POR PERÍODO
+    # ======================================
+    aberturas_periodo = []
+
+    aberturas_qs = (
+        qs.annotate(data=TruncDate("created_at"))
+        .values("data")
+        .annotate(total=Count("id"))
+        .order_by("data")
+    )
+
+    for item in aberturas_qs:
+        aberturas_periodo.append({
+            "data": item["data"],
+            "total": item["total"],
+        })
+
+    # ======================================
+    # MAIOR / MENOR RETORNO DE RESOLUÇÃO
+    # ======================================
     melhores_servicos = []
     piores_servicos = []
 
@@ -2798,20 +2938,24 @@ def report_services_download(request, periodo):
     for item in servicos_done:
         nome_servico = item["service_type"]
 
-        total_servico = qs.filter(
+        total_servico_done = qs.filter(
             status="DONE",
             service_type=nome_servico
         ).count()
 
-        resolvidos_prazo = qs.filter(
+        dentro_prazo_count = 0
+
+        for os_obj in qs.filter(
             status="DONE",
             service_type=nome_servico,
             finished_in_days__isnull=False
-        ).count()
+        ):
+            if _os_dentro_do_prazo(os_obj):
+                dentro_prazo_count += 1
 
         percentual_servico = round(
-            (resolvidos_prazo / total_servico) * 100, 1
-        ) if total_servico else 0
+            (dentro_prazo_count / total_servico_done) * 100, 1
+        ) if total_servico_done else 0
 
         dados_servico = {
             "service_type": nome_servico,
@@ -2833,8 +2977,71 @@ def report_services_download(request, periodo):
         key=lambda x: x["percentual_prazo"]
     )[:5]
 
-    if melhores_servicos:
-        percentual_prazo = melhores_servicos[0]["percentual_prazo"]
+    # ======================================
+    # REGIÕES
+    # ======================================
+    limite_regioes = None
+
+    if quantidade_regioes != "all":
+        try:
+            limite_regioes = int(quantidade_regioes)
+        except ValueError:
+            limite_regioes = 5
+
+    regioes_base = (
+        qs.exclude(neighborhood__isnull=True)
+        .exclude(neighborhood__exact="")
+        .values("neighborhood")
+        .annotate(total=Count("id"))
+        .order_by("-total", "neighborhood")
+    )
+
+    if limite_regioes:
+        regioes_base = regioes_base[:limite_regioes]
+
+    regioes = []
+
+    for regiao in regioes_base:
+        nome_regiao = regiao["neighborhood"]
+        total_regiao = regiao["total"]
+
+        percentual_regiao = round(
+            (total_regiao / total_os) * 100, 1
+        ) if total_os else 0
+
+        top_servicos_regiao_qs = (
+            qs.filter(neighborhood=nome_regiao)
+            .exclude(service_type__isnull=True)
+            .exclude(service_type__exact="")
+            .values("service_type")
+            .annotate(total=Count("id"))
+            .order_by("-total", "service_type")[:3]
+        )
+
+        top_servicos_regiao = []
+
+        for servico in top_servicos_regiao_qs:
+            top_servicos_regiao.append({
+                "service_type": servico["service_type"],
+                "total": servico["total"],
+            })
+
+        media_resposta_regiao = (
+            qs.filter(
+                neighborhood=nome_regiao,
+                finished_in_days__isnull=False
+            )
+            .aggregate(media=Avg("finished_in_days"))
+            .get("media") or 0
+        )
+
+        regioes.append({
+            "nome": nome_regiao,
+            "total": total_regiao,
+            "percentual": percentual_regiao,
+            "top_servicos": top_servicos_regiao,
+            "media_resposta": round(media_resposta_regiao, 1),
+        })
 
     # ======================================
     # DADOS DO USUÁRIO LOGADO
@@ -2850,21 +3057,34 @@ def report_services_download(request, periodo):
     cargo_usuario = getattr(profile, "cargo_funcao", "") if profile else ""
     setor_usuario = getattr(profile, "setor", "") if profile else ""
 
+    # ======================================
+    # CONTEXTO DO PDF
+    # ======================================
     context = {
         "periodo": titulo_periodo,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
         "data_emissao": timezone.localtime(),
+
+        "sections": sections,
+        "service_fields": service_fields,
+        "region_fields": region_fields,
+        "quantidade_regioes": quantidade_regioes,
+
         "total_os": total_os,
         "concluidas": concluidas,
         "media_tempo": media_tempo,
         "percentual_prazo": percentual_prazo,
+        "total_concluidas_dentro_prazo": total_concluidas_dentro_prazo,
 
         "ranking": ranking,
         "top3": top3,
         "maiores_datas": maiores_datas,
+        "aberturas_periodo": aberturas_periodo,
         "melhores_servicos": melhores_servicos,
         "piores_servicos": piores_servicos,
+        "regioes": regioes,
 
-        # CAMPOS DO PDF
         "usuario_nome": nome_usuario,
         "usuario_cargo": cargo_usuario,
         "usuario_setor": setor_usuario,

@@ -61,7 +61,7 @@ urlpatterns = [
     path("relatorios/os/", views.report_os_search, name="report_os_search"),
     path("relatorios/os/download/", views.report_os_download, name="report_os_download"),
     path("relatorios/servicos/", views.report_services_search, name="report_services_search"),
-    path("relatorios/servicos/download/<str:periodo>/", views.report_services_download, name="report_services_download"),
+    path("relatorios/servicos/download/", views.report_services_download, name="report_services_download"),
 
     # ===== APIS =====
     path("api/cep/<str:cep>/", views.api_cep, name="api_cep"),
