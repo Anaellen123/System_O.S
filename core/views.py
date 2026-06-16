@@ -33,6 +33,8 @@ from django.template.loader import render_to_string
 from django.http import HttpResponse
 from weasyprint import HTML
 from django.db.models import Count, Avg, Q
+from django.views.decorators.http import require_GET, require_POST
+from .models import NotificationHidden
 
 from .forms import (
     ServiceRequestForm,
@@ -371,6 +373,12 @@ def solicitar_servico(request):
 
         obj = form.save(commit=False)
 
+        # Mantém compatibilidade com relatórios/notificações antigos
+        # O service_type_ref salva o ID do serviço
+        # O service_type continua salvando o nome do serviço
+        if obj.service_type_ref:
+            obj.service_type = obj.service_type_ref.name
+
         if prazo_dias is None:
             prazo_dias = _get_service_type_deadline_days(obj.service_type)
 
@@ -393,6 +401,8 @@ def solicitar_servico(request):
                     prof.save()
 
         obj.save()
+        print("FILES:", request.FILES)
+        print("ANEXOS:", request.FILES.getlist("attachments"))
 
         for f in request.FILES.getlist("attachments"):
             ServiceRequestAttachment.objects.create(request=obj, file=f)
@@ -910,8 +920,9 @@ def users_list(request):
         return redirect("dashboard")
 
     q = (request.GET.get("q") or "").strip()
+    filtro = (request.GET.get("filtro") or "").strip()
 
-    qs = User.objects.all().order_by("-date_joined")
+    qs = User.objects.all().prefetch_related("groups").order_by("-date_joined")
 
     if q:
         qs = qs.filter(
@@ -921,7 +932,31 @@ def users_list(request):
             | Q(last_name__icontains=q)
         )
 
-    return render(request, "users_list.html", {"users": qs, "q": q})
+    if filtro == "requisitante":
+        qs = qs.filter(groups__name__iexact="requisitante")
+
+    elif filtro == "interno":
+        qs = qs.filter(groups__name__iexact="interno")
+
+    elif filtro == "superuser":
+        qs = qs.filter(is_superuser=True)
+
+    elif filtro == "ativo":
+        qs = qs.filter(is_active=True)
+
+    elif filtro == "bloqueado":
+        qs = qs.filter(is_active=False)
+
+    elif filtro == "staff":
+        qs = qs.filter(is_staff=True)
+
+    qs = qs.distinct()
+
+    return render(request, "users_list.html", {
+        "users": qs,
+        "q": q,
+        "filtro": filtro,
+    })
 
 
 @require_http_methods(["GET", "POST"])
@@ -1159,7 +1194,12 @@ def os_create(request):
                 messages.error(request, "CPF inválido.")
                 return render(request, "os_nova.html", {"form": form})
 
-            perfil_cpf = UserProfile.objects.filter(cpf=document_digits).select_related("user").first()
+            perfil_cpf = (
+                UserProfile.objects
+                .filter(cpf=document_digits)
+                .select_related("user")
+                .first()
+            )
 
             if not perfil_cpf:
                 form.add_error(
@@ -1173,6 +1213,10 @@ def os_create(request):
                 return render(request, "os_nova.html", {"form": form})
 
             obj = form.save(commit=False)
+
+            if obj.service_type_ref:
+                obj.service_type = obj.service_type_ref.name
+
             obj.created_by = perfil_cpf.user
 
             if eh_requisitante:
@@ -1191,10 +1235,23 @@ def os_create(request):
 
             obj.save()
 
-            for f in request.FILES.getlist("attachments"):
-                ServiceRequestAttachment.objects.create(request=obj, file=f)
+            anexos = request.FILES.getlist("attachments")
 
-            messages.success(request, f"Ordem criada com sucesso: {obj.os_number}")
+            print("=" * 50)
+            print("TOTAL DE ANEXOS RECEBIDOS:", len(anexos))
+            print("FILES:", request.FILES)
+            print("=" * 50)
+
+            for arquivo in anexos:
+                ServiceRequestAttachment.objects.create(
+                    request=obj,
+                    file=arquivo
+                )
+
+            messages.success(
+                request,
+                f"Ordem criada com sucesso: {obj.os_number}"
+            )
             return redirect("os_list")
 
         messages.error(request, "Revise os campos obrigatórios.")
@@ -1210,7 +1267,9 @@ def os_create(request):
 
         form = ServiceRequestForm(initial=initial)
 
-    return render(request, "os_nova.html", {"form": form})
+    return render(request, "os_nova.html", {
+        "form": form
+    })
 
 @login_required(login_url="login_admin")
 def os_list(request, status=None):
@@ -1269,10 +1328,18 @@ def os_detail(request, pk):
         status_anterior = os_obj.status
 
         form = ServiceRequestUpdateForm(request.POST, instance=os_obj)
+
         if form.is_valid():
             os_edit = form.save(commit=False)
 
+            # Mantém compatibilidade com relatórios/notificações antigos
+            # O service_type_ref salva o ID do serviço
+            # O service_type continua salvando o nome do serviço
+            if os_edit.service_type_ref:
+                os_edit.service_type = os_edit.service_type_ref.name
+
             prazo_dias = form.cleaned_data.get("prazo_dias")
+
             if prazo_dias is not None and str(prazo_dias).strip() != "":
                 data_base = timezone.localtime(os_obj.created_at).date()
                 os_edit.due_at = data_base + timedelta(days=int(prazo_dias))
@@ -1280,10 +1347,6 @@ def os_detail(request, pk):
             os_edit.save()
             form.save_m2m()
 
-            # ===============================
-            # NOTIFICAÇÃO DE CONCLUSÃO
-            # Apenas para o requisitante que abriu a O.S
-            # ===============================
             if status_anterior != "DONE" and os_edit.status == "DONE" and os_edit.created_by:
                 event_key = f"os_done_{os_edit.pk}"
 
@@ -1301,11 +1364,6 @@ def os_detail(request, pk):
                     event_key=event_key,
                 )
 
-            # ===============================
-            # CONTROLE DE PENDÊNCIA
-            # - se concluiu: remove notificação pendente
-            # - se não concluiu: recria a pendência conforme as regras
-            # ===============================
             Notification.objects.filter(
                 event_key=f"os_pending_{os_edit.pk}"
             ).delete()
@@ -1318,8 +1376,10 @@ def os_detail(request, pk):
 
             messages.success(request, "OS atualizada com sucesso!")
             return redirect("os_detail", pk=os_obj.pk)
+
         else:
             messages.error(request, "Revise os campos e tente novamente.")
+
     else:
         form = ServiceRequestUpdateForm(instance=os_obj)
 
@@ -1789,18 +1849,7 @@ def _get_service_type_deadline_days(service_type_name):
     if not service_type:
         return None
 
-    deadlines_map = _load_service_type_deadlines()
-    prazo = deadlines_map.get(str(service_type.id))
-
-    if prazo in [None, ""]:
-        return None
-
-    try:
-        prazo_int = int(prazo)
-        return prazo_int if prazo_int >= 0 else None
-    except (TypeError, ValueError):
-        return None
-
+    return service_type.prazo_dias
 
 def _load_service_type_deadlines():
     path = _service_type_deadlines_file()
@@ -1835,8 +1884,6 @@ def service_type_dashboard(request):
         messages.error(request, "Você não tem permissão para acessar esta área.")
         return redirect("dashboard_requisitante")
 
-    deadlines_map = _load_service_type_deadlines()
-
     if request.method == "POST":
         form = ServiceTypeForm(request.POST)
 
@@ -1846,89 +1893,46 @@ def service_type_dashboard(request):
 
             if not nome:
                 messages.error(request, "Informe o nome do tipo de serviço.")
-            elif ServiceType.objects.filter(name__iexact=nome).exists():
-                messages.error(request, "Já existe um tipo de serviço com este nome.")
-            else:
-                prazo_dias = None
-
-                if prazo_raw != "":
-                    try:
-                        prazo_dias = int(prazo_raw)
-                        if prazo_dias < 0:
-                            raise ValueError
-                    except ValueError:
-                        messages.error(request, "O prazo em dias deve ser um número válido maior ou igual a zero.")
-                        service_types_qs = ServiceType.objects.all().order_by("name")
-                        service_types = []
-
-                        for item in service_types_qs:
-                            service_types.append({
-                                "id": item.id,
-                                "name": item.name,
-                                "prazo_dias": deadlines_map.get(str(item.id), ""),
-                            })
-
-                        total_os = (
-                            ServiceRequest.objects
-                            .exclude(service_type__isnull=True)
-                            .exclude(service_type__exact="")
-                            .count()
-                        )
-
-                        ranking_qs = (
-                            ServiceRequest.objects
-                            .exclude(service_type__isnull=True)
-                            .exclude(service_type__exact="")
-                            .values("service_type")
-                            .annotate(total=Count("id"))
-                            .order_by("-total", "service_type")[:3]
-                        )
-
-                        top_services = []
-                        for row in ranking_qs:
-                            quantidade = row["total"]
-                            percentual = round((quantidade / total_os) * 100) if total_os > 0 else 0
-
-                            top_services.append({
-                                "name": row["service_type"],
-                                "count": quantidade,
-                                "percent": percentual,
-                            })
-
-                        return render(request, "service_types.html", {
-                            "form": form,
-                            "service_types": service_types,
-                            "top_services": top_services,
-                            "top_services_json": json.dumps(top_services, ensure_ascii=False),
-                        })
-
-                obj = form.save(commit=False)
-                obj.name = nome
-
-                if hasattr(obj, "is_active"):
-                    obj.is_active = True
-
-                obj.save()
-
-                deadlines_map[str(obj.id)] = prazo_dias if prazo_dias is not None else ""
-                _save_service_type_deadlines(deadlines_map)
-
-                messages.success(request, "Tipo de serviço cadastrado com sucesso.")
                 return redirect("service_type_dashboard")
-        else:
-            messages.error(request, "Revise os campos e tente novamente.")
+
+            if ServiceType.objects.filter(name__iexact=nome).exists():
+                messages.error(request, "Já existe um tipo de serviço com este nome.")
+                return redirect("service_type_dashboard")
+
+            prazo_dias = None
+
+            if prazo_raw != "":
+                try:
+                    prazo_dias = int(prazo_raw)
+
+                    if prazo_dias < 0:
+                        raise ValueError
+
+                except ValueError:
+                    messages.error(
+                        request,
+                        "O prazo em dias deve ser um número válido maior ou igual a zero."
+                    )
+                    return redirect("service_type_dashboard")
+
+            obj = form.save(commit=False)
+            obj.name = nome
+            obj.prazo_dias = prazo_dias
+
+            if hasattr(obj, "is_active"):
+                obj.is_active = True
+
+            obj.save()
+
+            messages.success(request, "Tipo de serviço cadastrado com sucesso.")
+            return redirect("service_type_dashboard")
+
+        messages.error(request, "Revise os campos e tente novamente.")
+
     else:
         form = ServiceTypeForm()
 
-    service_types_qs = ServiceType.objects.all().order_by("name")
-    service_types = []
-
-    for item in service_types_qs:
-        service_types.append({
-            "id": item.id,
-            "name": item.name,
-            "prazo_dias": deadlines_map.get(str(item.id), ""),
-        })
+    service_types = ServiceType.objects.all().order_by("name")
 
     total_os = (
         ServiceRequest.objects
@@ -1947,6 +1951,7 @@ def service_type_dashboard(request):
     )
 
     top_services = []
+
     for row in ranking_qs:
         quantidade = row["total"]
         percentual = round((quantidade / total_os) * 100) if total_os > 0 else 0
@@ -2424,6 +2429,9 @@ def notifications_list(request):
             Q(users=request.user) |
             Q(target_groups__in=request.user.groups.all())
         )
+        .exclude(
+            hidden_by__user=request.user
+        )
         .select_related("service_request", "service_request__team")
         .annotate(is_read=Exists(unread_subquery))
         .distinct()
@@ -2582,7 +2590,15 @@ def report_os_search(request):
         messages.error(request, "Você não tem permissão para acessar relatórios.")
         return redirect("dashboard_requisitante")
 
-    return render(request, "reports/os_report_search.html")
+    ultimas_os = (
+        ServiceRequest.objects
+        .filter(status="DONE")
+        .order_by("-created_at")[:15]
+    )
+
+    return render(request, "reports/os_report_search.html", {
+        "ultimas_os": ultimas_os,
+    })
 
 
 @login_required(login_url="login_admin")
@@ -3104,3 +3120,74 @@ def report_services_download(request):
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{nome_arquivo}"'
     return response
+
+@login_required(login_url="login_admin")
+@require_POST
+def service_type_update(request, pk):
+    if not request.user.is_superuser:
+        messages.error(request, "Você não tem permissão para editar tipos de serviço.")
+        return redirect("dashboard")
+
+    service_type = get_object_or_404(ServiceType, pk=pk)
+
+    name = (request.POST.get("name") or "").strip()
+    prazo_dias = (request.POST.get("prazo_dias") or "").strip()
+
+    if not name:
+        messages.error(request, "O nome do serviço é obrigatório.")
+        return redirect("service_type_dashboard")
+
+    service_type.name = name
+
+    if prazo_dias != "":
+        service_type.prazo_dias = int(prazo_dias)
+    else:
+        service_type.prazo_dias = None
+
+    service_type.save()
+
+    messages.success(request, "Tipo de serviço atualizado com sucesso.")
+    return redirect("service_type_dashboard")
+
+@login_required(login_url="login_admin")
+@require_http_methods(["POST"])
+def notifications_clear_history(request):
+
+    notifications = (
+        Notification.objects.filter(
+            Q(users=request.user)
+            | Q(target_groups__in=request.user.groups.all())
+        )
+        .distinct()
+    )
+
+    hidden_existing_ids = set(
+        NotificationHidden.objects.filter(
+            user=request.user,
+            notification__in=notifications
+        ).values_list("notification_id", flat=True)
+    )
+
+    NotificationHidden.objects.bulk_create([
+        NotificationHidden(
+            notification=n,
+            user=request.user
+        )
+        for n in notifications
+        if n.id not in hidden_existing_ids
+    ])
+
+    messages.success(
+        request,
+        "Histórico limpo com sucesso."
+    )
+
+    return redirect("notifications_list")
+
+@login_required(login_url="login_admin")
+def help_page(request):
+    whatsapp_number = getattr(settings, "HELP_WHATSAPP_NUMBER", "5579988459933")
+
+    return render(request, "help_page.html", {
+        "whatsapp_number": whatsapp_number,
+    })

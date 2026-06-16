@@ -5,16 +5,20 @@
 
 {% block content %}
 <style>
-:root{
+.edituser-page{
   --primary:#2563eb;
   --primary-dark:#1d4ed8;
   --primary-soft:#eff6ff;
+  --card:#ffffff;
+  --input:#ffffff;
+  --soft:#f8fafc;
   --text:#0f172a;
   --muted:#64748b;
-  --border:#dbeafe;
-}
+  --label:#334155;
+  --border:#e5e7eb;
+  --input-border:#dbe3ef;
+  --shadow:0 18px 40px rgba(37,99,235,.10);
 
-.edituser-page{
   max-width:1050px;
   margin:0 auto;
 }
@@ -32,12 +36,12 @@
   gap:8px;
   padding:10px 14px;
   border-radius:12px;
-  border:1px solid #e5e7eb;
+  border:1px solid var(--border);
   color:#475569;
   text-decoration:none;
   font-weight:700;
   font-size:14px;
-  background:#fff;
+  background:var(--card);
   transition:.2s ease;
 }
 
@@ -50,11 +54,11 @@
 .edituser-card{
   position:relative;
   overflow:hidden;
-  background:#fff;
-  border:1px solid #e5e7eb;
+  background:var(--card);
+  border:1px solid var(--border);
   border-radius:24px;
   padding:32px;
-  box-shadow:0 18px 40px rgba(37,99,235,.10);
+  box-shadow:var(--shadow);
 }
 
 .edituser-card::before{
@@ -105,7 +109,7 @@
 .edituser-section{
   margin-top:28px;
   padding-top:28px;
-  border-top:1px solid #e5e7eb;
+  border-top:1px solid var(--border);
 }
 
 .edituser-section:first-of-type{
@@ -149,7 +153,7 @@
 .edituser-lbl{
   display:block;
   margin-bottom:7px;
-  color:#334155;
+  color:var(--label);
   font-size:13px;
   font-weight:800;
 }
@@ -157,19 +161,28 @@
 .edituser-inp{
   width:100%;
   height:46px;
-  border:1px solid #dbe3ef;
+  border:1px solid var(--input-border);
   border-radius:14px;
   padding:0 14px;
   outline:none;
-  background:#fff;
+  background:var(--input);
   color:var(--text);
   font-size:14px;
   transition:.2s ease;
 }
 
+.edituser-inp::placeholder{
+  color:var(--muted);
+}
+
 .edituser-inp:focus{
   border-color:var(--primary);
   box-shadow:0 0 0 4px rgba(37,99,235,.12);
+}
+
+.edituser-inp option{
+  background:var(--input);
+  color:var(--text);
 }
 
 .edituser-help{
@@ -190,7 +203,7 @@
   align-items:center;
   gap:10px;
   padding:14px;
-  border:1px solid var(--border);
+  border:1px solid #dbeafe;
   border-radius:16px;
   background:var(--primary-soft);
   color:#1e40af;
@@ -210,7 +223,7 @@
   gap:12px;
   margin-top:32px;
   padding-top:22px;
-  border-top:1px solid #e5e7eb;
+  border-top:1px solid var(--border);
 }
 
 .edituser-btn-cancel,
@@ -227,7 +240,7 @@
 }
 
 .edituser-btn-cancel{
-  background:#fff;
+  background:var(--card);
   border:1px solid #d1d5db;
   color:#475569;
 }
@@ -243,60 +256,191 @@
   color:#fff;
 }
 
-/* modo escuro */
+body.dark .edituser-page,
+body.dark-mode .edituser-page,
+body.dark-theme .edituser-page,
+body.theme-dark .edituser-page,
+html.dark .edituser-page,
+html.dark-mode .edituser-page,
+html.dark-theme .edituser-page,
+html.theme-dark .edituser-page,
+[data-theme="dark"] .edituser-page{
+  --card:#0f172a;
+  --input:#111c31;
+  --soft:#17233a;
+  --text:#e5edf8;
+  --muted:#94a3b8;
+  --label:#dbeafe;
+  --border:#26364f;
+  --input-border:#2b3d5c;
+  --primary-soft:#17233a;
+  --shadow:0 18px 42px rgba(0,0,0,.28);
+}
+
 body.dark .edituser-card,
+body.dark-mode .edituser-card,
+body.dark-theme .edituser-card,
+body.theme-dark .edituser-card,
+html.dark .edituser-card,
+html.dark-mode .edituser-card,
+html.dark-theme .edituser-card,
+html.theme-dark .edituser-card,
 [data-theme="dark"] .edituser-card{
-  background:#0f172a;
-  border-color:#1e293b;
+  background:#0f172a !important;
+  border-color:#26364f !important;
+  box-shadow:0 18px 42px rgba(0,0,0,.28) !important;
 }
 
 body.dark .edituser-title,
-body.dark .edituser-section-title,
+body.dark-mode .edituser-title,
+body.dark-theme .edituser-title,
+body.theme-dark .edituser-title,
+html.dark .edituser-title,
+html.dark-mode .edituser-title,
+html.dark-theme .edituser-title,
+html.theme-dark .edituser-title,
 [data-theme="dark"] .edituser-title,
+body.dark .edituser-section-title,
+body.dark-mode .edituser-section-title,
+body.dark-theme .edituser-section-title,
+body.theme-dark .edituser-section-title,
+html.dark .edituser-section-title,
+html.dark-mode .edituser-section-title,
+html.dark-theme .edituser-section-title,
+html.theme-dark .edituser-section-title,
 [data-theme="dark"] .edituser-section-title{
-  color:#f8fafc;
+  color:#e5edf8 !important;
 }
 
 body.dark .edituser-sub,
-body.dark .edituser-help,
+body.dark-mode .edituser-sub,
+body.dark-theme .edituser-sub,
+body.theme-dark .edituser-sub,
+html.dark .edituser-sub,
+html.dark-mode .edituser-sub,
+html.dark-theme .edituser-sub,
+html.theme-dark .edituser-sub,
 [data-theme="dark"] .edituser-sub,
+body.dark .edituser-help,
+body.dark-mode .edituser-help,
+body.dark-theme .edituser-help,
+body.theme-dark .edituser-help,
+html.dark .edituser-help,
+html.dark-mode .edituser-help,
+html.dark-theme .edituser-help,
+html.theme-dark .edituser-help,
 [data-theme="dark"] .edituser-help{
-  color:#cbd5e1;
+  color:#94a3b8 !important;
 }
 
 body.dark .edituser-lbl,
+body.dark-mode .edituser-lbl,
+body.dark-theme .edituser-lbl,
+body.theme-dark .edituser-lbl,
+html.dark .edituser-lbl,
+html.dark-mode .edituser-lbl,
+html.dark-theme .edituser-lbl,
+html.theme-dark .edituser-lbl,
 [data-theme="dark"] .edituser-lbl{
-  color:#e2e8f0;
+  color:#dbeafe !important;
 }
 
 body.dark .edituser-inp,
+body.dark-mode .edituser-inp,
+body.dark-theme .edituser-inp,
+body.theme-dark .edituser-inp,
+html.dark .edituser-inp,
+html.dark-mode .edituser-inp,
+html.dark-theme .edituser-inp,
+html.theme-dark .edituser-inp,
 [data-theme="dark"] .edituser-inp{
-  background:#111827;
-  border-color:#263244;
-  color:#f8fafc;
+  background:#111c31 !important;
+  border-color:#2b3d5c !important;
+  color:#e5edf8 !important;
+}
+
+body.dark .edituser-inp option,
+body.dark-mode .edituser-inp option,
+body.dark-theme .edituser-inp option,
+body.theme-dark .edituser-inp option,
+html.dark .edituser-inp option,
+html.dark-mode .edituser-inp option,
+html.dark-theme .edituser-inp option,
+html.theme-dark .edituser-inp option,
+[data-theme="dark"] .edituser-inp option{
+  background:#111c31 !important;
+  color:#e5edf8 !important;
 }
 
 body.dark .edituser-section,
-body.dark .edituser-actions,
+body.dark-mode .edituser-section,
+body.dark-theme .edituser-section,
+body.theme-dark .edituser-section,
+html.dark .edituser-section,
+html.dark-mode .edituser-section,
+html.dark-theme .edituser-section,
+html.theme-dark .edituser-section,
 [data-theme="dark"] .edituser-section,
+body.dark .edituser-actions,
+body.dark-mode .edituser-actions,
+body.dark-theme .edituser-actions,
+body.theme-dark .edituser-actions,
+html.dark .edituser-actions,
+html.dark-mode .edituser-actions,
+html.dark-theme .edituser-actions,
+html.theme-dark .edituser-actions,
 [data-theme="dark"] .edituser-actions{
-  border-color:#263244;
+  border-color:#26364f !important;
 }
 
 body.dark .edituser-back,
-body.dark .edituser-btn-cancel,
+body.dark-mode .edituser-back,
+body.dark-theme .edituser-back,
+body.theme-dark .edituser-back,
+html.dark .edituser-back,
+html.dark-mode .edituser-back,
+html.dark-theme .edituser-back,
+html.theme-dark .edituser-back,
 [data-theme="dark"] .edituser-back,
+body.dark .edituser-btn-cancel,
+body.dark-mode .edituser-btn-cancel,
+body.dark-theme .edituser-btn-cancel,
+body.theme-dark .edituser-btn-cancel,
+html.dark .edituser-btn-cancel,
+html.dark-mode .edituser-btn-cancel,
+html.dark-theme .edituser-btn-cancel,
+html.theme-dark .edituser-btn-cancel,
 [data-theme="dark"] .edituser-btn-cancel{
-  background:#111827;
-  border-color:#263244;
-  color:#e2e8f0;
+  background:#111c31 !important;
+  border-color:#2b3d5c !important;
+  color:#e5edf8 !important;
 }
 
 body.dark .edituser-check,
+body.dark-mode .edituser-check,
+body.dark-theme .edituser-check,
+body.theme-dark .edituser-check,
+html.dark .edituser-check,
+html.dark-mode .edituser-check,
+html.dark-theme .edituser-check,
+html.theme-dark .edituser-check,
 [data-theme="dark"] .edituser-check{
-  background:#111827;
-  border-color:#1e3a8a;
-  color:#bfdbfe;
+  background:#111c31 !important;
+  border-color:#2b3d5c !important;
+  color:#bfdbfe !important;
+}
+
+body.dark .edituser-section-title i,
+body.dark-mode .edituser-section-title i,
+body.dark-theme .edituser-section-title i,
+body.theme-dark .edituser-section-title i,
+html.dark .edituser-section-title i,
+html.dark-mode .edituser-section-title i,
+html.dark-theme .edituser-section-title i,
+html.theme-dark .edituser-section-title i,
+[data-theme="dark"] .edituser-section-title i{
+  background:#17233a !important;
+  color:#93c5fd !important;
 }
 
 @media(max-width:760px){
@@ -498,43 +642,100 @@ body.dark .edituser-check,
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const select = document.getElementById("groupSelect");
-    const campo1 = document.getElementById("camposInterno");
-    const campo2 = document.getElementById("camposInterno2");
+  const select = document.getElementById("groupSelect");
+  const campo1 = document.getElementById("camposInterno");
+  const campo2 = document.getElementById("camposInterno2");
 
-    function toggleCampos() {
-        const option = select.options[select.selectedIndex];
-        const grupo = (option.dataset.name || "").toLowerCase();
+  function toggleCampos() {
+    const option = select.options[select.selectedIndex];
+    const grupo = (option.dataset.name || "").toLowerCase();
+    const checkboxSuperuser = document.querySelector('input[name="is_superuser"]');
+    const ehSuperuser = checkboxSuperuser ? checkboxSuperuser.checked : false;
 
-        const checkboxSuperuser = document.querySelector(
-            'input[name="is_superuser"]'
-        );
+    const mostrar =
+      grupo.includes("interno") ||
+      grupo.includes("admin") ||
+      grupo.includes("administrador") ||
+      ehSuperuser;
 
-        const ehSuperuser = checkboxSuperuser
-            ? checkboxSuperuser.checked
-            : false;
+    campo1.style.display = mostrar ? "block" : "none";
+    campo2.style.display = mostrar ? "block" : "none";
+  }
 
-        const mostrar =
-            grupo.includes("interno") ||
-            grupo.includes("admin") ||
-            grupo.includes("administrador") ||
-            ehSuperuser;
+  select.addEventListener("change", toggleCampos);
 
-        campo1.style.display = mostrar ? "block" : "none";
-        campo2.style.display = mostrar ? "block" : "none";
-    }
+  const checkSuper = document.querySelector('input[name="is_superuser"]');
+  if (checkSuper) checkSuper.addEventListener("change", toggleCampos);
 
-    select.addEventListener("change", toggleCampos);
+  toggleCampos();
 
-    const checkSuper = document.querySelector(
-        'input[name="is_superuser"]'
-    );
+  function onlyNumbers(value) {
+    return (value || "").replace(/\D/g, "");
+  }
 
-    if (checkSuper) {
-        checkSuper.addEventListener("change", toggleCampos);
-    }
+  const cpfInput = document.querySelector('input[name="cpf"]');
+  if (cpfInput) {
+    cpfInput.addEventListener("input", function () {
+      let v = onlyNumbers(cpfInput.value).slice(0, 11);
+      v = v.replace(/(\d{3})(\d)/, "$1.$2");
+      v = v.replace(/(\d{3})(\d)/, "$1.$2");
+      v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+      cpfInput.value = v;
+    });
+  }
 
-    toggleCampos();
+  const phoneInput = document.querySelector('input[name="phone"]');
+  if (phoneInput) {
+    phoneInput.addEventListener("input", function () {
+      let v = onlyNumbers(phoneInput.value).slice(0, 11);
+
+      if (v.length > 10) {
+        phoneInput.value = `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}`;
+      } else if (v.length > 6) {
+        phoneInput.value = `(${v.slice(0, 2)}) ${v.slice(2, 6)}-${v.slice(6)}`;
+      } else if (v.length > 2) {
+        phoneInput.value = `(${v.slice(0, 2)}) ${v.slice(2)}`;
+      } else {
+        phoneInput.value = v;
+      }
+    });
+  }
+
+  const cepInput = document.querySelector('input[name="cep"]');
+  const streetInput = document.querySelector('input[name="street"]');
+  const neighborhoodInput = document.querySelector('input[name="neighborhood"]');
+  const cityInput = document.querySelector('input[name="city"]');
+  const numberInput = document.querySelector('input[name="number"]');
+
+  if (cepInput) {
+    cepInput.addEventListener("input", function () {
+      let v = onlyNumbers(cepInput.value).slice(0, 8);
+      if (v.length > 5) v = v.slice(0, 5) + "-" + v.slice(5);
+      cepInput.value = v;
+    });
+
+    cepInput.addEventListener("blur", async function () {
+      const cep = onlyNumbers(cepInput.value);
+
+      if (cep.length !== 8) return;
+
+      try {
+        const response = await fetch(`/api/cep/${cep}/`);
+        const data = await response.json();
+
+        if (!response.ok) return;
+
+        if (streetInput) streetInput.value = data.rua || "";
+        if (neighborhoodInput) neighborhoodInput.value = data.bairro || "";
+        if (cityInput) cityInput.value = data.cidade || "";
+
+        if (numberInput) numberInput.focus();
+
+      } catch (error) {
+        console.error("Erro ao buscar CEP:", error);
+      }
+    });
+  }
 });
 </script>
 

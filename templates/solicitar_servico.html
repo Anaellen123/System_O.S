@@ -35,25 +35,18 @@
             <span class="step-text">Dados do Solicitante</span>
           </li>
 
-          {% if not request.user.is_authenticated %}
           <li class="step" data-step="2">
             <span class="step-num">2</span>
-            <span class="step-text">Criar conta</span>
-          </li>
-          {% endif %}
-
-          <li class="step" data-step="{% if not request.user.is_authenticated %}3{% else %}2{% endif %}">
-            <span class="step-num">{% if not request.user.is_authenticated %}3{% else %}2{% endif %}</span>
             <span class="step-text">Localização e Serviço</span>
           </li>
 
-          <li class="step" data-step="{% if not request.user.is_authenticated %}4{% else %}3{% endif %}">
-            <span class="step-num">{% if not request.user.is_authenticated %}4{% else %}3{% endif %}</span>
+          <li class="step" data-step="3">
+            <span class="step-num">3</span>
             <span class="step-text">Anexos</span>
           </li>
 
-          <li class="step" data-step="{% if not request.user.is_authenticated %}5{% else %}4{% endif %}">
-            <span class="step-num">{% if not request.user.is_authenticated %}5{% else %}4{% endif %}</span>
+          <li class="step" data-step="4">
+            <span class="step-num">4</span>
             <span class="step-text">Revisar e Enviar</span>
           </li>
         </ul>
@@ -62,9 +55,9 @@
       <div class="card tips-card">
         <div class="card-title">Dicas para agilizar</div>
         <ul class="tips">
-          <li>Separe documentos (ex: CPF e e-mail)</li>
-          <li>Tenha uma cópia dos anexos pronta</li>
-          <li>Anexe formulários no formato imagens</li>
+          <li>Informe um CPF válido</li>
+          <li>Preencha o endereço corretamente</li>
+          <li>Anexe imagens no formato PNG ou JPG</li>
         </ul>
         <div class="tip-icon" aria-hidden="true">📝</div>
       </div>
@@ -95,9 +88,9 @@
 
         <div class="progress-row">
           <div class="progress-track">
-            <div class="progress-bar" id="progressBar" style="width: 20%;"></div>
+            <div class="progress-bar" id="progressBar" style="width: 25%;"></div>
           </div>
-          <div class="progress-pct" id="progressPct">20%</div>
+          <div class="progress-pct" id="progressPct">25%</div>
         </div>
 
         <form
@@ -110,132 +103,141 @@
         >
           {% csrf_token %}
 
-          {% if not request.user.is_authenticated %}
-            <input type="hidden" name="create_account" value="1">
-          {% endif %}
-
-          <!-- STEP 1 -->
           <div class="step-content active" data-content="1">
             <h2>Dados do Solicitante</h2>
             <p class="muted">Preencha os dados de quem está solicitando o serviço</p>
 
             <div class="field">
-              <label>Tipo de Pessoa <span class="req">*</span></label>
-              <div class="segmented" role="group" aria-label="Tipo de Pessoa">
-                <label class="seg-item">
-                  <input type="radio" name="person_type" value="PF" checked>
-                  <span>✅ Pessoa Física</span>
-                </label>
-                <label class="seg-item">
-                  <input type="radio" name="person_type" value="PJ">
-                  <span>◻️ Pessoa Jurídica</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="field">
-              <label for="cpf">CPF/CNPJ <span class="req">*</span></label>
+              <label for="cpf">CPF <span class="req">*</span></label>
               <input
                 id="cpf"
                 name="document"
                 type="text"
                 inputmode="numeric"
                 autocomplete="off"
-                maxlength="18"
-                placeholder="000.000.000-00 (PF) ou 00.000.000/0001-00 (PJ)"
+                maxlength="14"
+                placeholder="000.000.000-00"
+                value="{{ form.document.value|default_if_none:'' }}"
                 required
+                {% if request.user.is_authenticated %}readonly{% endif %}
               >
-              <div id="cpfError" style="display:none;margin-top:6px;font-size:13px;color:#b91c1c;"></div>
+
+              {% if form.document.errors %}
+                <div style="margin-top:6px;font-size:13px;color:#b91c1c;">
+                  {{ form.document.errors.0 }}
+                </div>
+              {% endif %}
+
+              <div id="cpfError" style="display:none;margin-top:8px;font-size:13px;color:#b91c1c;"></div>
             </div>
 
             <div class="field">
               <label for="nome">Nome do Solicitante <span class="req">*</span></label>
-              <input id="nome" name="full_name" type="text" placeholder="Seu nome completo" required>
+              <input
+                id="nome"
+                name="full_name"
+                type="text"
+                placeholder="Seu nome completo"
+                value="{{ form.full_name.value|default_if_none:'' }}"
+                required
+                {% if request.user.is_authenticated %}readonly{% endif %}
+              >
+              {% if form.full_name.errors %}
+                <div style="margin-top:6px;font-size:13px;color:#b91c1c;">
+                  {{ form.full_name.errors.0 }}
+                </div>
+              {% endif %}
             </div>
 
             <div class="field">
               <label for="tel">Telefone para Contato <span class="req">*</span></label>
-              <input id="tel" name="phone" type="text" placeholder="(00) 00000-0000 (com DDD da cidade)" required>
+              <input
+                id="tel"
+                name="phone"
+                type="text"
+                placeholder="(00) 00000-0000"
+                value="{{ form.phone.value|default_if_none:'' }}"
+                required
+              >
               <small class="help">Use o DDD da sua cidade</small>
+              {% if form.phone.errors %}
+                <div style="margin-top:6px;font-size:13px;color:#b91c1c;">
+                  {{ form.phone.errors.0 }}
+                </div>
+              {% endif %}
             </div>
           </div>
 
-          {% if not request.user.is_authenticated %}
-          <!-- STEP 2 (CADASTRO OBRIGATÓRIO) -->
           <div class="step-content" data-content="2">
-            <h2>Criar conta</h2>
-            <p class="muted">Crie sua conta para acompanhar suas solicitações.</p>
-
-            <div class="field">
-              <label for="reg_email">Email <span class="req">*</span></label>
-              <input id="reg_email" name="reg_email" type="email" placeholder="seu@email.com" required>
-            </div>
-
-            <div class="field">
-              <label for="reg_password1">Senha <span class="req">*</span></label>
-              <input id="reg_password1" name="reg_password1" type="password" placeholder="••••••••" required>
-            </div>
-
-            <div class="field">
-              <label for="reg_password2">Confirmar senha <span class="req">*</span></label>
-              <input id="reg_password2" name="reg_password2" type="password" placeholder="••••••••" required>
-            </div>
-          </div>
-          {% endif %}
-
-          <!-- STEP 3 (ou 2 se logado) -->
-          <div class="step-content" data-content="{% if not request.user.is_authenticated %}3{% else %}2{% endif %}">
             <h2>Localização e Serviço</h2>
             <p class="muted">Informe onde ocorreu e qual o serviço desejado</p>
 
             <div class="grid-2">
               <div class="field">
                 <label for="cep">CEP</label>
-                <input id="cep" name="cep" type="text" placeholder="00000-000">
+                <input id="cep" name="cep" type="text" placeholder="00000-000" value="{{ form.cep.value|default_if_none:'' }}">
               </div>
+
               <div class="field">
                 <label for="numero">Número</label>
-                <input id="numero" name="number" type="text" placeholder="Ex: 123">
+                <input id="numero" name="number" type="text" placeholder="Ex: 123" value="{{ form.number.value|default_if_none:'' }}">
               </div>
             </div>
 
             <div class="field">
               <label for="rua">Rua</label>
-              <input id="rua" name="street" type="text" placeholder="Nome da rua">
+              <input id="rua" name="street" type="text" placeholder="Nome da rua" value="{{ form.street.value|default_if_none:'' }}">
             </div>
 
             <div class="grid-2">
               <div class="field">
                 <label for="bairro">Bairro</label>
-                <input id="bairro" name="neighborhood" type="text" placeholder="Bairro">
+                <input id="bairro" name="neighborhood" type="text" placeholder="Bairro" value="{{ form.neighborhood.value|default_if_none:'' }}">
               </div>
+
               <div class="field">
                 <label for="cidade">Cidade</label>
-                <input id="cidade" name="city" type="text" placeholder="Cidade">
+                <input id="cidade" name="city" type="text" placeholder="Cidade" value="{{ form.city.value|default_if_none:'' }}">
               </div>
             </div>
 
             <div class="field">
               <label for="servico">Tipo de serviço <span class="req">*</span></label>
-              <select id="servico" name="service_type" required>
+              <select id="servico" name="service_type_ref" required>
                 <option value="">Selecione...</option>
-                <option value="Coleta de entulho">Coleta de entulho</option>
-                <option value="Reparo de iluminação">Reparo de iluminação</option>
-                <option value="Limpeza urbana">Limpeza urbana</option>
-                <option value="Roçagem e capinação">Roçagem e capinação</option>
-                <option value="Poda de árvore">Poda de árvore</option>
-                <option value="Sinalização">Sinalização</option>
+                {% for service in form.fields.service_type_ref.queryset %}
+                  <option value="{{ service.id }}"
+                    {% if form.service_type_ref.value|stringformat:"s" == service.id|stringformat:"s" %}selected{% endif %}
+                  >
+                    {{ service.name }}
+                  </option>
+                {% endfor %}
               </select>
+              {% if form.service_type_ref.errors %}
+                <div style="margin-top:6px;font-size:13px;color:#b91c1c;">
+                  {{ form.service_type_ref.errors.0 }}
+                </div>
+              {% endif %}
             </div>
 
             <div class="field">
               <label for="descricao">Descrição <span class="req">*</span></label>
-              <textarea id="descricao" name="description" rows="4" placeholder="Descreva o problema (ponto de referência, detalhes, etc.)" required></textarea>
+              <textarea
+                id="descricao"
+                name="description"
+                rows="4"
+                placeholder="Descreva o problema, ponto de referência e detalhes"
+                required
+              >{{ form.description.value|default_if_none:'' }}</textarea>
+              {% if form.description.errors %}
+                <div style="margin-top:6px;font-size:13px;color:#b91c1c;">
+                  {{ form.description.errors.0 }}
+                </div>
+              {% endif %}
             </div>
           </div>
 
-          <!-- STEP 4 (ou 3 se logado) -->
-          <div class="step-content" data-content="{% if not request.user.is_authenticated %}4{% else %}3{% endif %}">
+          <div class="step-content" data-content="3">
             <h2>Anexos</h2>
             <p class="muted">Envie imagens que ajudem na análise</p>
 
@@ -253,28 +255,23 @@
 
             <div class="field">
               <label for="obs">Observações</label>
-              <textarea id="obs" name="notes" rows="4" placeholder="Observações adicionais (opcional)"></textarea>
+              <textarea id="obs" name="notes" rows="4" placeholder="Observações adicionais">{{ form.notes.value|default_if_none:'' }}</textarea>
             </div>
           </div>
 
-          <!-- STEP 5 (ou 4 se logado) -->
-          <div class="step-content" data-content="{% if not request.user.is_authenticated %}5{% else %}4{% endif %}">
+          <div class="step-content" data-content="4">
             <h2>Revisar e Enviar</h2>
             <p class="muted">Confira os dados antes de enviar</p>
 
             <div class="review" id="reviewBox">
               <div class="review-row"><b>Nome:</b> <span data-r="full_name">—</span></div>
-              <div class="review-row"><b>CPF/CNPJ:</b> <span data-r="document">—</span></div>
+              <div class="review-row"><b>CPF:</b> <span data-r="document">—</span></div>
               <div class="review-row"><b>Telefone:</b> <span data-r="phone">—</span></div>
               <hr>
-              <div class="review-row"><b>Serviço:</b> <span data-r="service_type">—</span></div>
+              <div class="review-row"><b>Serviço:</b> <span data-r="service_type_ref">—</span></div>
               <div class="review-row"><b>Endereço:</b> <span data-r="address">—</span></div>
               <div class="review-row"><b>Descrição:</b> <span data-r="description">—</span></div>
               <div class="review-row"><b>Observações:</b> <span data-r="notes">—</span></div>
-              {% if not request.user.is_authenticated %}
-                <hr>
-                <div class="review-row"><b>Email:</b> <span data-r="reg_email">—</span></div>
-              {% endif %}
             </div>
 
             <div class="notice">
@@ -306,7 +303,7 @@
         <span class="info-ico">📎</span>
         <h3>Anexamentos</h3>
       </div>
-      <p>Envie fotos e documentos para agilizar a análise e execução da solicitação.</p>
+      <p>Envie fotos para agilizar a análise e execução da solicitação.</p>
     </article>
 
     <article class="info-card">
@@ -322,7 +319,6 @@
     © 2024 Prefeitura de Nossa Senhora do Socorro - SE<br>
     <span class="muted">Todos os direitos reservados.</span>
   </footer>
-
 </main>
 
 <div class="success-overlay" id="successOverlay" aria-hidden="true">
@@ -338,6 +334,7 @@
       <p class="success-sub">
         Sua ordem de serviço foi registrada com sucesso. Guarde o comprovante para acompanhamento.
       </p>
+
       <div class="receipt" id="receiptCard">
         <div class="receipt-top">
           <div class="receipt-kicker">ORDEM DE SERVIÇO</div>
@@ -402,13 +399,354 @@
   window.OS_CREATED = {{ created|yesno:"true,false" }};
   window.OS_TARGET_WIDTH = 900;
   window.CEP_API_BASE = "{% url 'api_cep' '00000000' %}".replace("00000000/", "");
-  window.CPF_CHECK_API = "/api/check-cpf/";
+  window.CPF_CHECK_API = "{% url 'api_check_cpf_exists' %}";
+  window.REGISTER_URL = "{% url 'login_admin' %}";
   window.IS_AUTH = {{ request.user.is_authenticated|yesno:"true,false" }};
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-<script src="{% static 'js/solicitar_servico.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const cpfInput = document.getElementById("cpf");
+  const telInput = document.getElementById("tel");
+  const btnNext = document.getElementById("btnNext");
+  const btnPrev = document.getElementById("btnPrev");
+  const form = document.getElementById("solicitarForm");
+  const progressBar = document.getElementById("progressBar");
+  const progressPct = document.getElementById("progressPct");
+  const stepLabel = document.getElementById("stepLabel");
+  const steps = Array.from(document.querySelectorAll(".step"));
+  const contents = Array.from(document.querySelectorAll(".step-content"));
+  const totalSteps = 4;
+  let currentStep = 1;
+
+  function onlyNumbers(value) {
+    return (value || "").replace(/\D/g, "");
+  }
+
+  function formatCPF(value) {
+    const d = onlyNumbers(value).slice(0, 11);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return d.replace(/(\d{3})(\d+)/, "$1.$2");
+    if (d.length <= 9) return d.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
+    return d.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
+  }
+
+  function formatPhone(value) {
+    const d = onlyNumbers(value).slice(0, 11);
+    if (d.length <= 2) return d;
+    if (d.length <= 6) return d.replace(/(\d{2})(\d+)/, "($1) $2");
+    if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+    return d.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
+  }
+
+  function clearCpfMessage() {
+    const cpfError = document.getElementById("cpfError");
+    if (cpfError) {
+      cpfError.innerHTML = "";
+      cpfError.style.display = "none";
+    }
+  }
+
+  function showCpfNotFoundMessage(cpf) {
+    const cpfError = document.getElementById("cpfError");
+    if (!cpfError) return;
+
+    cpfError.innerHTML = `
+      <div style="
+        padding:10px 12px;
+        border-radius:12px;
+        background:#fee2e2;
+        border:1px solid #fecaca;
+        color:#991b1b;
+        line-height:1.45;
+      ">
+        <strong>Usuário não existe.</strong><br>
+        Este CPF ainda não está cadastrado. Cadastre-se antes de solicitar uma O.S.
+        <br>
+        <button type="button" id="goRegisterBtn" style="
+          margin-top:9px;
+          border:0;
+          border-radius:10px;
+          background:#2563eb;
+          color:#fff;
+          font-weight:800;
+          padding:9px 13px;
+          cursor:pointer;
+        ">
+          Criar conta agora
+        </button>
+      </div>
+    `;
+    cpfError.style.display = "block";
+
+    const btn = document.getElementById("goRegisterBtn");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        const cpfLimpo = onlyNumbers(cpf);
+        window.location.href = `${window.REGISTER_URL}?tab=register&cpf=${encodeURIComponent(cpfLimpo)}`;
+      });
+    }
+  }
+
+  async function checkCpfExists() {
+    if (!cpfInput || window.IS_AUTH) return true;
+
+    const cpf = onlyNumbers(cpfInput.value);
+
+    if (cpf.length !== 11) {
+      return false;
+    }
+
+    try {
+      const url = `${window.CPF_CHECK_API}?cpf=${encodeURIComponent(cpf)}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.ok && data.exists === false) {
+        showCpfNotFoundMessage(cpf);
+        return false;
+      }
+
+      clearCpfMessage();
+
+      if (data.ok && data.exists && data.user) {
+        const nome = document.getElementById("nome");
+        const tel = document.getElementById("tel");
+        const cep = document.getElementById("cep");
+        const rua = document.getElementById("rua");
+        const numero = document.getElementById("numero");
+        const bairro = document.getElementById("bairro");
+        const cidade = document.getElementById("cidade");
+
+        if (nome && data.user.name) nome.value = data.user.name;
+        if (tel && data.user.phone) tel.value = formatPhone(data.user.phone);
+        if (cep && data.user.cep) cep.value = data.user.cep;
+        if (rua && data.user.street) rua.value = data.user.street;
+        if (numero && data.user.number) numero.value = data.user.number;
+        if (bairro && data.user.neighborhood) bairro.value = data.user.neighborhood;
+        if (cidade && data.user.city) cidade.value = data.user.city;
+
+        updateReview();
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Erro ao consultar CPF:", error);
+      return true;
+    }
+  }
+
+  if (cpfInput) {
+    cpfInput.addEventListener("input", () => {
+      cpfInput.value = formatCPF(cpfInput.value);
+      clearCpfMessage();
+    });
+
+    cpfInput.addEventListener("blur", checkCpfExists);
+  }
+
+  if (telInput) {
+    telInput.addEventListener("input", () => {
+      telInput.value = formatPhone(telInput.value);
+    });
+  }
+
+  function showStep(step) {
+    currentStep = step;
+
+    contents.forEach((content) => {
+      content.classList.toggle("active", Number(content.dataset.content) === currentStep);
+    });
+
+    steps.forEach((item) => {
+      item.classList.toggle("active", Number(item.dataset.step) === currentStep);
+    });
+
+    const pct = Math.round((currentStep / totalSteps) * 100);
+    progressBar.style.width = pct + "%";
+    progressPct.textContent = pct + "%";
+    stepLabel.textContent = "Etapa " + currentStep;
+
+    btnPrev.disabled = currentStep === 1;
+    btnNext.textContent = currentStep === totalSteps ? "Enviar solicitação" : "Próximo ›";
+
+    updateReview();
+  }
+
+  function getField(name) {
+    return form.querySelector(`[name="${name}"]`);
+  }
+
+  function getValue(name) {
+    const field = getField(name);
+    if (!field) return "";
+
+    if (field.tagName === "SELECT") {
+      return field.options[field.selectedIndex]?.text || "";
+    }
+
+    return field.value || "";
+  }
+
+  function setReview(key, value) {
+    const el = document.querySelector(`[data-r="${key}"]`);
+    if (el) el.textContent = value || "—";
+  }
+
+  function updateReview() {
+    setReview("full_name", getValue("full_name"));
+    setReview("document", getValue("document"));
+    setReview("phone", getValue("phone"));
+    setReview("service_type_ref", getValue("service_type_ref"));
+    setReview("description", getValue("description"));
+    setReview("notes", getValue("notes"));
+
+    const address = [
+      getValue("street"),
+      getValue("number"),
+      getValue("neighborhood"),
+      getValue("city"),
+      getValue("cep"),
+    ].filter(Boolean).join(", ");
+
+    setReview("address", address);
+  }
+
+  function validateCurrentStep() {
+    const activeContent = document.querySelector(`.step-content[data-content="${currentStep}"]`);
+    const requiredFields = Array.from(activeContent.querySelectorAll("[required]"));
+
+    for (const field of requiredFields) {
+      if (!field.value.trim()) {
+        field.focus();
+        field.reportValidity();
+        return false;
+      }
+    }
+
+    if (currentStep === 1 && cpfInput) {
+      const cpf = onlyNumbers(cpfInput.value);
+      const cpfError = document.getElementById("cpfError");
+
+      if (cpf.length !== 11) {
+        if (cpfError) {
+          cpfError.textContent = "Digite um CPF válido com 11 dígitos.";
+          cpfError.style.display = "block";
+        }
+        cpfInput.focus();
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  btnNext.addEventListener("click", async () => {
+    if (!validateCurrentStep()) return;
+
+    if (currentStep === 1) {
+      const cpfOk = await checkCpfExists();
+      if (!cpfOk) return;
+    }
+
+    if (currentStep < totalSteps) {
+      showStep(currentStep + 1);
+      return;
+    }
+
+    form.submit();
+  });
+
+  btnPrev.addEventListener("click", () => {
+    if (currentStep > 1) {
+      showStep(currentStep - 1);
+    }
+  });
+
+  form.addEventListener("input", updateReview);
+  form.addEventListener("change", updateReview);
+
+  const anexos = document.getElementById("anexos");
+  const uploadFeedback = document.getElementById("uploadFeedback");
+  const uploadPreviews = document.getElementById("uploadPreviews");
+
+  if (anexos) {
+    anexos.addEventListener("change", () => {
+      const files = Array.from(anexos.files || []);
+
+      if (uploadFeedback) {
+        uploadFeedback.textContent = files.length
+          ? `${files.length} arquivo(s) selecionado(s).`
+          : "";
+      }
+
+      if (uploadPreviews) {
+        uploadPreviews.innerHTML = "";
+
+        files.forEach((file) => {
+          if (!file.type.startsWith("image/")) return;
+
+          const img = document.createElement("img");
+          img.style.width = "72px";
+          img.style.height = "72px";
+          img.style.objectFit = "cover";
+          img.style.borderRadius = "12px";
+          img.style.margin = "8px 8px 0 0";
+          img.src = URL.createObjectURL(file);
+          uploadPreviews.appendChild(img);
+        });
+      }
+    });
+  }
+
+  const successOverlay = document.getElementById("successOverlay");
+  const successClose = document.getElementById("successClose");
+
+  if (window.OS_CREATED && successOverlay) {
+    successOverlay.setAttribute("aria-hidden", "false");
+    successOverlay.classList.add("show");
+  }
+
+  if (successClose && successOverlay) {
+    successClose.addEventListener("click", () => {
+      successOverlay.setAttribute("aria-hidden", "true");
+      successOverlay.classList.remove("show");
+    });
+  }
+
+  const btnCopyOs = document.getElementById("btnCopyOs");
+  if (btnCopyOs) {
+    btnCopyOs.addEventListener("click", async () => {
+      const os = document.getElementById("receiptOsNumber")?.textContent.trim() || "";
+      if (os) await navigator.clipboard.writeText(os);
+      btnCopyOs.textContent = "Copiado!";
+      setTimeout(() => btnCopyOs.textContent = "Copiar OS", 1500);
+    });
+  }
+
+  const btnDownload = document.getElementById("btnDownload");
+  if (btnDownload) {
+    btnDownload.addEventListener("click", async () => {
+      const receipt = document.getElementById("receiptCard");
+      if (!receipt || typeof html2canvas === "undefined") return;
+
+      const canvas = await html2canvas(receipt, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+      });
+
+      const link = document.createElement("a");
+      link.download = "comprovante-os.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+  }
+
+  showStep(1);
+});
+</script>
+
 <script src="{% static 'js/cep-api.js' %}"></script>
-<script src="{% static 'js/CPF-CNPJ-api.js' %}"></script>
 {% endblock %}

@@ -25,7 +25,7 @@ class ServiceRequestForm(forms.ModelForm):
         fields = [
             "document", "full_name", "phone",
             "cep", "street", "number", "neighborhood", "city",
-            "service_type", "description", "notes",
+            "service_type_ref", "description", "notes",
         ]
         widgets = {
             "document": forms.TextInput(attrs={
@@ -84,13 +84,16 @@ class ServiceRequestForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        service_types = ServiceType.objects.filter(is_active=True).order_by("name")
-        self.fields["service_type"].widget = forms.Select(
-            attrs={"class": "form-control"},
-            choices=[("", "Selecione...")] + [
-                (item.name, item.name) for item in service_types
-            ]
-        )
+        self.fields["service_type_ref"].required = True
+
+        self.fields["service_type_ref"].queryset = ServiceType.objects.all().order_by("name")
+
+        self.fields["service_type_ref"].empty_label = "Selecione..."
+        self.fields["service_type_ref"].widget.attrs.update({
+            "id": "servico",
+            "class": "form-control",
+            "required": "required",
+        })
 
 
 class ServiceRequestUpdateForm(forms.ModelForm):
@@ -109,7 +112,7 @@ class ServiceRequestUpdateForm(forms.ModelForm):
         fields = [
             "document", "full_name", "phone",
             "cep", "street", "number", "neighborhood", "city",
-            "service_type", "description", "notes",
+            "service_type_ref", "description", "notes",
             "status", "assigned_to", "team",
         ]
         widgets = {
@@ -140,13 +143,12 @@ class ServiceRequestUpdateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        service_types = ServiceType.objects.filter(is_active=True).order_by("name")
-        self.fields["service_type"].widget = forms.Select(
-            attrs={"class": "form-control"},
-            choices=[("", "Selecione...")] + [
-                (item.name, item.name) for item in service_types
-            ]
-        )
+        self.fields["service_type_ref"].queryset = ServiceType.objects.all().order_by("name")
+
+        self.fields["service_type_ref"].empty_label = "Selecione..."
+        self.fields["service_type_ref"].widget.attrs.update({
+            "class": "form-control"
+        })
 
         self.fields["assigned_to"].required = False
         self.fields["assigned_to"].queryset = (

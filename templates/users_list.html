@@ -12,11 +12,21 @@
   }
 
   .users-card{
-    background: var(--card, #fff);
-    border: 1px solid var(--line, #e5e7eb);
-    border-radius: 22px;
-    overflow: hidden;
-    box-shadow: 0 16px 36px rgba(2, 6, 23, .06);
+    --card:#ffffff;
+    --input:#ffffff;
+    --soft:#f8fafc;
+    --line:#e5e7eb;
+    --line-soft:#f1f5f9;
+    --text:#0f172a;
+    --muted:#64748b;
+    --row-hover:#f8fafc;
+    --table-head:#f8fafc;
+
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:22px;
+    overflow:hidden;
+    box-shadow:0 16px 36px rgba(2, 6, 23, .06);
   }
 
   .users-card-head{
@@ -26,24 +36,20 @@
     gap:16px;
     flex-wrap:wrap;
     padding:20px 22px;
-    border-bottom:1px solid var(--line, #e5e7eb);
-  }
-
-  .users-head-left{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
+    border-bottom:1px solid var(--line);
   }
 
   .users-head-title{
     margin:0;
     font-size:22px;
     font-weight:800;
+    color:var(--text);
   }
 
   .users-head-subtitle{
     font-size:13px;
-    color:#64748b;
+    color:var(--muted);
+    font-weight:600;
   }
 
   .users-head-right{
@@ -51,44 +57,71 @@
     align-items:center;
     gap:10px;
     margin-left:auto;
+    flex-wrap:wrap;
   }
 
   .users-total{
-    padding:8px 14px;
-    border-radius:10px;
-    background:#f8fafc;
-    border:1px solid #e2e8f0;
+    padding:10px 16px;
+    border-radius:12px;
+    background:var(--soft);
+    border:1px solid var(--line);
+    color:var(--text);
     font-size:13px;
-    font-weight:700;
+    font-weight:800;
   }
 
-  /* ===== BUSCA ===== */
   .users-search-form{
     display:flex;
     align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
   }
 
   .users-search{
     display:flex;
     align-items:center;
-    border:1px solid #dbe3ee;
-    border-radius:12px;
+    border:1px solid var(--line);
+    border-radius:14px;
     overflow:hidden;
-    background:#fff;
+    background:var(--input);
   }
 
   .users-search-input{
-    height:42px;
+    height:44px;
     border:none;
     outline:none;
-    padding:0 12px;
-    width:240px;
+    padding:0 14px;
+    width:230px;
     font-size:14px;
+    background:transparent;
+    color:var(--text);
+  }
+
+  .users-search-input::placeholder{
+    color:var(--muted);
+  }
+
+  .users-filter-select{
+    height:44px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--input);
+    color:var(--text);
+    padding:0 14px;
+    outline:none;
+    font-size:14px;
+    font-weight:700;
+    min-width:190px;
+  }
+
+  .users-filter-select option{
+    background:var(--input);
+    color:var(--text);
   }
 
   .users-search-btn{
-    height:42px;
-    width:44px;
+    height:44px;
+    width:48px;
     border:none;
     background:#2563eb;
     color:#fff;
@@ -103,7 +136,26 @@
     background:#1d4ed8;
   }
 
-  /* ===== TABELA ===== */
+  .users-clear-btn{
+    height:44px;
+    padding:0 16px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:var(--input);
+    color:var(--muted);
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    font-weight:800;
+  }
+
+  .users-clear-btn:hover{
+    background:var(--soft);
+    color:#2563eb;
+  }
+
   .users-table{
     width:100%;
     border-collapse:collapse;
@@ -114,17 +166,20 @@
     padding:14px 20px;
     font-size:12px;
     text-transform:uppercase;
-    color:#64748b;
-    border-bottom:1px solid #e5e7eb;
+    color:var(--muted);
+    border-bottom:1px solid var(--line);
+    background:var(--table-head);
   }
 
   .users-table td{
     padding:16px 20px;
-    border-bottom:1px solid #f1f5f9;
+    border-bottom:1px solid var(--line-soft);
+    color:var(--text);
+    background:var(--card);
   }
 
-  .users-table tr:hover{
-    background:#f8fafc;
+  .users-table tbody tr:hover td{
+    background:var(--row-hover);
   }
 
   .users-user{
@@ -137,88 +192,396 @@
     width:38px;
     height:38px;
     border-radius:50%;
-    background:#2563eb20;
+    background:#2563eb22;
     color:#2563eb;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-weight:700;
+    font-weight:800;
+    flex-shrink:0;
   }
 
   .users-user-name{
-    font-weight:700;
+    font-weight:800;
+    color:var(--text);
   }
 
   .users-user-login{
     font-size:12px;
-    color:#64748b;
+    color:var(--muted);
   }
 
   .users-role{
-    padding:6px 10px;
+    padding:6px 11px;
     border-radius:999px;
-    background:#f1f5f9;
+    background:var(--soft);
+    color:var(--text);
+    border:1px solid var(--line);
     font-size:12px;
-    font-weight:700;
+    font-weight:800;
+    display:inline-flex;
   }
 
   .users-status{
     display:flex;
     gap:6px;
+    flex-wrap:wrap;
   }
 
   .users-badge{
     padding:5px 10px;
     border-radius:999px;
     font-size:12px;
-    font-weight:700;
+    font-weight:800;
   }
 
   .users-badge--ok{
     background:#dcfce7;
     color:#166534;
+    border:1px solid #86efac;
   }
 
   .users-badge--bad{
     background:#fee2e2;
     color:#991b1b;
+    border:1px solid #fecaca;
   }
 
   .users-badge--info{
     background:#dbeafe;
     color:#1d4ed8;
+    border:1px solid #93c5fd;
+  }
+
+  .users-badge--staff{
+    background:#fef3c7;
+    color:#92400e;
+    border:1px solid #fcd34d;
   }
 
   .users-actions{
     display:flex;
-    gap:6px;
+    gap:7px;
   }
 
   .users-btn{
-    width:34px;
-    height:34px;
-    border-radius:8px;
+    width:36px;
+    height:36px;
+    border-radius:10px;
     border:none;
     cursor:pointer;
     display:flex;
     align-items:center;
     justify-content:center;
+    text-decoration:none;
+    transition:.2s;
   }
 
   .users-btn-edit{
-    background:#2563eb20;
+    background:#2563eb22;
     color:#2563eb;
   }
 
   .users-btn-delete{
-    background:#dc262620;
+    background:#dc262622;
     color:#dc2626;
   }
 
   .users-empty{
     text-align:center;
     padding:30px;
-    color:#64748b;
+    color:var(--muted);
+  }
+
+  body.dark .users-card,
+  body.dark-mode .users-card,
+  body.dark-theme .users-card,
+  body.theme-dark .users-card,
+  html.dark .users-card,
+  html.dark-mode .users-card,
+  html.dark-theme .users-card,
+  html.theme-dark .users-card,
+  [data-theme="dark"] .users-card{
+    --card:#0f172a;
+    --input:#111c31;
+    --soft:#17233a;
+    --line:#26364f;
+    --line-soft:#1f2e46;
+    --text:#e5edf8;
+    --muted:#94a3b8;
+    --row-hover:#17233a;
+    --table-head:#101b2f;
+
+    background:#0f172a !important;
+    border-color:#26364f !important;
+    box-shadow:0 18px 42px rgba(0,0,0,.28) !important;
+  }
+
+  body.dark .users-card-head,
+  body.dark-mode .users-card-head,
+  body.dark-theme .users-card-head,
+  body.theme-dark .users-card-head,
+  html.dark .users-card-head,
+  html.dark-mode .users-card-head,
+  html.dark-theme .users-card-head,
+  html.theme-dark .users-card-head,
+  [data-theme="dark"] .users-card-head{
+    border-bottom-color:#26364f !important;
+  }
+
+  body.dark .users-table th,
+  body.dark-mode .users-table th,
+  body.dark-theme .users-table th,
+  body.theme-dark .users-table th,
+  html.dark .users-table th,
+  html.dark-mode .users-table th,
+  html.dark-theme .users-table th,
+  html.theme-dark .users-table th,
+  [data-theme="dark"] .users-table th{
+    background:#101b2f !important;
+    color:#94a3b8 !important;
+    border-bottom-color:#26364f !important;
+  }
+
+  body.dark .users-table td,
+  body.dark-mode .users-table td,
+  body.dark-theme .users-table td,
+  body.theme-dark .users-table td,
+  html.dark .users-table td,
+  html.dark-mode .users-table td,
+  html.dark-theme .users-table td,
+  html.theme-dark .users-table td,
+  [data-theme="dark"] .users-table td{
+    background:#0f172a !important;
+    color:#e5edf8 !important;
+    border-bottom-color:#1f2e46 !important;
+  }
+
+  body.dark .users-table tbody tr:hover td,
+  body.dark-mode .users-table tbody tr:hover td,
+  body.dark-theme .users-table tbody tr:hover td,
+  body.theme-dark .users-table tbody tr:hover td,
+  html.dark .users-table tbody tr:hover td,
+  html.dark-mode .users-table tbody tr:hover td,
+  html.dark-theme .users-table tbody tr:hover td,
+  html.theme-dark .users-table tbody tr:hover td,
+  [data-theme="dark"] .users-table tbody tr:hover td{
+    background:#17233a !important;
+  }
+
+  body.dark .users-head-title,
+  body.dark-mode .users-head-title,
+  body.dark-theme .users-head-title,
+  body.theme-dark .users-head-title,
+  html.dark .users-head-title,
+  html.dark-mode .users-head-title,
+  html.dark-theme .users-head-title,
+  html.theme-dark .users-head-title,
+  [data-theme="dark"] .users-head-title,
+  body.dark .users-user-name,
+  body.dark-mode .users-user-name,
+  body.dark-theme .users-user-name,
+  body.theme-dark .users-user-name,
+  html.dark .users-user-name,
+  html.dark-mode .users-user-name,
+  html.dark-theme .users-user-name,
+  html.theme-dark .users-user-name,
+  [data-theme="dark"] .users-user-name{
+    color:#e5edf8 !important;
+  }
+
+  body.dark .users-head-subtitle,
+  body.dark-mode .users-head-subtitle,
+  body.dark-theme .users-head-subtitle,
+  body.theme-dark .users-head-subtitle,
+  html.dark .users-head-subtitle,
+  html.dark-mode .users-head-subtitle,
+  html.dark-theme .users-head-subtitle,
+  html.theme-dark .users-head-subtitle,
+  [data-theme="dark"] .users-head-subtitle,
+  body.dark .users-user-login,
+  body.dark-mode .users-user-login,
+  body.dark-theme .users-user-login,
+  body.theme-dark .users-user-login,
+  html.dark .users-user-login,
+  html.dark-mode .users-user-login,
+  html.dark-theme .users-user-login,
+  html.theme-dark .users-user-login,
+  [data-theme="dark"] .users-user-login{
+    color:#94a3b8 !important;
+  }
+
+  body.dark .users-total,
+  body.dark-mode .users-total,
+  body.dark-theme .users-total,
+  body.theme-dark .users-total,
+  html.dark .users-total,
+  html.dark-mode .users-total,
+  html.dark-theme .users-total,
+  html.theme-dark .users-total,
+  [data-theme="dark"] .users-total,
+  body.dark .users-search,
+  body.dark-mode .users-search,
+  body.dark-theme .users-search,
+  body.theme-dark .users-search,
+  html.dark .users-search,
+  html.dark-mode .users-search,
+  html.dark-theme .users-search,
+  html.theme-dark .users-search,
+  [data-theme="dark"] .users-search,
+  body.dark .users-filter-select,
+  body.dark-mode .users-filter-select,
+  body.dark-theme .users-filter-select,
+  body.theme-dark .users-filter-select,
+  html.dark .users-filter-select,
+  html.dark-mode .users-filter-select,
+  html.dark-theme .users-filter-select,
+  html.theme-dark .users-filter-select,
+  [data-theme="dark"] .users-filter-select,
+  body.dark .users-clear-btn,
+  body.dark-mode .users-clear-btn,
+  body.dark-theme .users-clear-btn,
+  body.theme-dark .users-clear-btn,
+  html.dark .users-clear-btn,
+  html.dark-mode .users-clear-btn,
+  html.dark-theme .users-clear-btn,
+  html.theme-dark .users-clear-btn,
+  [data-theme="dark"] .users-clear-btn{
+    background:#111c31 !important;
+    color:#e5edf8 !important;
+    border-color:#2b3d5c !important;
+  }
+
+  body.dark .users-search-input,
+  body.dark-mode .users-search-input,
+  body.dark-theme .users-search-input,
+  body.theme-dark .users-search-input,
+  html.dark .users-search-input,
+  html.dark-mode .users-search-input,
+  html.dark-theme .users-search-input,
+  html.theme-dark .users-search-input,
+  [data-theme="dark"] .users-search-input{
+    color:#e5edf8 !important;
+    background:transparent !important;
+  }
+
+  body.dark .users-filter-select option,
+  body.dark-mode .users-filter-select option,
+  body.dark-theme .users-filter-select option,
+  body.theme-dark .users-filter-select option,
+  html.dark .users-filter-select option,
+  html.dark-mode .users-filter-select option,
+  html.dark-theme .users-filter-select option,
+  html.theme-dark .users-filter-select option,
+  [data-theme="dark"] .users-filter-select option{
+    background:#111c31 !important;
+    color:#e5edf8 !important;
+  }
+
+  body.dark .users-avatar,
+  body.dark-mode .users-avatar,
+  body.dark-theme .users-avatar,
+  body.theme-dark .users-avatar,
+  html.dark .users-avatar,
+  html.dark-mode .users-avatar,
+  html.dark-theme .users-avatar,
+  html.theme-dark .users-avatar,
+  [data-theme="dark"] .users-avatar{
+    background:#1e3a8a55 !important;
+    color:#93c5fd !important;
+  }
+
+  body.dark .users-role,
+  body.dark-mode .users-role,
+  body.dark-theme .users-role,
+  body.theme-dark .users-role,
+  html.dark .users-role,
+  html.dark-mode .users-role,
+  html.dark-theme .users-role,
+  html.theme-dark .users-role,
+  [data-theme="dark"] .users-role{
+    background:#17233a !important;
+    color:#dbeafe !important;
+    border-color:#2b3d5c !important;
+  }
+
+  body.dark .users-badge--ok,
+  body.dark-mode .users-badge--ok,
+  body.dark-theme .users-badge--ok,
+  body.theme-dark .users-badge--ok,
+  html.dark .users-badge--ok,
+  html.dark-mode .users-badge--ok,
+  html.dark-theme .users-badge--ok,
+  html.theme-dark .users-badge--ok,
+  [data-theme="dark"] .users-badge--ok{
+    background:#064e3b !important;
+    color:#d1fae5 !important;
+    border-color:#10b98155 !important;
+  }
+
+  body.dark .users-badge--bad,
+  body.dark-mode .users-badge--bad,
+  body.dark-theme .users-badge--bad,
+  body.theme-dark .users-badge--bad,
+  html.dark .users-badge--bad,
+  html.dark-mode .users-badge--bad,
+  html.dark-theme .users-badge--bad,
+  html.theme-dark .users-badge--bad,
+  [data-theme="dark"] .users-badge--bad{
+    background:#7f1d1d !important;
+    color:#fee2e2 !important;
+    border-color:#ef444455 !important;
+  }
+
+  body.dark .users-badge--info,
+  body.dark-mode .users-badge--info,
+  body.dark-theme .users-badge--info,
+  body.theme-dark .users-badge--info,
+  html.dark .users-badge--info,
+  html.dark-mode .users-badge--info,
+  html.dark-theme .users-badge--info,
+  html.theme-dark .users-badge--info,
+  [data-theme="dark"] .users-badge--info{
+    background:#0b3b82 !important;
+    color:#dbeafe !important;
+    border-color:#60a5fa55 !important;
+  }
+
+  body.dark .users-badge--staff,
+  body.dark-mode .users-badge--staff,
+  body.dark-theme .users-badge--staff,
+  body.theme-dark .users-badge--staff,
+  html.dark .users-badge--staff,
+  html.dark-mode .users-badge--staff,
+  html.dark-theme .users-badge--staff,
+  html.theme-dark .users-badge--staff,
+  [data-theme="dark"] .users-badge--staff{
+    background:#78350f !important;
+    color:#fef3c7 !important;
+    border-color:#f59e0b55 !important;
+  }
+
+  @media(max-width:768px){
+    .users-head-right,
+    .users-search-form,
+    .users-search,
+    .users-filter-select,
+    .users-clear-btn{
+      width:100%;
+    }
+
+    .users-search-input{
+      width:100%;
+      flex:1;
+    }
+
+    .users-table{
+      min-width:760px;
+    }
+
+    .users-card{
+      overflow-x:auto;
+    }
   }
 </style>
 
@@ -238,7 +601,6 @@
           {{ users|length }} usuários
         </div>
 
-        <!-- 🔥 BUSCA COM BOTÃO -->
         <form method="get" class="users-search-form">
           <div class="users-search">
             <input
@@ -248,14 +610,30 @@
               placeholder="Buscar..."
               class="users-search-input"
             >
+
             <button type="submit" class="users-search-btn">
               <i class="bi bi-search"></i>
             </button>
           </div>
+
+          <select name="filtro" class="users-filter-select" onchange="this.form.submit()">
+            <option value="">Todos</option>
+            <option value="requisitante" {% if filtro == "requisitante" %}selected{% endif %}>Requisitantes</option>
+            <option value="interno" {% if filtro == "interno" %}selected{% endif %}>Internos</option>
+            <option value="superuser" {% if filtro == "superuser" %}selected{% endif %}>Superuser</option>
+            <option value="ativo" {% if filtro == "ativo" %}selected{% endif %}>Ativos</option>
+            <option value="bloqueado" {% if filtro == "bloqueado" %}selected{% endif %}>Bloqueados</option>
+            <option value="staff" {% if filtro == "staff" %}selected{% endif %}>Staff</option>
+          </select>
+
+          {% if q or filtro %}
+            <a href="{% url 'users_list' %}" class="users-clear-btn">
+              Limpar
+            </a>
+          {% endif %}
         </form>
 
       </div>
-
     </div>
 
     <table class="users-table">
@@ -307,7 +685,11 @@
               {% endif %}
 
               {% if u.is_superuser %}
-                <span class="users-badge users-badge--info">Admin</span>
+                <span class="users-badge users-badge--info">Superuser</span>
+              {% endif %}
+
+              {% if u.is_staff %}
+                <span class="users-badge users-badge--staff">Staff</span>
               {% endif %}
             </div>
           </td>

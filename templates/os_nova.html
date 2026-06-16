@@ -26,7 +26,6 @@
       </div>
 
       <div class="os-card-body">
-
         <div class="field">
           <label for="id_document">CPF *</label>
           <input
@@ -40,25 +39,18 @@
           >
 
           {% if form.document.errors %}
-            <div class="field-error">
-              {{ form.document.errors.0 }}
-            </div>
+            <div class="field-error">{{ form.document.errors.0 }}</div>
           {% endif %}
 
           <div id="cpf-warning" class="cpf-warning" style="display:none;">
             <div class="cpf-warning-icon">⚠️</div>
-
             <div class="cpf-warning-content">
               <strong>CPF não encontrado no sistema.</strong>
-
               <p>
                 Para cadastrar esta Ordem de Serviço, primeiro é necessário
                 cadastrar o usuário correspondente a este CPF.
               </p>
-
-              <span>
-                Vá até o menu <b>Usuários</b> → <b>Criar usuário</b>.
-              </span>
+              <span>Vá até o menu <b>Usuários</b> → <b>Criar usuário</b>.</span>
             </div>
           </div>
         </div>
@@ -74,9 +66,7 @@
             {% if request.user.is_authenticated and form.full_name.value %}readonly{% endif %}
           >
           {% if form.full_name.errors %}
-            <div class="field-error">
-              {{ form.full_name.errors.0 }}
-            </div>
+            <div class="field-error">{{ form.full_name.errors.0 }}</div>
           {% endif %}
         </div>
 
@@ -84,12 +74,9 @@
           <label>Telefone *</label>
           {{ form.phone }}
           {% if form.phone.errors %}
-            <div class="field-error">
-              {{ form.phone.errors.0 }}
-            </div>
+            <div class="field-error">{{ form.phone.errors.0 }}</div>
           {% endif %}
         </div>
-
       </div>
     </section>
 
@@ -108,9 +95,7 @@
             <label>CEP</label>
             {{ form.cep }}
             {% if form.cep.errors %}
-              <div class="field-error">
-                {{ form.cep.errors.0 }}
-              </div>
+              <div class="field-error">{{ form.cep.errors.0 }}</div>
             {% endif %}
           </div>
         </div>
@@ -119,9 +104,7 @@
           <label>Rua / Avenida</label>
           {{ form.street }}
           {% if form.street.errors %}
-            <div class="field-error">
-              {{ form.street.errors.0 }}
-            </div>
+            <div class="field-error">{{ form.street.errors.0 }}</div>
           {% endif %}
         </div>
 
@@ -130,9 +113,7 @@
             <label>Número</label>
             {{ form.number }}
             {% if form.number.errors %}
-              <div class="field-error">
-                {{ form.number.errors.0 }}
-              </div>
+              <div class="field-error">{{ form.number.errors.0 }}</div>
             {% endif %}
           </div>
 
@@ -146,9 +127,7 @@
           <label>Bairro</label>
           {{ form.neighborhood }}
           {% if form.neighborhood.errors %}
-            <div class="field-error">
-              {{ form.neighborhood.errors.0 }}
-            </div>
+            <div class="field-error">{{ form.neighborhood.errors.0 }}</div>
           {% endif %}
         </div>
 
@@ -157,15 +136,20 @@
             <label>Cidade</label>
             {{ form.city }}
             {% if form.city.errors %}
-              <div class="field-error">
-                {{ form.city.errors.0 }}
-              </div>
+              <div class="field-error">{{ form.city.errors.0 }}</div>
             {% endif %}
           </div>
 
           <div class="field">
-            <label>UF</label>
-            <input type="text" name="uf" placeholder="UF" maxlength="2" />
+            <label for="id_uf">UF</label>
+            <input
+              type="text"
+              name="uf"
+              id="id_uf"
+              placeholder="UF"
+              maxlength="2"
+              value="{{ form.uf.value|default:'' }}"
+            />
           </div>
         </div>
 
@@ -187,12 +171,10 @@
 
       <div class="os-card-body">
         <div class="field">
-          <label>Tipo de Serviço *</label>
-          {{ form.service_type }}
-          {% if form.service_type.errors %}
-            <div class="field-error">
-              {{ form.service_type.errors.0 }}
-            </div>
+          <label for="servico">Tipo de Serviço *</label>
+          {{ form.service_type_ref }}
+          {% if form.service_type_ref.errors %}
+            <div class="field-error">{{ form.service_type_ref.errors.0 }}</div>
           {% endif %}
         </div>
 
@@ -200,9 +182,7 @@
           <label>Descrição *</label>
           {{ form.description }}
           {% if form.description.errors %}
-            <div class="field-error">
-              {{ form.description.errors.0 }}
-            </div>
+            <div class="field-error">{{ form.description.errors.0 }}</div>
           {% endif %}
         </div>
 
@@ -241,9 +221,7 @@
           <label>Observações Internas</label>
           {{ form.notes }}
           {% if form.notes.errors %}
-            <div class="field-error">
-              {{ form.notes.errors.0 }}
-            </div>
+            <div class="field-error">{{ form.notes.errors.0 }}</div>
           {% endif %}
         </div>
       </div>
@@ -278,7 +256,6 @@
     border-radius: 14px;
     background: #fff7ed;
     border: 1px solid #fdba74;
-
     display: flex;
     gap: 12px;
     align-items: flex-start;
@@ -290,11 +267,9 @@
     border-radius: 10px;
     background: #fb923c;
     color: white;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     font-size: 18px;
     flex-shrink: 0;
   }
@@ -324,6 +299,36 @@
     box-shadow: 0 0 0 4px rgba(251, 146, 60, .18) !important;
   }
 
+  .upload-previews{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .upload-preview-item{
+    width: 110px;
+    height: 110px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+  }
+
+  .upload-preview-item img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .upload-feedback{
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+  }
+
   body.theme-dark .cpf-warning{
     background: rgba(154, 52, 18, .22);
     border-color: rgba(251, 146, 60, .45);
@@ -337,7 +342,83 @@
   body.theme-dark .cpf-warning-content span{
     color: #fdba74;
   }
+
+  body.theme-dark .upload-preview-item{
+    border-color: rgba(148, 163, 184, .35);
+    background: rgba(15, 23, 42, .6);
+  }
+
+  body.theme-dark .upload-feedback{
+    color: #cbd5e1;
+  }
 </style>
 
 <script src="{% static 'js/os_nova.js' %}"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("id_attachments");
+    const previews = document.getElementById("uploadPreviews");
+    const feedback = document.getElementById("uploadFeedback");
+    const count = document.getElementById("uploadCount");
+    const title = document.getElementById("uploadTitle");
+    const sub = document.getElementById("uploadSub");
+
+    if (!input) return;
+
+    input.addEventListener("change", function () {
+      const files = Array.from(input.files || []);
+
+      if (previews) {
+        previews.innerHTML = "";
+      }
+
+      if (count) {
+        count.hidden = files.length === 0;
+        count.textContent = files.length;
+      }
+
+      if (feedback) {
+        feedback.textContent = files.length
+          ? `${files.length} imagem(ns) selecionada(s).`
+          : "";
+      }
+
+      if (title) {
+        title.textContent = files.length
+          ? "Imagem(ns) selecionada(s)"
+          : "Selecionar imagens";
+      }
+
+      if (sub) {
+        sub.textContent = files.length
+          ? "Clique para trocar os arquivos"
+          : "PNG ou JPG";
+      }
+
+      files.forEach(function (file) {
+        if (!file.type.startsWith("image/")) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+          const item = document.createElement("div");
+          item.className = "upload-preview-item";
+
+          const img = document.createElement("img");
+          img.src = event.target.result;
+          img.alt = file.name;
+
+          item.appendChild(img);
+
+          if (previews) {
+            previews.appendChild(item);
+          }
+        };
+
+        reader.readAsDataURL(file);
+      });
+    });
+  });
+</script>
 {% endblock %}

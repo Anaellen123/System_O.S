@@ -4,30 +4,57 @@
 {% block page_title %}Gerador de Relatório de Demanda{% endblock %}
 
 {% block content %}
+
 <style>
   .report-search-wrap{
-    max-width: 700px;
+    max-width: 1100px;
+    margin: 0 auto;
   }
 
-  .report-search-card{
-    background: #fff;
+  .report-search-card,
+  .report-list-card{
+    background: #ffffff;
     border: 1px solid #dbe2ea;
     border-radius: 18px;
     padding: 24px;
     box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
   }
 
-  .report-search-title{
-    margin: 0 0 8px;
-    font-size: 24px;
-    font-weight: 800;
+  .report-list-card{
+    margin-top: 24px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .report-search-title,
+  .report-list-title{
+    margin: 0;
     color: #0f172a;
+    font-weight: 800;
+  }
+
+  .report-search-title{
+    margin-bottom: 8px;
+    font-size: 24px;
+  }
+
+  .report-list-title{
+    font-size: 18px;
+  }
+
+  .report-search-sub,
+  .report-list-sub{
+    color: #64748b;
+    font-size: 14px;
   }
 
   .report-search-sub{
     margin: 0 0 18px;
-    color: #64748b;
-    font-size: 14px;
+  }
+
+  .report-list-sub{
+    margin: 4px 0 0;
+    font-size: 13px;
   }
 
   .report-label{
@@ -48,11 +75,13 @@
     padding: 0 14px;
     font-size: 15px;
     outline: none;
+    background: #ffffff;
+    color: #0f172a;
   }
 
   .report-input:focus{
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
   }
 
   .report-actions{
@@ -69,28 +98,218 @@
     border-radius: 12px;
     background: #2563eb;
     color: #fff;
-    font-weight: 700;
+    font-weight: 800;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: .2s;
   }
 
   .report-btn:hover{
     background: #1d4ed8;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  .report-list-header{
+    padding: 18px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #ffffff;
+  }
+
+  .report-table-wrap{
+    overflow-x: auto;
+  }
+
+  .report-table{
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .report-table th{
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 14px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+  }
+
+  .report-table td{
+    padding: 14px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 14px;
+  }
+
+  .report-table tr:hover{
+    background: #f8fafc;
+  }
+
+  .os-link{
+    color: #2563eb;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .os-link:hover{
+    text-decoration: underline;
+  }
+
+  .status-done{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .empty-state{
+    text-align: center;
+    padding: 28px;
+    color: #64748b;
+  }
+
+  /* TEMA ESCURO */
+  body.dark-mode .report-search-card,
+  body.dark-mode .report-list-card,
+  html.dark-mode .report-search-card,
+  html.dark-mode .report-list-card{
+    background: #0f172a !important;
+    border-color: #263449 !important;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, .30);
+  }
+
+  body.dark-mode .report-list-header,
+  html.dark-mode .report-list-header{
+    background: #0f172a !important;
+    border-bottom-color: #263449 !important;
+  }
+
+  body.dark-mode .report-search-title,
+  body.dark-mode .report-list-title,
+  html.dark-mode .report-search-title,
+  html.dark-mode .report-list-title{
+    color: #f8fafc !important;
+  }
+
+  body.dark-mode .report-search-sub,
+  body.dark-mode .report-list-sub,
+  html.dark-mode .report-search-sub,
+  html.dark-mode .report-list-sub{
+    color: #94a3b8 !important;
+  }
+
+  body.dark-mode .report-label,
+  html.dark-mode .report-label{
+    color: #cbd5e1 !important;
+  }
+
+  body.dark-mode .report-input,
+  html.dark-mode .report-input{
+    background: #111827 !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+
+  body.dark-mode .report-input::placeholder,
+  html.dark-mode .report-input::placeholder{
+    color: #64748b !important;
+  }
+
+  body.dark-mode .report-input:focus,
+  html.dark-mode .report-input:focus{
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 3px rgba(96,165,250,.18) !important;
+  }
+
+  body.dark-mode .report-table th,
+  html.dark-mode .report-table th{
+    background: #111827 !important;
+    color: #cbd5e1 !important;
+    border-bottom-color: #263449 !important;
+  }
+
+  body.dark-mode .report-table td,
+  html.dark-mode .report-table td{
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+    border-bottom-color: #263449 !important;
+  }
+
+  body.dark-mode .report-table tr:hover td,
+  html.dark-mode .report-table tr:hover td{
+    background: #162033 !important;
+  }
+
+  body.dark-mode .os-link,
+  html.dark-mode .os-link{
+    color: #60a5fa !important;
+  }
+
+  body.dark-mode .status-done,
+  html.dark-mode .status-done{
+    background: rgba(34,197,94,.16) !important;
+    color: #86efac !important;
+    border: 1px solid rgba(34,197,94,.30);
+  }
+
+  body.dark-mode .empty-state,
+  html.dark-mode .empty-state{
+    color: #94a3b8 !important;
+  }
+
+  @media (max-width: 768px){
+    .report-search-card{
+      padding: 18px;
+    }
+
+    .report-search-title{
+      font-size: 20px;
+    }
+
+    .report-list-header{
+      padding: 16px 18px;
+    }
+
+    .report-table{
+      min-width: 800px;
+    }
+
+    .report-btn{
+      width: 100%;
+    }
   }
 </style>
 
 <div class="report-search-wrap">
+
   <div class="report-search-card">
-    <h2 class="report-search-title">Relatório de Ordem de Demanda</h2>
+
+    <h2 class="report-search-title">
+      Relatório de Ordem de Demanda
+    </h2>
+
     <p class="report-search-sub">
-      Digite o número da demanda para gerar o relatório na hora e baixar o PDF.
+      Digite o número da demanda para gerar o relatório em PDF.
     </p>
 
     <form method="get" action="{% url 'report_os_download' %}">
-      <label class="report-label" for="os_number">Número da Demanda</label>
+
+      <label class="report-label" for="os_number">
+        Número da Demanda
+      </label>
+
       <input
         type="text"
         name="os_number"
@@ -101,9 +320,102 @@
       >
 
       <div class="report-actions">
-        <button type="submit" class="report-btn">Gerar relatório</button>
+        <button type="submit" class="report-btn">
+          Gerar Relatório
+        </button>
       </div>
+
     </form>
+
   </div>
+
+  <div class="report-list-card">
+
+    <div class="report-list-header">
+      <h3 class="report-list-title">
+        Últimas 15 O.S Concluídas
+      </h3>
+
+      <p class="report-list-sub">
+        Clique no número da O.S para preencher automaticamente o campo acima.
+      </p>
+    </div>
+
+    <div class="report-table-wrap">
+
+      <table class="report-table">
+
+        <thead>
+          <tr>
+            <th>Número O.S</th>
+            <th>Solicitante</th>
+            <th>Serviço</th>
+            <th>Data</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% for os in ultimas_os %}
+          <tr>
+
+            <td>
+              <a
+                href="#"
+                class="os-link"
+                onclick="selecionarOS('{{ os.os_number }}'); return false;"
+              >
+                {{ os.os_number }}
+              </a>
+            </td>
+
+            <td>{{ os.full_name }}</td>
+
+            <td>{{ os.service_type }}</td>
+
+            <td>{{ os.created_at|date:"d/m/Y" }}</td>
+
+            <td>
+              <span class="status-done">
+                Concluída
+              </span>
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="empty-state">
+              Nenhuma O.S concluída encontrada.
+            </td>
+          </tr>
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
 </div>
+
+<script>
+function selecionarOS(numeroOS){
+  const inputOS = document.getElementById("os_number");
+
+  if (!inputOS) return;
+
+  inputOS.value = numeroOS;
+
+  inputOS.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
+  inputOS.focus();
+}
+</script>
+
 {% endblock %}

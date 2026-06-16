@@ -1,0 +1,282 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Ajuda{% endblock %}
+{% block page_title %}Central de Ajuda{% endblock %}
+
+{% block content %}
+
+<style>
+  .help-wrap{
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .help-card{
+    background: var(--card, #fff);
+    border: 2px solid #22c55e;
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow:
+      0 0 0 4px rgba(34,197,94,.10),
+      0 18px 40px rgba(15,23,42,.10);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .help-card::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:5px;
+    background:linear-gradient(90deg,#16a34a,#22c55e,#4ade80);
+  }
+
+  .help-head{
+    display:flex;
+    gap:16px;
+    align-items:center;
+    margin-bottom:24px;
+    padding-bottom:20px;
+    border-bottom:2px solid rgba(34,197,94,.15);
+  }
+
+  .help-icon{
+    width:64px;
+    height:64px;
+    border-radius:20px;
+    display:grid;
+    place-items:center;
+    background:linear-gradient(135deg,#16a34a,#22c55e);
+    color:#fff;
+    font-size:30px;
+    box-shadow:
+      0 0 0 5px rgba(34,197,94,.15),
+      0 12px 24px rgba(22,163,74,.25);
+  }
+
+  .help-head h2{
+    margin:0;
+    color:var(--text,#0f172a);
+    font-size:28px;
+    font-weight:800;
+  }
+
+  .help-head p{
+    margin:4px 0 0;
+    color:var(--muted,#64748b);
+  }
+
+  .help-label{
+    display:block;
+    margin-bottom:10px;
+    color:var(--text,#0f172a);
+    font-weight:800;
+    font-size:15px;
+  }
+
+  .help-textarea{
+    width:100%;
+    min-height:200px;
+    border-radius:18px;
+    border:2px solid #d1fae5;
+    background:var(--input-bg,#fff);
+    color:var(--text,#0f172a);
+    padding:18px;
+    resize:vertical;
+    outline:none;
+    font-size:15px;
+    transition:.25s ease;
+  }
+
+  .help-textarea:hover{
+    border-color:#86efac;
+  }
+
+  .help-textarea:focus{
+    border-color:#22c55e;
+    box-shadow:
+      0 0 0 5px rgba(34,197,94,.15);
+  }
+
+  .help-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+    margin-top:22px;
+    flex-wrap:wrap;
+  }
+
+  .help-btn{
+    border:0;
+    border-radius:999px;
+    padding:14px 26px;
+    font-weight:800;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    transition:.25s ease;
+  }
+
+  .help-btn-whatsapp{
+    background:linear-gradient(135deg,#16a34a,#22c55e);
+    color:#fff;
+    box-shadow:
+      0 0 0 3px rgba(34,197,94,.18),
+      0 12px 24px rgba(22,163,74,.25);
+  }
+
+  .help-btn-whatsapp:hover{
+    color:#fff;
+    transform:translateY(-2px);
+    box-shadow:
+      0 0 0 4px rgba(34,197,94,.22),
+      0 18px 30px rgba(22,163,74,.35);
+  }
+
+  .help-alert{
+    display:none;
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid rgba(220,38,38,.25);
+    background:rgba(239,68,68,.12);
+    color:#dc2626;
+    font-weight:700;
+  }
+
+  /* DARK MODE */
+
+  body.dark .help-card,
+  [data-theme="dark"] .help-card{
+    background:#111827;
+    border:2px solid #22c55e;
+    box-shadow:
+      0 0 0 4px rgba(34,197,94,.10),
+      0 20px 50px rgba(0,0,0,.45);
+  }
+
+  body.dark .help-head,
+  [data-theme="dark"] .help-head{
+    border-bottom:2px solid rgba(34,197,94,.20);
+  }
+
+  body.dark .help-head h2,
+  body.dark .help-label,
+  [data-theme="dark"] .help-head h2,
+  [data-theme="dark"] .help-label{
+    color:#f8fafc;
+  }
+
+  body.dark .help-head p,
+  [data-theme="dark"] .help-head p{
+    color:#94a3b8;
+  }
+
+  body.dark .help-textarea,
+  [data-theme="dark"] .help-textarea{
+    background:#0f172a;
+    border:2px solid #334155;
+    color:#f8fafc;
+  }
+
+  body.dark .help-textarea:hover,
+  [data-theme="dark"] .help-textarea:hover{
+    border-color:#22c55e;
+  }
+
+  body.dark .help-textarea::placeholder,
+  [data-theme="dark"] .help-textarea::placeholder{
+    color:#94a3b8;
+  }
+
+  @media(max-width:576px){
+
+    .help-card{
+      padding:22px;
+      border-radius:20px;
+    }
+
+    .help-head{
+      align-items:flex-start;
+    }
+
+    .help-head h2{
+      font-size:22px;
+    }
+
+    .help-actions{
+      justify-content:stretch;
+    }
+
+    .help-btn{
+      width:100%;
+      justify-content:center;
+    }
+  }
+</style>
+<div class="help-wrap">
+  <div class="help-card">
+    <div class="help-head">
+      <div class="help-icon">
+        <i class="bi bi-whatsapp"></i>
+      </div>
+
+      <div>
+        <h2>Precisa de ajuda?</h2>
+        <p>Digite sua mensagem abaixo e envie diretamente para o WhatsApp do suporte.</p>
+      </div>
+    </div>
+
+    <form id="helpForm">
+      <label class="help-label" for="helpMessage">Mensagem</label>
+
+      <textarea
+        id="helpMessage"
+        class="help-textarea"
+        placeholder="Ex: Olá, preciso de ajuda com uma ordem de serviço..."
+      ></textarea>
+
+      <div class="help-alert" id="helpAlert">
+        Digite uma mensagem antes de enviar.
+      </div>
+
+      <div class="help-actions">
+        <button type="submit" class="help-btn help-btn-whatsapp">
+          <i class="bi bi-whatsapp"></i>
+          Enviar pelo WhatsApp
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById("helpForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const number = "{{ whatsapp_number }}";
+    const messageInput = document.getElementById("helpMessage");
+    const alertBox = document.getElementById("helpAlert");
+
+    const message = messageInput.value.trim();
+
+    if(!message){
+      alertBox.style.display = "block";
+      messageInput.focus();
+      return;
+    }
+
+    alertBox.style.display = "none";
+
+    const finalMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${number}?text=${finalMessage}`;
+
+    window.open(whatsappUrl, "_blank");
+  });
+</script>
+
+{% endblock %}

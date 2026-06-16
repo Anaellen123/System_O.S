@@ -22,6 +22,27 @@ class UserProfile(models.Model):
     cpf = models.CharField(max_length=14, blank=True, null=True, unique=True)
     birth_date = models.DateField(blank=True, null=True)
 
+    phone = models.CharField(
+        "Telefone",
+        max_length=20,
+        blank=True,
+        default=""
+    )
+
+    cargo_funcao = models.CharField(
+        "Cargo / Função",
+        max_length=150,
+        blank=True,
+        default=""
+    )
+
+    setor = models.CharField(
+        "Setor",
+        max_length=150,
+        blank=True,
+        default=""
+    )
+
     cep = models.CharField(max_length=9, blank=True)
     street = models.CharField(max_length=150, blank=True)
     number = models.CharField(max_length=20, blank=True)
@@ -61,9 +82,15 @@ def attachment_upload_to(instance, filename):
     new_name = f"{uuid.uuid4().hex}{ext}"
     return f"service_requests/{os_number}/{new_name}"
 
-
 class ServiceType(models.Model):
     name = models.CharField("Nome do serviço", max_length=120, unique=True)
+
+    prazo_dias = models.PositiveIntegerField(
+        "Prazo em dias",
+        null=True,
+        blank=True
+    )
+
     is_active = models.BooleanField("Ativo", default=True)
     created_at = models.DateTimeField("Criado em", auto_now_add=True)
 
@@ -140,6 +167,16 @@ class ServiceRequest(models.Model):
     city = models.CharField(max_length=120, blank=True)
 
     service_type = models.CharField(max_length=80)
+
+    service_type_ref = models.ForeignKey(
+        "ServiceType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="service_requests_ref",
+        verbose_name="Tipo de serviço"
+    )
+
     description = models.TextField()
     notes = models.TextField(blank=True)
 
@@ -339,3 +376,23 @@ class NotificationRead(models.Model):
 
     def __str__(self):
         return f"{self.user} leu {self.notification}"
+
+class NotificationHidden(models.Model):
+    notification = models.ForeignKey(
+        Notification,
+        on_delete=models.CASCADE,
+        related_name="hidden_by",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="hidden_notifications",
+    )
+    hidden_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("notification", "user")
+
+    def __str__(self):
+        return f"{self.user} ocultou {self.notification}"
+

@@ -1,8 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-
-  // =========================
-  // INPUT CEP
-  // =========================
   const cepInput =
     document.getElementById("cep") ||
     document.getElementById("id_cep") ||
@@ -10,9 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!cepInput) return;
 
-  // =========================
-  // CAMPOS ENDEREÇO
-  // =========================
   const ruaInput =
     document.getElementById("rua") ||
     document.getElementById("id_street") ||
@@ -34,158 +27,123 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("[name='number']");
 
   const ufInput =
-    document.getElementById("uf") ||
     document.getElementById("id_uf") ||
+    document.getElementById("uf") ||
     document.querySelector("[name='uf']");
 
-  // =========================
-  // URL API CEP
-  // =========================
-  const CEP_API_BASE =
-    (window.CEP_API_BASE || "/api/cep/")
-      .replace(/\/+$/, "") + "/";
-
-  // =========================
-  // HELPERS
-  // =========================
   const onlyNumbers = (v) => (v || "").replace(/\D/g, "");
 
   function formatCep(v) {
     const d = onlyNumbers(v).slice(0, 8);
-
-    if (d.length > 5) {
-      return d.slice(0, 5) + "-" + d.slice(5);
-    }
-
-    return d;
+    return d.length > 5 ? d.slice(0, 5) + "-" + d.slice(5) : d;
   }
 
-  // =========================
-  // CONSULTAR CEP
-  // =========================
+  function setValue(input, value) {
+    if (!input) return;
+    input.value = value || "";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
   async function consultarCep(cep8) {
+    const urlLocal = `/api/cep/${cep8}/`;
 
-    const url = `${CEP_API_BASE}${cep8}/`;
+    try {
+      const res = await fetch(urlLocal, {
+        headers: { "Accept": "application/json" }
+      });
 
-    const res = await fetch(url, {
-      headers: {
-        "Accept": "application/json"
+      if (res.ok) {
+        const data = await res.json();
+
+        if (data && !data.erro) {
+          return data;
+        }
       }
-    });
-
-    const contentType =
-      res.headers.get("content-type") || "";
-
-    // evita crash quando API devolve HTML
-    if (!contentType.includes("application/json")) {
-
-      const txt = await res.text();
-
-      throw new Error(
-        `Resposta não-JSON em ${url} ` +
-        `(status ${res.status}). ` +
-        `Primeiros chars: ${txt.slice(0, 120)}`
-      );
+    } catch (e) {
+      console.warn("API local falhou, tentando ViaCEP...", e);
     }
 
-    const data = await res.json();
+    const resViaCep = await fetch(`https://viacep.com.br/ws/${cep8}/json/`);
+    const dataViaCep = await resViaCep.json();
 
-    if (!res.ok) {
-      throw new Error(
-        data.error || "Erro ao consultar CEP"
-      );
+    if (dataViaCep.erro) {
+      throw new Error("CEP não encontrado.");
     }
 
-    return data;
+    return dataViaCep;
   }
 
-  // =========================
-  // CONTROLE CEP
-  // =========================
   let lastCep = "";
 
-  // =========================
-  // PREENCHER ENDEREÇO
-  // =========================
   async function preencherEndereco() {
-
     const cep = onlyNumbers(cepInput.value);
 
     if (cep.length !== 8) return;
-
     if (cep === lastCep) return;
 
     lastCep = cep;
 
     try {
-
       const data = await consultarCep(cep);
 
-      // LOG DEBUG
       console.log("CEP DATA:", data);
 
-      if (ruaInput) {
-        ruaInput.value =
-          data.rua ||
-          data.logradouro ||
-          "";
-      }
+      setValue(
+        ruaInput,
+        data.rua ||
+        data.logradouro ||
+        data.street ||
+        ""
+      );
 
-      if (bairroInput) {
-        bairroInput.value =
-          data.bairro || "";
-      }
+      setValue(
+        bairroInput,
+        data.bairro ||
+        data.neighborhood ||
+        ""
+      );
 
-      if (cidadeInput) {
-        cidadeInput.value =
-          data.cidade ||
-          data.localidade ||
-          "";
-      }
+      setValue(
+        cidadeInput,
+        data.cidade ||
+        data.localidade ||
+        data.city ||
+        ""
+      );
 
-      if (ufInput) {
-        ufInput.value =
-          data.uf ||
-          data.estado ||
-          "";
-      }
+      const uf =
+        data.uf ||
+        data.UF ||
+        data.estado_sigla ||
+        data.estado_uf ||
+        "";
+
+      setValue(ufInput, uf.toString().toUpperCase().slice(0, 2));
 
       if (numeroInput) {
         numeroInput.focus();
       }
 
     } catch (err) {
-
-      console.error("Erro CEP:", err);
-
-      // opcional:
-      // alert("Não foi possível consultar o CEP.");
+      lastCep = "";
+      console.error("Erro ao consultar CEP:", err);
     }
   }
 
-  // =========================
-  // INPUT CEP
-  // =========================
   cepInput.addEventListener("input", () => {
-
-    const before = cepInput.value;
-
-    cepInput.value = formatCep(before);
+    cepInput.value = formatCep(cepInput.value);
 
     if (onlyNumbers(cepInput.value).length === 8) {
-
       preencherEndereco();
-
     } else {
-
-      // permite consultar novamente
       lastCep = "";
     }
   });
 
-  // =========================
-  // BLUR CEP
-  // =========================
   cepInput.addEventListener("blur", preencherEndereco);
 
+  if (onlyNumbers(cepInput.value).length === 8) {
+    preencherEndereco();
+  }
 });

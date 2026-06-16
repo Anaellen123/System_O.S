@@ -62,6 +62,7 @@ urlpatterns = [
     path("relatorios/os/download/", views.report_os_download, name="report_os_download"),
     path("relatorios/servicos/", views.report_services_search, name="report_services_search"),
     path("relatorios/servicos/download/", views.report_services_download, name="report_services_download"),
+    path("tipos-servico/<int:pk>/editar/", views.service_type_update, name="service_type_update"),
 
     # ===== APIS =====
     path("api/cep/<str:cep>/", views.api_cep, name="api_cep"),
@@ -86,5 +87,9 @@ urlpatterns = [
     path("notificacoes/<int:pk>/ler/", views.notification_mark_read, name="notification_mark_read"),
     path("notificacoes/marcar-todas/", views.notifications_mark_all_read, name="notifications_mark_all_read"),
     path("api/notificacoes/dropdown/", views.api_notifications_dropdown, name="api_notifications_dropdown"),
+    path("notificacoes/limpar-historico/",views.notifications_clear_history,name="notifications_clear_history"),
+
+    # ===== AJUDA =====
+    path("ajuda/", views.help_page, name="help_page"),
     
 ]

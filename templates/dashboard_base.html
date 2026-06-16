@@ -193,7 +193,8 @@
         <span>Configurações</span>
       </a>
 
-      <a class="menu-item" href="#">
+      <a class="menu-item {% if request.resolver_match.url_name == 'help_page' %}active{% endif %}"
+   href="{% url 'help_page' %}">
         <i class="bi bi-question-circle"></i>
         <span>Ajuda</span>
       </a>
