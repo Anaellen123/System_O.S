@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from .models import Notification, NotificationRead, TeamMember
 from .models import Team
 import json
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 import os
 from django.conf import settings
 from django import forms
@@ -24,7 +24,7 @@ from django.db.models.functions import TruncDate
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 from django.utils import timezone
 from datetime import datetime, time, timedelta
 from django.utils.encoding import force_bytes, force_str
@@ -36,6 +36,7 @@ from weasyprint import HTML
 from django.db.models import Count, Avg, Q
 from django.views.decorators.http import require_GET, require_POST
 from .models import NotificationHidden
+from decimal import Decimal, InvalidOperation
 
 from .forms import (
     ServiceRequestForm,
@@ -154,6 +155,75 @@ def _create_pending_notification_for_os(os_obj, created_by=None):
         created_by=created_by,
         event_key=event_key,
     )
+
+def _geocodificar_endereco_os(os_obj):
+    """
+    Converte o endereço da O.S. em latitude e longitude usando Nominatim.
+
+    Retorna:
+        (latitude, longitude) quando encontrar;
+        (None, None) quando não encontrar.
+    """
+
+    if not os_obj:
+        return None, None
+
+    partes = [
+        os_obj.street,
+        os_obj.number,
+        os_obj.neighborhood,
+        os_obj.city or "Nossa Senhora do Socorro",
+        "Sergipe",
+        "Brasil",
+        os_obj.cep,
+    ]
+
+    endereco = ", ".join(
+        str(parte).strip()
+        for parte in partes
+        if parte and str(parte).strip()
+    )
+
+    if not endereco:
+        return None, None
+
+    parametros = urlencode({
+        "q": endereco,
+        "format": "jsonv2",
+        "limit": 1,
+        "countrycodes": "br",
+    })
+
+    url = f"https://nominatim.openstreetmap.org/search?{parametros}"
+
+    requisicao = Request(
+        url,
+        headers={
+            "User-Agent": "PortalServicosUrbanos/1.0"
+        }
+    )
+
+    try:
+        with urlopen(requisicao, timeout=10) as resposta:
+            dados = json.loads(resposta.read().decode("utf-8"))
+
+        if not dados:
+            return None, None
+
+        latitude = Decimal(str(dados[0]["lat"]))
+        longitude = Decimal(str(dados[0]["lon"]))
+
+        return latitude, longitude
+
+    except (
+        OSError,
+        ValueError,
+        KeyError,
+        IndexError,
+        InvalidOperation,
+        json.JSONDecodeError,
+    ):
+        return None, None
 
 class LoginForm(forms.Form):
     username = forms.EmailField(
@@ -317,127 +387,272 @@ def solicitar_servico(request):
     nome_usuario = ""
     cpf_usuario = ""
 
-    if request.user.is_authenticated and _is_requisitante(request.user):
-        perfil = UserProfile.objects.filter(user=request.user).first()
+    eh_requisitante = (
+        request.user.is_authenticated
+        and _is_requisitante(request.user)
+    )
+
+    if eh_requisitante:
+        perfil = (
+            UserProfile.objects
+            .filter(user=request.user)
+            .first()
+        )
+
         nome_usuario = (
             request.user.get_full_name()
             or request.user.first_name
             or request.user.username
             or ""
         ).strip()
-        cpf_usuario = _only_digits(getattr(perfil, "cpf", "") or "")
+
+        cpf_usuario = _only_digits(
+            getattr(perfil, "cpf", "") or ""
+        )
 
     if request.method == "POST":
         post_data = request.POST.copy()
 
-        if request.user.is_authenticated and _is_requisitante(request.user):
+        if eh_requisitante:
             post_data["full_name"] = nome_usuario
             post_data["document"] = cpf_usuario
 
-        form = ServiceRequestForm(post_data, request.FILES)
+        form = ServiceRequestForm(
+            post_data,
+            request.FILES,
+        )
 
         if not form.is_valid():
-            messages.error(request, "Revise os campos obrigatórios.")
-            return render(request, "solicitar_servico.html", {
-                "form": form,
-                "created": False,
-            })
+            messages.error(
+                request,
+                "Revise os campos obrigatórios.",
+            )
 
-        prazo_dias = form.cleaned_data.get("prazo_dias")
-        document_digits = _only_digits(form.cleaned_data.get("document") or "")
-        user_to_link = request.user if request.user.is_authenticated else None
+            return render(
+                request,
+                "solicitar_servico.html",
+                {
+                    "form": form,
+                    "created": False,
+                },
+            )
 
-        if len(document_digits) == 11:
-            cpf_qs = UserProfile.objects.filter(cpf=document_digits)
+        document_digits = _only_digits(
+            form.cleaned_data.get("document") or ""
+        )
 
-            if cpf_qs.exists():
-                if user_to_link and user_to_link.is_authenticated:
-                    prof = UserProfile.objects.filter(user=user_to_link).first()
-                    if not prof or prof.cpf != document_digits:
-                        messages.error(
-                            request,
-                            "Este CPF já possui cadastro em outra conta."
-                        )
-                        return render(request, "solicitar_servico.html", {
-                            "form": form,
-                            "created": False
-                        })
-                else:
-                    messages.error(
-                        request,
-                        "Este CPF já possui cadastro. Faça login."
-                    )
-                    return render(request, "solicitar_servico.html", {
+        if len(document_digits) != 11:
+            form.add_error(
+                "document",
+                "Digite um CPF válido com 11 dígitos.",
+            )
+
+            messages.error(
+                request,
+                "CPF inválido.",
+            )
+
+            return render(
+                request,
+                "solicitar_servico.html",
+                {
+                    "form": form,
+                    "created": False,
+                },
+            )
+
+        perfil_cpf = (
+            UserProfile.objects
+            .filter(cpf=document_digits)
+            .select_related("user")
+            .first()
+        )
+
+        if not perfil_cpf:
+            form.add_error(
+                "document",
+                (
+                    "Usuário não encontrado. Cadastre uma conta "
+                    "antes de solicitar o serviço."
+                ),
+            )
+
+            messages.error(
+                request,
+                (
+                    "Este CPF ainda não possui cadastro. "
+                    "Cadastre uma conta antes de continuar."
+                ),
+            )
+
+            return render(
+                request,
+                "solicitar_servico.html",
+                {
+                    "form": form,
+                    "created": False,
+                    "cpf_nao_cadastrado": True,
+                    "cpf_informado": document_digits,
+                },
+            )
+
+        usuario_do_cpf = perfil_cpf.user
+
+        if eh_requisitante:
+            if usuario_do_cpf.id != request.user.id:
+                form.add_error(
+                    "document",
+                    "Este CPF pertence a outra conta.",
+                )
+
+                messages.error(
+                    request,
+                    "Este CPF está cadastrado em outra conta.",
+                )
+
+                return render(
+                    request,
+                    "solicitar_servico.html",
+                    {
                         "form": form,
-                        "created": False
-                    })
+                        "created": False,
+                    },
+                )
+
+        prazo_dias = form.cleaned_data.get(
+            "prazo_dias"
+        )
 
         obj = form.save(commit=False)
 
-        # Mantém compatibilidade com relatórios/notificações antigos
-        # O service_type_ref salva o ID do serviço
-        # O service_type continua salvando o nome do serviço
+        # O sistema utiliza somente CPF atualmente.
+        # A opção PJ permanece no model para uso futuro.
+        obj.person_type = "PF"
+        obj.document = document_digits
+        obj.created_by = usuario_do_cpf
+
+        if eh_requisitante:
+            obj.full_name = nome_usuario
+            obj.document = cpf_usuario
+
+        # Mantém o campo antigo com o nome do serviço para
+        # compatibilidade com relatórios e notificações.
         if obj.service_type_ref:
             obj.service_type = obj.service_type_ref.name
 
         if prazo_dias is None:
-            prazo_dias = _get_service_type_deadline_days(obj.service_type)
+            prazo_dias = _get_service_type_deadline_days(
+                obj.service_type
+            )
 
         if prazo_dias is not None:
-            obj.due_at = timezone.now() + timedelta(days=int(prazo_dias))
+            obj.due_at = (
+                timezone.now()
+                + timedelta(days=int(prazo_dias))
+            )
         else:
             obj.due_at = None
 
-        if user_to_link:
-            obj.created_by = user_to_link
-
-            if request.user.is_authenticated and _is_requisitante(request.user):
-                obj.full_name = nome_usuario
-                obj.document = cpf_usuario
-
-            if len(document_digits) == 11:
-                prof = UserProfile.objects.filter(user=user_to_link).first()
-                if prof and not prof.cpf:
-                    prof.cpf = document_digits
-                    prof.save()
-
         obj.save()
-        print("FILES:", request.FILES)
-        print("ANEXOS:", request.FILES.getlist("attachments"))
 
-        for f in request.FILES.getlist("attachments"):
-            ServiceRequestAttachment.objects.create(request=obj, file=f)
+        # ==========================================================
+        # Geocodifica o endereço para exibição no mapa
+        # ==========================================================
+        try:
+            latitude, longitude = _geocodificar_endereco_os(obj)
 
-        messages.success(request, "Solicitação criada com sucesso!")
+            if (
+                latitude is not None
+                and longitude is not None
+            ):
+                obj.latitude = latitude
+                obj.longitude = longitude
 
-        form_limpo = ServiceRequestForm()
+                obj.save(
+                    update_fields=[
+                        "latitude",
+                        "longitude",
+                    ]
+                )
 
-        if request.user.is_authenticated and _is_requisitante(request.user):
-            form_limpo = ServiceRequestForm(initial={
+        except Exception as erro:
+            print(
+                f"Não foi possível geocodificar a O.S. "
+                f"{obj.os_number}: {erro}"
+            )
+
+        # ==========================================================
+        # Salvar anexos
+        # ==========================================================
+        anexos = request.FILES.getlist("attachments")
+
+        print("=" * 50)
+        print(
+            "TOTAL DE ANEXOS RECEBIDOS:",
+            len(anexos),
+        )
+        print(
+            "FILES:",
+            request.FILES,
+        )
+        print("=" * 50)
+
+        for arquivo in anexos:
+            ServiceRequestAttachment.objects.create(
+                request=obj,
+                file=arquivo,
+            )
+
+        messages.success(
+            request,
+            (
+                f"Solicitação criada com sucesso! "
+                f"Número: {obj.os_number}"
+            ),
+        )
+
+        initial = {}
+
+        if eh_requisitante:
+            initial = {
                 "full_name": nome_usuario,
                 "document": cpf_usuario,
-            })
+            }
 
-        return render(request, "solicitar_servico.html", {
-            "form": form_limpo,
-            "created": True,
-            "os_created": obj,
-        })
+        form_limpo = ServiceRequestForm(
+            initial=initial,
+        )
+
+        return render(
+            request,
+            "solicitar_servico.html",
+            {
+                "form": form_limpo,
+                "created": True,
+                "os_created": obj,
+            },
+        )
 
     initial = {}
 
-    if request.user.is_authenticated and _is_requisitante(request.user):
+    if eh_requisitante:
         initial = {
             "full_name": nome_usuario,
             "document": cpf_usuario,
         }
 
-    form = ServiceRequestForm(initial=initial)
+    form = ServiceRequestForm(
+        initial=initial,
+    )
 
-    return render(request, "solicitar_servico.html", {
-        "form": form,
-        "created": False,
-    })
+    return render(
+        request,
+        "solicitar_servico.html",
+        {
+            "form": form,
+            "created": False,
+        },
+    )
 
 @require_GET
 def api_os_status(request, os_number):
@@ -1038,37 +1253,45 @@ def dashboard(request):
     if _is_requisitante(request.user):
         return redirect("dashboard_requisitante")
 
-    stats = {
-        "abertos": ServiceRequest.objects.filter(status="OPEN").count(),
-        "andamento": ServiceRequest.objects.filter(status="IN_PROGRESS").count(),
-        "concluidos": ServiceRequest.objects.filter(status="DONE").count(),
-        "total": ServiceRequest.objects.count(),
-    }
+    solicitacoes = ServiceRequest.objects.all()
 
-    recent = ServiceRequest.objects.order_by("-created_at")[:10]
+    stats = {
+        "abertos": solicitacoes.filter(status="OPEN").count(),
+        "andamento": solicitacoes.filter(status="IN_PROGRESS").count(),
+        "concluidos": solicitacoes.filter(status="DONE").count(),
+        "total": solicitacoes.count(),
+    }
 
     today = timezone.localdate()
     start = today - timedelta(days=89)
 
     daily = (
-        ServiceRequest.objects
-        .filter(created_at__date__gte=start, created_at__date__lte=today)
+        solicitacoes
+        .filter(
+            created_at__date__gte=start,
+            created_at__date__lte=today
+        )
         .annotate(d=TruncDate("created_at"))
         .values("d")
         .annotate(c=Count("id"))
         .order_by("d")
     )
 
-    counts_by_day = {row["d"]: row["c"] for row in daily}
+    counts_by_day = {
+        row["d"]: row["c"]
+        for row in daily
+    }
+
     labels = []
     data = []
+
     for i in range(90):
         day = start + timedelta(days=i)
         labels.append(day.strftime("%d/%m"))
         data.append(counts_by_day.get(day, 0))
 
     bairros_qs = (
-        ServiceRequest.objects
+        solicitacoes
         .filter(city__icontains="socorro")
         .exclude(neighborhood__isnull=True)
         .exclude(neighborhood__exact="")
@@ -1077,17 +1300,68 @@ def dashboard(request):
         .order_by("-total")[:10]
     )
 
-    bairros_labels = [row["neighborhood"] for row in bairros_qs]
-    bairros_data = [row["total"] for row in bairros_qs]
+    bairros_labels = [
+        row["neighborhood"]
+        for row in bairros_qs
+    ]
+
+    bairros_data = [
+        row["total"]
+        for row in bairros_qs
+    ]
+
+    os_com_localizacao = (
+        solicitacoes
+        .exclude(latitude__isnull=True)
+        .exclude(longitude__isnull=True)
+        .order_by("-created_at")
+    )
+
+    mapa_pontos = []
+
+    for os_obj in os_com_localizacao:
+        endereco_partes = [
+            os_obj.street,
+            os_obj.number,
+            os_obj.neighborhood,
+            os_obj.city,
+        ]
+
+        endereco = ", ".join(
+            str(parte).strip()
+            for parte in endereco_partes
+            if parte and str(parte).strip()
+        )
+
+        mapa_pontos.append({
+            "id": os_obj.pk,
+            "numero": os_obj.os_number,
+            "solicitante": os_obj.full_name or "Não informado",
+            "servico": os_obj.service_type or "Não informado",
+            "bairro": os_obj.neighborhood or "Não informado",
+            "endereco": endereco or "Endereço não informado",
+            "status": os_obj.status,
+            "status_label": os_obj.get_status_display(),
+            "data": timezone.localtime(
+                os_obj.created_at
+            ).strftime("%d/%m/%Y %H:%M"),
+            "latitude": float(os_obj.latitude),
+            "longitude": float(os_obj.longitude),
+            "url": reverse(
+                "os_detail",
+                kwargs={"pk": os_obj.pk}
+            ),
+        })
 
     return render(request, "dashboard.html", {
         "stats": stats,
-        "recent": recent,
         "chart_labels": labels,
         "chart_data": data,
         "bairros_labels": bairros_labels,
         "bairros_data": bairros_data,
+        "mapa_pontos": mapa_pontos,
     })
+
 
 
 @login_required(login_url="login_admin")
@@ -1176,7 +1450,9 @@ def os_create(request):
         or ""
     ).strip()
 
-    cpf_usuario = _only_digits(getattr(perfil, "cpf", "") or "")
+    cpf_usuario = _only_digits(
+        getattr(perfil, "cpf", "") or ""
+    )
 
     if request.method == "POST":
         post_data = request.POST.copy()
@@ -1185,15 +1461,34 @@ def os_create(request):
             post_data["full_name"] = nome_usuario
             post_data["document"] = cpf_usuario
 
-        form = ServiceRequestForm(post_data, request.FILES)
+        form = ServiceRequestForm(
+            post_data,
+            request.FILES,
+        )
 
         if form.is_valid():
-            document_digits = _only_digits(form.cleaned_data.get("document") or "")
+            document_digits = _only_digits(
+                form.cleaned_data.get("document") or ""
+            )
 
             if len(document_digits) != 11:
-                form.add_error("document", "Digite um CPF válido com 11 dígitos.")
-                messages.error(request, "CPF inválido.")
-                return render(request, "os_nova.html", {"form": form})
+                form.add_error(
+                    "document",
+                    "Digite um CPF válido com 11 dígitos.",
+                )
+
+                messages.error(
+                    request,
+                    "CPF inválido.",
+                )
+
+                return render(
+                    request,
+                    "os_nova.html",
+                    {
+                        "form": form,
+                    },
+                )
 
             perfil_cpf = (
                 UserProfile.objects
@@ -1205,16 +1500,32 @@ def os_create(request):
             if not perfil_cpf:
                 form.add_error(
                     "document",
-                    "CPF não encontrado. Para cadastrar uma O.S com este CPF, primeiro cadastre o usuário no menu Usuários > Criar usuário."
+                    (
+                        "CPF não encontrado. Para cadastrar uma O.S. "
+                        "com este CPF, primeiro cadastre o usuário no "
+                        "menu Usuários > Criar usuário."
+                    ),
                 )
+
                 messages.error(
                     request,
-                    "CPF não encontrado. É preciso cadastrar o usuário antes de criar a O.S."
+                    (
+                        "CPF não encontrado. É preciso cadastrar o "
+                        "usuário antes de criar a O.S."
+                    ),
                 )
-                return render(request, "os_nova.html", {"form": form})
+
+                return render(
+                    request,
+                    "os_nova.html",
+                    {
+                        "form": form,
+                    },
+                )
 
             obj = form.save(commit=False)
 
+            # Mantém o nome do serviço sincronizado
             if obj.service_type_ref:
                 obj.service_type = obj.service_type_ref.name
 
@@ -1227,15 +1538,45 @@ def os_create(request):
             prazo_dias = form.cleaned_data.get("prazo_dias")
 
             if prazo_dias is None:
-                prazo_dias = _get_service_type_deadline_days(obj.service_type)
+                prazo_dias = _get_service_type_deadline_days(
+                    obj.service_type
+                )
 
             if prazo_dias is not None:
-                obj.due_at = timezone.now() + timedelta(days=int(prazo_dias))
+                obj.due_at = timezone.now() + timedelta(
+                    days=int(prazo_dias)
+                )
             else:
                 obj.due_at = None
 
             obj.save()
 
+            # ==========================================================
+            # Geocodifica o endereço para exibição no mapa
+            # ==========================================================
+            try:
+                latitude, longitude = _geocodificar_endereco_os(obj)
+
+                if latitude is not None and longitude is not None:
+                    obj.latitude = latitude
+                    obj.longitude = longitude
+
+                    obj.save(
+                        update_fields=[
+                            "latitude",
+                            "longitude",
+                        ]
+                    )
+
+            except Exception as erro:
+                print(
+                    f"Não foi possível geocodificar a O.S. "
+                    f"{obj.os_number}: {erro}"
+                )
+
+            # ==========================================================
+            # Salvar anexos
+            # ==========================================================
             anexos = request.FILES.getlist("attachments")
 
             print("=" * 50)
@@ -1246,16 +1587,20 @@ def os_create(request):
             for arquivo in anexos:
                 ServiceRequestAttachment.objects.create(
                     request=obj,
-                    file=arquivo
+                    file=arquivo,
                 )
 
             messages.success(
                 request,
-                f"Ordem criada com sucesso: {obj.os_number}"
+                f"Ordem criada com sucesso: {obj.os_number}",
             )
+
             return redirect("os_list")
 
-        messages.error(request, "Revise os campos obrigatórios.")
+        messages.error(
+            request,
+            "Revise os campos obrigatórios.",
+        )
 
     else:
         initial = {}
@@ -1266,11 +1611,17 @@ def os_create(request):
                 "document": cpf_usuario,
             }
 
-        form = ServiceRequestForm(initial=initial)
+        form = ServiceRequestForm(
+            initial=initial,
+        )
 
-    return render(request, "os_nova.html", {
-        "form": form
-    })
+    return render(
+        request,
+        "os_nova.html",
+        {
+            "form": form,
+        },
+    )
 
 @login_required(login_url="login_admin")
 def os_list(request, status=None):

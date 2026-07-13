@@ -92,64 +92,426 @@
   </div>
 </div>
 
-<div class="card">
-  <div class="card-head">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+
+<style>
+  .os-map-card {
+    margin-top: 24px;
+    overflow: hidden;
+  }
+
+  .os-map-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .os-map-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 13px;
+    border: 1px solid var(--line, #dbe2ea);
+    border-radius: 999px;
+    background: var(--card, #ffffff);
+    color: var(--text, #0f172a);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  #osRegionMap {
+    width: 100%;
+    height: 560px;
+    margin-top: 18px;
+    border-radius: 18px;
+    border: 1px solid var(--line, #dbe2ea);
+    background: #e5e7eb;
+    overflow: hidden;
+    z-index: 1;
+  }
+  /* Protege o Leaflet de regras globais aplicadas às imagens. */
+  #osRegionMap .leaflet-tile,
+  #osRegionMap .leaflet-marker-icon,
+  #osRegionMap .leaflet-marker-shadow {
+    max-width: none !important;
+    max-height: none !important;
+  }
+
+/* Marcador vermelho semelhante ao exemplo enviado. */
+  .os-location-marker {
+    background: transparent;
+    border: 0;
+  }
+
+  .os-location-pin {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border: 3px solid #ffffff;
+    border-radius: 50% 50% 50% 0;
+    background: #ef4444;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .32);
+    transform: rotate(-45deg);
+  }
+
+  .os-location-pin::after {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ffffff;
+  }
+
+  .map-empty-message {
+    display: none;
+    min-height: 220px;
+    margin-top: 18px;
+    padding: 30px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    border: 1px dashed var(--line, #cbd5e1);
+    border-radius: 18px;
+    color: var(--muted, #64748b);
+  }
+
+  .map-empty-message i {
+    font-size: 36px;
+  }
+
+  .os-map-popup {
+    min-width: 230px;
+    font-family: inherit;
+  }
+
+  .os-map-popup-number {
+    margin-bottom: 7px;
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .os-map-popup-row {
+    margin-bottom: 5px;
+    color: #334155;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .os-map-popup-status {
+    display: inline-flex;
+    margin-top: 5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .os-map-popup-status.open {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .os-map-popup-status.progress {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  .os-map-popup-status.done {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .os-map-popup-link {
+    display: block;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    background: #0f172a;
+    color: #ffffff !important;
+    text-align: center;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  body.dark-mode .leaflet-popup-content-wrapper,
+  body.dark-mode .leaflet-popup-tip {
+    background: #172033;
+    color: #f8fafc;
+  }
+
+  body.dark-mode .os-map-popup-number,
+  body.dark-mode .os-map-popup-row {
+    color: #f8fafc;
+  }
+
+  @media (max-width: 768px) {
+    #osRegionMap {
+      height: 430px;
+      border-radius: 14px;
+    }
+  }
+</style>
+
+<div class="card os-map-card">
+  <div class="card-head os-map-head">
     <div>
-      <h2>Solicitações Recentes</h2>
-      <p>Últimas ordens registradas</p>
+      <h2>Mapa das Ordens de Serviço</h2>
+      <p>
+        Localização das demandas registradas em Nossa Senhora do
+        Socorro/SE
+      </p>
+    </div>
+
+    <div class="os-map-counter">
+      <i class="bi bi-geo-alt-fill"></i>
+      <span id="mapPointsCounter">0 pontos localizados</span>
     </div>
   </div>
 
-  <div class="table-wrap">
-    <table class="table table-sm align-middle recent-table">
-      <thead>
-        <tr>
-          <th>Número</th>
-          <th>Solicitante</th>
-          <th>Demandas</th>
-          <th>Bairro</th>
-          <th>Data</th>
-          <th>Status</th>
-        </tr>
-      </thead>
+  <div id="osRegionMap"></div>
 
-      <tbody>
-        {% for r in recent %}
-        <tr>
-          <td data-label="Número">
-            <span class="os-number">{{ r.os_number }}</span>
-          </td>
+  <div id="mapEmptyMessage" class="map-empty-message">
+    <i class="bi bi-map"></i>
 
-          <td data-label="Solicitante">{{ r.full_name }}</td>
+    <strong>Nenhuma O.S. com localização encontrada</strong>
 
-          <td data-label="Serviço">{{ r.service_type }}</td>
-
-          <td data-label="Bairro">{{ r.neighborhood|default:"-" }}</td>
-
-          <td data-label="Data">{{ r.created_at|date:"d/m/Y" }}</td>
-
-          <td data-label="Status">
-            {% if r.status == "OPEN" %}
-              <span class="pill pendente">Aberto</span>
-            {% elif r.status == "IN_PROGRESS" %}
-              <span class="pill andamento">Em andamento</span>
-            {% elif r.status == "DONE" %}
-              <span class="pill concluido">Concluído</span>
-            {% else %}
-              <span class="pill">{{ r.get_status_display }}</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="6" style="text-align:center; padding:16px;">
-            Nenhuma solicitação registrada ainda.
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <span>
+      As O.S. precisam possuir latitude e longitude para aparecerem
+      no mapa.
+    </span>
   </div>
+
+  {{ mapa_pontos|json_script:"mapa-os-pontos" }}
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const mapElement = document.getElementById("osRegionMap");
+    const emptyElement = document.getElementById("mapEmptyMessage");
+    const counterElement = document.getElementById("mapPointsCounter");
+    const jsonElement = document.getElementById("mapa-os-pontos");
+
+    if (!mapElement || !jsonElement || typeof L === "undefined") {
+      return;
+    }
+
+    let pontos = [];
+
+    try {
+      pontos = JSON.parse(jsonElement.textContent || "[]");
+    } catch (error) {
+      console.error("Não foi possível carregar os pontos do mapa.", error);
+      pontos = [];
+    }
+
+    /*
+     * Limites aproximados de Nossa Senhora do Socorro/SE.
+     * O usuário não consegue arrastar o mapa para fora dessa região.
+     */
+    const limitesSocorro = L.latLngBounds(
+      L.latLng(-10.9650, -37.2250),
+      L.latLng(-10.7350, -36.9950)
+    );
+
+    const centroSocorro = [-10.8550, -37.1260];
+
+    const mapa = L.map("osRegionMap", {
+      center: centroSocorro,
+      zoom: 12,
+      minZoom: 11,
+      maxZoom: 19,
+      maxBounds: limitesSocorro,
+      maxBoundsViscosity: 1.0,
+      zoomControl: true,
+      scrollWheelZoom: true,
+      preferCanvas: true
+    });
+
+    L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        subdomains: "abc",
+        minZoom: 11,
+        maxZoom: 19,
+        tileSize: 256,
+        zoomOffset: 0,
+        noWrap: true,
+        keepBuffer: 4,
+        updateWhenIdle: true,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">' +
+          "OpenStreetMap</a>"
+      }
+    ).addTo(mapa);
+
+    const iconeLocalizacao = L.divIcon({
+      className: "os-location-marker",
+      html: '<div class="os-location-pin"></div>',
+      iconSize: [38, 42],
+      iconAnchor: [19, 40],
+      popupAnchor: [0, -38]
+    });
+
+    /*
+     * Agrupa marcadores próximos. Quando várias O.S. possuem exatamente
+     * a mesma coordenada, o clique no grupo abre os marcadores em leque.
+     */
+    const grupoMarcadores = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      spiderfyOnMaxZoom: true,
+      spiderfyDistanceMultiplier: 1.6,
+      removeOutsideVisibleBounds: false,
+      maxClusterRadius: 45
+    });
+
+    mapa.addLayer(grupoMarcadores);
+
+    const limitesMarcadores = [];
+
+    function escaparHtml(valor) {
+      const elemento = document.createElement("div");
+      elemento.textContent = valor == null ? "" : String(valor);
+      return elemento.innerHTML;
+    }
+
+    function obterClasseStatus(status) {
+      if (status === "DONE") {
+        return "done";
+      }
+
+      if (status === "IN_PROGRESS") {
+        return "progress";
+      }
+
+      return "open";
+    }
+
+    pontos.forEach(function (ponto) {
+      const latitude = Number(ponto.latitude);
+      const longitude = Number(ponto.longitude);
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        return;
+      }
+
+      const coordenada = L.latLng(latitude, longitude);
+
+      /*
+       * Não exibe coordenadas que tenham sido geocodificadas fora
+       * da região configurada para Nossa Senhora do Socorro.
+       */
+      if (!limitesSocorro.contains(coordenada)) {
+        return;
+      }
+
+      limitesMarcadores.push(coordenada);
+
+      const popup = `
+        <div class="os-map-popup">
+          <div class="os-map-popup-number">
+            ${escaparHtml(ponto.numero)}
+          </div>
+
+          <div class="os-map-popup-row">
+            <strong>Solicitante:</strong>
+            ${escaparHtml(ponto.solicitante)}
+          </div>
+
+          <div class="os-map-popup-row">
+            <strong>Demanda:</strong>
+            ${escaparHtml(ponto.servico)}
+          </div>
+
+          <div class="os-map-popup-row">
+            <strong>Endereço:</strong>
+            ${escaparHtml(ponto.endereco)}
+          </div>
+
+          <div class="os-map-popup-row">
+            <strong>Data:</strong>
+            ${escaparHtml(ponto.data)}
+          </div>
+
+          <span class="os-map-popup-status ${obterClasseStatus(ponto.status)}">
+            ${escaparHtml(ponto.status_label)}
+          </span>
+
+          <a
+            class="os-map-popup-link"
+            href="${escaparHtml(ponto.url)}"
+          >
+            Visualizar O.S.
+          </a>
+        </div>
+      `;
+
+      const marcador = L.marker(coordenada, {
+        icon: iconeLocalizacao,
+        keyboard: true,
+        title: ponto.numero || "Ordem de Serviço"
+      }).bindPopup(popup, {
+        maxWidth: 320,
+        closeButton: true
+      });
+
+      grupoMarcadores.addLayer(marcador);
+    });
+
+    counterElement.textContent =
+      `${limitesMarcadores.length} ${
+        limitesMarcadores.length === 1
+          ? "ponto localizado"
+          : "pontos localizados"
+      }`;
+
+    if (!limitesMarcadores.length) {
+      mapElement.style.display = "none";
+      emptyElement.style.display = "flex";
+      return;
+    }
+
+    if (limitesMarcadores.length === 1) {
+      mapa.setView(limitesMarcadores[0], 16);
+    } else {
+      const areaMarcadores = L.latLngBounds(limitesMarcadores);
+
+      mapa.fitBounds(areaMarcadores, {
+        padding: [45, 45],
+        maxZoom: 16
+      });
+    }
+
+    /*
+     * Recalcula o tamanho depois que o dashboard terminar de montar.
+     * Isso evita os blocos do mapa desalinhados ou sobrepostos.
+     */
+    requestAnimationFrame(function () {
+      mapa.invalidateSize(true);
+    });
+
+    setTimeout(function () {
+      mapa.invalidateSize(true);
+    }, 300);
+
+    window.addEventListener("resize", function () {
+      mapa.invalidateSize(false);
+    });
+  });
+</script>
 
 {% endblock %}

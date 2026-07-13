@@ -166,6 +166,20 @@ class ServiceRequest(models.Model):
     neighborhood = models.CharField(max_length=120, blank=True)
     city = models.CharField(max_length=120, blank=True)
 
+    latitude = models.DecimalField(
+    max_digits=10,
+    decimal_places=7,
+    null=True,
+    blank=True
+    )
+
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True
+    )
+
     service_type = models.CharField(max_length=80)
 
     service_type_ref = models.ForeignKey(
@@ -266,6 +280,8 @@ class ServiceRequest(models.Model):
 
     def __str__(self):
         return f"{self.os_number} - {self.full_name}"
+
+    
 
 
 class ServiceRequestAttachment(models.Model):
