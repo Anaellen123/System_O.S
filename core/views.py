@@ -24,6 +24,7 @@ from django.db.models.functions import TruncDate
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from urllib.parse import quote
 from django.utils import timezone
 from datetime import datetime, time, timedelta
 from django.utils.encoding import force_bytes, force_str
@@ -1281,19 +1282,56 @@ def os_list(request, status=None):
     if status and status != "todas":
         qs = qs.filter(status=status)
 
-    get_status = request.GET.get("status")
+    get_status = (request.GET.get("status") or "").strip()
     if get_status:
         qs = qs.filter(status=get_status)
 
-    q = (request.GET.get("q") or "").strip()
-    if q:
-        qs = qs.filter(
-            Q(os_number__icontains=q)
-            | Q(full_name__icontains=q)
-            | Q(document__icontains=q)
-            | Q(phone__icontains=q)
-            | Q(neighborhood__icontains=q)
-        )
+    def get_multi_text(name):
+        valores = request.GET.getlist(name)
+        itens = []
+
+        for valor in valores:
+            partes = str(valor).replace(";", ",").split(",")
+            for parte in partes:
+                parte = parte.strip()
+                if parte:
+                    itens.append(parte)
+
+        return itens
+
+    nomes = get_multi_text("nome")
+    cpfs = get_multi_text("cpf")
+    telefones = get_multi_text("telefone")
+
+    bairros = [b.strip() for b in request.GET.getlist("bairro") if b.strip()]
+    servicos = [s.strip() for s in request.GET.getlist("servico") if s.strip()]
+
+    if nomes:
+        q_nome = Q()
+        for nome in nomes:
+            q_nome |= Q(full_name__icontains=nome)
+        qs = qs.filter(q_nome)
+
+    if cpfs:
+        q_cpf = Q()
+        for cpf in cpfs:
+            q_cpf |= Q(document__icontains=cpf)
+        qs = qs.filter(q_cpf)
+
+    if telefones:
+        q_tel = Q()
+        for telefone in telefones:
+            q_tel |= Q(phone__icontains=telefone)
+        qs = qs.filter(q_tel)
+
+    if bairros:
+        qs = qs.filter(neighborhood__in=bairros)
+
+    if servicos:
+        q_servico = Q()
+        for servico in servicos:
+            q_servico |= Q(service_type__icontains=servico)
+        qs = qs.filter(q_servico)
 
     total = qs.count()
     ativas = qs.exclude(status="DONE").count()
@@ -1303,18 +1341,55 @@ def os_list(request, status=None):
         created_at__lt=timezone.now() - timedelta(days=30)
     ).count()
 
+    bairros_options = (
+        ServiceRequest.objects
+        .exclude(neighborhood__isnull=True)
+        .exclude(neighborhood__exact="")
+        .values_list("neighborhood", flat=True)
+        .distinct()
+        .order_by("neighborhood")
+    )
+
+    servicos_options = (
+        ServiceType.objects
+        .filter(is_active=True)
+        .order_by("name")
+    )
+
     context = {
         "os_list": qs,
         "total": total,
         "ativas": ativas,
         "vencidas": vencidas,
-        "status_atual": status or "todas",
+        "status_atual": get_status or status or "todas",
+
+        "bairros_options": bairros_options,
+        "servicos_options": servicos_options,
+
+        "bairros_selecionados": bairros,
+        "servicos_selecionados": servicos,
+
+        "filtros": {
+            "nome": ", ".join(nomes),
+            "cpf": ", ".join(cpfs),
+            "telefone": ", ".join(telefones),
+        }
     }
+
     return render(request, "os_list.html", context)
 
 @login_required(login_url="login_admin")
 def os_detail(request, pk):
     os_obj = get_object_or_404(ServiceRequest, pk=pk)
+
+    # Guarda a URL da listagem com filtros.
+    # No GET vem pela URL.
+    # No POST vem pelo input hidden do formulário.
+    back_url = (
+        request.GET.get("next")
+        or request.POST.get("next")
+        or reverse("os_list")
+    )
 
     if _is_requisitante(request.user) and os_obj.created_by_id != request.user.id:
         messages.error(request, "Você não tem permissão para acessar esta OS.")
@@ -1323,7 +1398,9 @@ def os_detail(request, pk):
     if request.method == "POST":
         if _is_requisitante(request.user):
             messages.error(request, "Você não tem permissão para editar esta OS.")
-            return redirect("os_detail", pk=os_obj.pk)
+
+            detail_url = reverse("os_detail", kwargs={"pk": os_obj.pk})
+            return redirect(f"{detail_url}?next={quote(back_url)}")
 
         status_anterior = os_obj.status
 
@@ -1332,9 +1409,6 @@ def os_detail(request, pk):
         if form.is_valid():
             os_edit = form.save(commit=False)
 
-            # Mantém compatibilidade com relatórios/notificações antigos
-            # O service_type_ref salva o ID do serviço
-            # O service_type continua salvando o nome do serviço
             if os_edit.service_type_ref:
                 os_edit.service_type = os_edit.service_type_ref.name
 
@@ -1375,7 +1449,9 @@ def os_detail(request, pk):
                 )
 
             messages.success(request, "OS atualizada com sucesso!")
-            return redirect("os_detail", pk=os_obj.pk)
+
+            detail_url = reverse("os_detail", kwargs={"pk": os_obj.pk})
+            return redirect(f"{detail_url}?next={quote(back_url)}")
 
         else:
             messages.error(request, "Revise os campos e tente novamente.")
@@ -1394,6 +1470,7 @@ def os_detail(request, pk):
         "anexos": anexos,
         "endereco_completo": endereco_completo or "—",
         "status_choices": ServiceRequest.STATUS_CHOICES,
+        "back_url": back_url,
     })
 
 @login_required(login_url="login_admin")
@@ -3137,17 +3214,31 @@ def service_type_update(request, pk):
         messages.error(request, "O nome do serviço é obrigatório.")
         return redirect("service_type_dashboard")
 
+    if ServiceType.objects.filter(name__iexact=name).exclude(pk=service_type.pk).exists():
+        messages.error(request, "Já existe um tipo de serviço com este nome.")
+        return redirect("service_type_dashboard")
+
     service_type.name = name
 
     if prazo_dias != "":
-        service_type.prazo_dias = int(prazo_dias)
+        try:
+            service_type.prazo_dias = int(prazo_dias)
+        except ValueError:
+            messages.error(request, "O prazo deve ser um número válido.")
+            return redirect("service_type_dashboard")
     else:
         service_type.prazo_dias = None
 
     service_type.save()
 
+    ServiceRequest.objects.filter(service_type_ref=service_type).update(
+        service_type=service_type.name
+    )
+
     messages.success(request, "Tipo de serviço atualizado com sucesso.")
     return redirect("service_type_dashboard")
+
+
 
 @login_required(login_url="login_admin")
 @require_http_methods(["POST"])

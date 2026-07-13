@@ -5,90 +5,12 @@
 {% block page_title %}Demandas{% endblock %}
 
 {% block content %}
-<style>
 
-  .page { padding: 6px 2px; }
+<style>
   .page-sub{
     margin: 4px 0 18px;
     color: var(--muted);
     font-size: 13px;
-  }
-
-  .toolbar{
-    display:flex;
-    gap:12px;
-    align-items:center;
-    justify-content:space-between;
-    margin: 10px 0 14px;
-  }
-
-  .search-form{
-    flex: 1;
-    max-width: 700px;
-  }
-
-  .search{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    width:100%;
-    padding: 10px 12px;
-    border-radius: 14px;
-    background: var(--card);
-    border: 2px solid rgba(148,163,184,.32);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 20px rgba(15,23,42,.07);
-    transition: box-shadow .15s ease, transform .15s ease, background .15s ease, border-color .15s ease;
-  }
-
-  .search:hover{
-    box-shadow: 0 12px 28px rgba(15,23,42,.10);
-    transform: translateY(-1px);
-    border-color: rgba(37,99,235,.35);
-  }
-
-  .search:focus-within{
-    border-color: rgba(37,99,235,.55);
-    box-shadow: 0 0 0 4px rgba(37,99,235,.10), 0 12px 28px rgba(15,23,42,.10);
-  }
-
-  .search input{
-    border:none;
-    outline:none;
-    width:100%;
-    font-size:14px;
-    background: transparent;
-    color: var(--text);
-  }
-
-  .search input::placeholder{ color: rgba(109,122,144,.9); }
-  body.theme-dark .search input::placeholder{ color: rgba(226,232,240,.55); }
-
-  .search-btn{
-    width: 42px;
-    height: 42px;
-    border: 2px solid rgba(255,255,255,.20);
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--blue), var(--blue-2));
-    color: #fff;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex: 0 0 42px;
-    cursor:pointer;
-    box-shadow: 0 10px 22px rgba(37,99,235,.20);
-    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease, border-color .15s ease;
-  }
-
-  .search-btn:hover{
-    transform: translateY(-1px);
-    box-shadow: 0 14px 28px rgba(37,99,235,.28);
-    border-color: rgba(255,255,255,.32);
-  }
-
-  .search-btn i{
-    font-size: 15px;
-    line-height: 1;
   }
 
   .cards{
@@ -103,14 +25,9 @@
     background: var(--card);
     border: 2px solid rgba(148,163,184,.24);
     border-radius: var(--radius);
-    padding: 14px 14px;
-    backdrop-filter: blur(10px);
+    padding: 14px;
     box-shadow: 0 10px 24px rgba(15,23,42,.06);
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
     overflow:hidden;
-    transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
   }
 
   .sumcard::before{
@@ -120,19 +37,7 @@
     background:
       radial-gradient(420px 180px at 15% 0%, rgba(37,99,235,.12), transparent 55%),
       radial-gradient(420px 180px at 85% 10%, rgba(11,94,215,.10), transparent 55%);
-    opacity: .9;
     pointer-events:none;
-  }
-
-  .sumcard:hover{
-    transform: translateY(-2px);
-    box-shadow: 0 16px 34px rgba(15,23,42,.10);
-    background: rgba(255,255,255,0.96);
-    border-color: rgba(37,99,235,.28);
-  }
-
-  body.theme-dark .sumcard:hover{
-    background: rgba(15,23,42,.72) !important;
   }
 
   .sumcard small{
@@ -142,7 +47,6 @@
     margin-bottom:6px;
     font-weight: 800;
     font-size: 12.5px;
-    letter-spacing: .02em;
     text-transform: uppercase;
   }
 
@@ -150,7 +54,243 @@
     position:relative;
     font-size: 26px;
     font-weight: 1000;
-    letter-spacing: -0.02em;
+  }
+
+  .filter-card{
+    background: var(--card);
+    border: 1.8px solid rgba(37,99,235,.16);
+    border-radius: 26px;
+    padding: 22px;
+    margin: 10px 0 18px;
+    box-shadow: 0 18px 40px rgba(15,23,42,.08);
+  }
+
+  .filter-head{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:18px;
+  }
+
+  .filter-icon{
+    width:44px;
+    height:44px;
+    border-radius:16px;
+    display:grid;
+    place-items:center;
+    color:#fff;
+    background:linear-gradient(135deg,#2563eb,#1d4ed8);
+    box-shadow:0 12px 24px rgba(37,99,235,.28);
+  }
+
+  .filter-head h3{
+    margin:0;
+    font-size:18px;
+    font-weight:900;
+    color:var(--text);
+  }
+
+  .filter-head span{
+    display:block;
+    margin-top:3px;
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  .filter-grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap:14px;
+  }
+
+  .filter-field{
+    position:relative;
+  }
+
+  .filter-field > i{
+    position:absolute;
+    left:15px;
+    top:26px;
+    transform:translateY(-50%);
+    color:#64748b;
+    z-index:2;
+  }
+
+  .filter-field input{
+    width:100%;
+    height:52px;
+    padding:0 15px 0 44px;
+    border:1.5px solid rgba(148,163,184,.34);
+    border-radius:16px;
+    background:rgba(255,255,255,.88);
+    color:var(--text);
+    outline:none;
+    font-size:14px;
+  }
+
+  .filter-field input:focus{
+    border-color:#2563eb;
+    box-shadow:0 0 0 4px rgba(37,99,235,.10);
+  }
+
+  .filter-help{
+    margin-top:6px;
+    padding-left:4px;
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.4;
+  }
+
+  .filter-help strong{
+    color:#2563eb;
+    font-weight:800;
+  }
+
+  .multi-dropdown{
+    position:relative;
+  }
+
+  .multi-toggle{
+    width:100%;
+    min-height:52px;
+    padding:0 15px 0 44px;
+    border:1.5px solid rgba(148,163,184,.34);
+    border-radius:16px;
+    background:rgba(255,255,255,.88);
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+    font-size:14px;
+  }
+
+  .multi-toggle span{
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+
+  .multi-toggle .bi-chevron-down{
+    position:static;
+    transform:none;
+    color:#64748b;
+    font-size:13px;
+  }
+
+  .multi-menu{
+    display:none;
+    position:absolute;
+    left:0;
+    right:0;
+    top:60px;
+    z-index:80;
+    background:#fff;
+    border:1.5px solid rgba(148,163,184,.28);
+    border-radius:18px;
+    box-shadow:0 20px 40px rgba(15,23,42,.16);
+    padding:8px;
+    max-height:230px;
+    overflow:auto;
+  }
+
+  .multi-dropdown.open .multi-menu{
+    display:block;
+  }
+
+  .multi-option{
+    width:100%;
+    border:0;
+    background:transparent;
+    padding:10px 12px;
+    border-radius:12px;
+    text-align:left;
+    cursor:pointer;
+    font-size:14px;
+    color:#0f172a;
+  }
+
+  .multi-option:hover{
+    background:#f1f5f9;
+  }
+
+  .multi-option.selected{
+    background:#e0ecff;
+    color:#1d4ed8;
+    font-weight:800;
+  }
+
+  .multi-selected{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-top:8px;
+  }
+
+  .multi-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 9px;
+    border-radius:999px;
+    background:#e0ecff;
+    color:#1d4ed8;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .multi-chip button{
+    border:0;
+    background:rgba(29,78,216,.12);
+    color:#1d4ed8;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:12px;
+    line-height:18px;
+    padding:0;
+  }
+
+  .multi-empty{
+    display:block;
+    padding:10px;
+    color:#64748b;
+    font-size:13px;
+  }
+
+  .filter-actions{
+    margin-top:18px;
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+  }
+
+  .btn-clear,
+  .btn-search-modern{
+    height:48px;
+    padding:0 22px;
+    border-radius:15px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-weight:900;
+    text-decoration:none;
+  }
+
+  .btn-clear{
+    background:#f1f5f9;
+    color:#475569;
+    border:1.5px solid rgba(148,163,184,.28);
+  }
+
+  .btn-search-modern{
+    border:0;
+    cursor:pointer;
+    background:linear-gradient(135deg,#2563eb,#1d4ed8);
+    color:#fff;
+    box-shadow:0 12px 24px rgba(37,99,235,.25);
   }
 
   .table-wrap{
@@ -158,7 +298,6 @@
     border: 2px solid rgba(148,163,184,.24);
     border-radius: var(--radius);
     overflow:hidden;
-    backdrop-filter: blur(10px);
     box-shadow: 0 10px 24px rgba(15,23,42,.06);
   }
 
@@ -173,50 +312,38 @@
     font-size:12px;
     color: rgba(15,23,42,.70);
     font-weight:900;
-    letter-spacing: .04em;
     text-transform: uppercase;
     padding: 12px 14px;
     background: rgba(255,255,255,.92);
-    backdrop-filter: blur(8px);
     border-bottom: 2px solid rgba(148,163,184,.20);
-    position: sticky;
-    top: 0;
-    z-index: 2;
   }
 
   tbody td{
     padding: 14px;
     border-bottom: 1px solid rgba(148,163,184,.20);
     font-size:14px;
-    vertical-align:top;
     color: var(--text);
   }
 
   .who{
     display:flex;
     flex-direction:column;
-    gap: 2px;
+    gap:2px;
   }
 
-  .who b{ font-size:14px; }
-  .who span{ font-size:12px; color: var(--muted); }
+  .who span{
+    font-size:12px;
+    color:var(--muted);
+  }
 
   .tag{
     font-size:12px;
     padding:6px 10px;
     border-radius:999px;
     display:inline-flex;
-    align-items:center;
-    gap: 6px;
-    border: 1.5px solid rgba(148,163,184,.26);
-    background: rgba(255,255,255,.65);
-    color: rgba(15,23,42,.82);
-    font-weight: 900;
-  }
-
-  body.theme-dark .tag{
-    background: rgba(2,6,23,.22);
-    color: rgba(226,232,240,.86);
+    border:1.5px solid rgba(148,163,184,.26);
+    background:rgba(255,255,255,.65);
+    font-weight:900;
   }
 
   .status{
@@ -225,40 +352,35 @@
     border-radius:999px;
     display:inline-flex;
     align-items:center;
-    gap: 8px;
-    font-weight: 1000;
-    border: 1.5px solid rgba(148,163,184,.24);
-    background: rgba(255,255,255,.75);
+    gap:8px;
+    font-weight:1000;
+    border:1.5px solid rgba(148,163,184,.24);
   }
 
   .status::before{
     content:"";
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: rgba(2,6,23,.25);
+    width:8px;
+    height:8px;
+    border-radius:999px;
   }
 
   .s-open{
-    background: rgba(255,243,205,.85);
-    color: #7a5c00;
-    border-color: rgba(122,92,0,.22);
+    background:rgba(255,243,205,.85);
+    color:#7a5c00;
   }
 
   .s-open::before{ background:#eab308; }
 
   .s-progress{
-    background: rgba(231,241,255,.90);
-    color: #0b4db3;
-    border-color: rgba(11,77,179,.22);
+    background:rgba(231,241,255,.90);
+    color:#0b4db3;
   }
 
   .s-progress::before{ background:#2563eb; }
 
   .s-done{
-    background: rgba(220,252,231,.90);
-    color: #166534;
-    border-color: rgba(22,101,52,.22);
+    background:rgba(220,252,231,.90);
+    color:#166534;
   }
 
   .s-done::before{ background:#22c55e; }
@@ -266,7 +388,6 @@
   .os-actions{
     display:flex;
     gap:10px;
-    align-items:center;
   }
 
   .btn-action{
@@ -279,13 +400,6 @@
     justify-content:center;
     text-decoration:none;
     cursor:pointer;
-    transition: all .18s ease;
-    box-shadow: 0 6px 16px rgba(15,23,42,.08);
-  }
-
-  .btn-action i{
-    font-size:16px;
-    line-height:1;
   }
 
   .btn-edit{
@@ -293,190 +407,97 @@
     color:#2563eb;
   }
 
-  .btn-edit:hover{
-    background:#c7d2fe;
-    color:#1d4ed8;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 18px rgba(37,99,235,.16);
-  }
-
   .btn-delete{
     background:#fee2e2;
     color:#ef4444;
   }
 
-  .btn-delete:hover{
-    background:#fecaca;
-    color:#dc2626;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 18px rgba(239,68,68,.16);
-  }
-
   .btn-delete-form{
-    display:inline-flex;
     margin:0;
   }
 
-  body.theme-dark .search{
-    border-color: rgba(148,163,184,.28);
-    box-shadow: 0 12px 24px rgba(0,0,0,.18);
+  body.theme-dark .filter-card{
+    background:rgba(15,23,42,.72);
+    border-color:rgba(148,163,184,.22);
   }
 
-  body.theme-dark .search:hover,
-  body.theme-dark .search:focus-within{
-    border-color: rgba(96,165,250,.42);
+  body.theme-dark .filter-field input,
+  body.theme-dark .multi-toggle{
+    background:rgba(2,6,23,.34);
+    border-color:rgba(148,163,184,.24);
+    color:#e2e8f0;
+  }
+
+  body.theme-dark .filter-help{
+    color:#94a3b8;
+  }
+
+  body.theme-dark .filter-help strong{
+    color:#93c5fd;
+  }
+
+  body.theme-dark .multi-menu{
+    background:#0f172a;
+    border-color:rgba(148,163,184,.24);
+  }
+
+  body.theme-dark .multi-option{
+    color:#e2e8f0;
+  }
+
+  body.theme-dark .multi-option:hover{
+    background:rgba(255,255,255,.08);
+  }
+
+  body.theme-dark .multi-option.selected{
+    background:rgba(59,130,246,.20);
+    color:#93c5fd;
+  }
+
+  body.theme-dark .multi-chip{
+    background:rgba(59,130,246,.18);
+    color:#bfdbfe;
+  }
+
+  body.theme-dark .btn-clear{
+    background:rgba(255,255,255,.08);
+    color:#e2e8f0;
   }
 
   body.theme-dark .table-wrap{
-    background: rgba(15,23,42,.60);
-    border-color: rgba(148,163,184,.24);
-    box-shadow: 0 12px 28px rgba(0,0,0,.22);
+    background:rgba(15,23,42,.60);
   }
 
   body.theme-dark thead th{
-    background: rgba(15,23,42,.92);
-    color: rgba(226,232,240,.72);
-    border-bottom-color: rgba(148,163,184,.22);
+    background:rgba(15,23,42,.92);
+    color:rgba(226,232,240,.72);
   }
 
   body.theme-dark tbody td{
-    border-bottom-color: rgba(148,163,184,.16);
-    color: rgba(226,232,240,.92);
+    color:rgba(226,232,240,.92);
   }
 
-  body.theme-dark .status{
-    background: rgba(2,6,23,.35);
-    border-color: rgba(148,163,184,.20);
+  body.theme-dark .tag{
+    background:rgba(2,6,23,.22);
+    color:rgba(226,232,240,.86);
   }
 
-  body.theme-dark .sumcard{
-    border-color: rgba(148,163,184,.22);
-    box-shadow: 0 12px 28px rgba(0,0,0,.18);
+  @media(max-width:1100px){
+    .cards{ grid-template-columns:repeat(2,1fr); }
+    .filter-grid{ grid-template-columns:repeat(2,1fr); }
   }
 
-  body.theme-dark .sumcard:hover{
-    border-color: rgba(96,165,250,.32);
-  }
+  @media(max-width:720px){
+    .cards,
+    .filter-grid{ grid-template-columns:1fr; }
 
-  body.theme-dark .btn-edit{
-    background: rgba(59,130,246,.16);
-    color: #93c5fd;
-  }
-
-  body.theme-dark .btn-edit:hover{
-    background: rgba(59,130,246,.24);
-    color: #bfdbfe;
-  }
-
-  body.theme-dark .btn-delete{
-    background: rgba(239,68,68,.16);
-    color: #fca5a5;
-  }
-
-  body.theme-dark .btn-delete:hover{
-    background: rgba(239,68,68,.24);
-    color: #fecaca;
-  }
-
-  @media (max-width: 1100px){
-    .cards{ grid-template-columns: repeat(2, minmax(180px, 1fr)); }
-    .toolbar{ flex-direction:column; align-items:stretch; }
-    .search-form{ max-width:none; }
-  }
-
-  @media (max-width: 720px){
-    .cards{ grid-template-columns: 1fr; }
-  }
-
-  @media (max-width: 620px){
-    .table-wrap{ overflow: visible; }
-
-    table, thead, tbody, th, td, tr{
-      display: block;
-      width: 100%;
+    .filter-actions{
+      flex-direction:column;
     }
 
-    thead{ display: none; }
-
-    tbody tr{
-      background: rgba(255,255,255,.76);
-      border: 2px solid rgba(148,163,184,.24);
-      border-radius: 18px;
-      box-shadow: 0 10px 24px rgba(15,23,42,.07);
-      padding: 10px 10px;
-      margin: 0 0 14px 0;
-      overflow: hidden;
-      position: relative;
-    }
-
-    tbody tr::before{
-      content:"";
-      position:absolute;
-      left:0; right:0; top:0;
-      height: 4px;
-      background: rgba(37,99,235,.55);
-    }
-
-    tbody td{
-      display:flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 14px;
-      padding: 11px 8px;
-      border-bottom: 1px solid rgba(148,163,184,.18);
-    }
-
-    tbody td:last-child{ border-bottom: 0; }
-
-    tbody td::before{
-      content: attr(data-label);
-      min-width: 96px;
-      font-size: 11px;
-      font-weight: 1000;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding-top: 2px;
-      flex: 0 0 auto;
-    }
-
-    tbody td[data-label="Número"] b{
-      font-size: 15px;
-      letter-spacing: -0.01em;
-    }
-
-    tbody td[data-label="Status"]{
-      align-items: center;
-    }
-
-    tbody td[data-label="Status"] .status{
-      margin-left: auto;
-    }
-
-    tbody td[data-label="Serviço"] .tag{
-      white-space: nowrap;
-    }
-
-    tbody td[data-label="Ações"]{
-      align-items:center;
-    }
-
-    tbody td[data-label="Ações"] .os-actions{
-      margin-left:auto;
-    }
-
-    body.theme-dark tbody tr{
-      background: rgba(15,23,42,.62);
-      border-color: rgba(148,163,184,.24);
-      box-shadow: 0 12px 26px rgba(0,0,0,.28);
-    }
-
-    body.theme-dark tbody tr::before{
-      background: rgba(147,197,253,.45);
-    }
-
-    body.theme-dark tbody td{
-      border-bottom-color: rgba(148,163,184,.14);
+    .btn-clear,
+    .btn-search-modern{
+      width:100%;
     }
   }
 </style>
@@ -485,55 +506,158 @@
 
 <div class="cards">
   <div class="sumcard">
-    <div>
-      <small>Total de OS</small>
-      <div class="num">{{ total }}</div>
-    </div>
+    <small>Total de OS</small>
+    <div class="num">{{ total }}</div>
   </div>
 
   <div class="sumcard">
-    <div>
-      <small>OS ativas</small>
-      <div class="num">{{ ativas }}</div>
-    </div>
+    <small>OS ativas</small>
+    <div class="num">{{ ativas }}</div>
   </div>
 
   <div class="sumcard">
-    <div>
-      <small>Vencidas*</small>
-      <div class="num">{{ vencidas }}</div>
-    </div>
+    <small>Vencidas*</small>
+    <div class="num">{{ vencidas }}</div>
   </div>
 
   <div class="sumcard">
+    <small>Status atual</small>
+    <div class="num" style="font-size:16px;">{{ status_atual|upper }}</div>
+  </div>
+</div>
+
+<form method="get" class="filter-card">
+
+  {% if request.GET.status %}
+    <input type="hidden" name="status" value="{{ request.GET.status }}">
+  {% endif %}
+
+  <div class="filter-head">
+    <div class="filter-icon">
+      <i class="bi bi-sliders"></i>
+    </div>
     <div>
-      <small>Status atual</small>
-      <div class="num" style="font-size:16px; font-weight:900; margin-top:6px;">
-        {{ status_atual|upper }}
+      <h3>Filtros de busca</h3>
+      <span>Pesquise por dados do solicitante, bairro ou demanda</span>
+    </div>
+  </div>
+
+  <div class="filter-grid">
+
+    <div class="filter-field">
+      <i class="bi bi-person"></i>
+      <input
+        type="text"
+        name="nome"
+        placeholder="Nome do solicitante"
+        value="{{ filtros.nome|default:'' }}"
+      >
+      <div class="filter-help">
+        Ex.: <strong>Maria</strong>, <strong>João</strong>, <strong>Carlos</strong>
+        <br>
+        Separe vários nomes com vírgula.
       </div>
     </div>
-  </div>
-</div>
 
-<div class="toolbar">
-  <form class="search-form" method="get">
-    <div class="search">
+    <div class="filter-field">
+      <i class="bi bi-card-text"></i>
       <input
-        name="q"
-        placeholder="Buscar por nome, CPF/CNPJ, telefone ou bairro..."
-        value="{{ request.GET.q|default:'' }}"
+        type="text"
+        name="cpf"
+        placeholder="CPF"
+        value="{{ filtros.cpf|default:'' }}"
       >
-
-      {% if request.GET.status %}
-        <input type="hidden" name="status" value="{{ request.GET.status }}">
-      {% endif %}
-
-      <button type="submit" class="search-btn" aria-label="Pesquisar">
-        <i class="bi bi-search"></i>
-      </button>
+      <div class="filter-help">
+        Ex.: <strong>12345678900</strong>, <strong>98765432100</strong>
+        <br>
+        Pesquise vários CPFs separados por vírgula.
+      </div>
     </div>
-  </form>
-</div>
+
+    <div class="filter-field">
+      <i class="bi bi-telephone"></i>
+      <input
+        type="text"
+        name="telefone"
+        placeholder="Telefone"
+        value="{{ filtros.telefone|default:'' }}"
+      >
+      <div class="filter-help">
+        Ex.: <strong>79999999999</strong>, <strong>79888888888</strong>
+        <br>
+        Você pode informar vários números separados por vírgula.
+      </div>
+    </div>
+
+    <div class="filter-field">
+      <i class="bi bi-geo-alt"></i>
+
+      <div class="multi-dropdown" data-name="bairro">
+        <button type="button" class="multi-toggle">
+          <span>Bairros</span>
+          <i class="bi bi-chevron-down"></i>
+        </button>
+
+        <div class="multi-selected"></div>
+
+        <div class="multi-menu">
+          {% for bairro in bairros_options %}
+            <button
+              type="button"
+              class="multi-option {% if bairro in bairros_selecionados %}selected{% endif %}"
+              data-value="{{ bairro }}"
+            >
+              {{ bairro }}
+            </button>
+          {% empty %}
+            <span class="multi-empty">Nenhum bairro encontrado</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-field">
+      <i class="bi bi-tools"></i>
+
+      <div class="multi-dropdown" data-name="servico">
+        <button type="button" class="multi-toggle">
+          <span>Demandas / Serviços</span>
+          <i class="bi bi-chevron-down"></i>
+        </button>
+
+        <div class="multi-selected"></div>
+
+        <div class="multi-menu">
+          {% for servico in servicos_options %}
+            <button
+              type="button"
+              class="multi-option {% if servico.name in servicos_selecionados %}selected{% endif %}"
+              data-value="{{ servico.name }}"
+            >
+              {{ servico.name }}
+            </button>
+          {% empty %}
+            <span class="multi-empty">Nenhum serviço encontrado</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="filter-actions">
+    <a href="{% url 'os_list' %}" class="btn-clear">
+      <i class="bi bi-x-circle"></i>
+      Limpar filtros
+    </a>
+
+    <button type="submit" class="btn-search-modern">
+      <i class="bi bi-search"></i>
+      Pesquisar
+    </button>
+  </div>
+
+</form>
 
 <div class="table-wrap">
   <table>
@@ -552,22 +676,22 @@
     <tbody>
       {% for os in os_list %}
         <tr>
-          <td data-label="Número"><b>{{ os.os_number }}</b></td>
+          <td><b>{{ os.os_number }}</b></td>
 
-          <td data-label="Solicitante">
+          <td>
             <div class="who">
               <b>{{ os.full_name }}</b>
               <span>{{ os.phone }}</span>
             </div>
           </td>
 
-          <td data-label="Serviço">
+          <td>
             <span class="tag">{{ os.service_type }}</span>
           </td>
 
-          <td data-label="Bairro">{{ os.neighborhood|default:"-" }}</td>
+          <td>{{ os.neighborhood|default:"-" }}</td>
 
-          <td data-label="Status">
+          <td>
             {% if os.status == "OPEN" %}
               <span class="status s-open">Pendente</span>
             {% elif os.status == "IN_PROGRESS" %}
@@ -577,22 +701,17 @@
             {% endif %}
           </td>
 
-          <td data-label="Criação">{{ os.created_at|date:"d/m/Y" }}</td>
+          <td>{{ os.created_at|date:"d/m/Y" }}</td>
 
-          <td data-label="Ações">
+          <td>
             <div class="os-actions">
-              <a href="{% url 'os_detail' os.pk %}" class="btn-action btn-edit" title="Editar">
+              <a href="{% url 'os_detail' os.pk %}?next={{ request.get_full_path|urlencode }}" class="btn-action btn-edit">
                 <i class="bi bi-pencil"></i>
               </a>
 
               <form method="post" action="{% url 'os_delete' os.pk %}" class="btn-delete-form">
                 {% csrf_token %}
-                <button
-                  type="submit"
-                  class="btn-action btn-delete"
-                  title="Excluir"
-                  onclick="return confirm('Deseja realmente excluir esta O.S?');"
-                >
+                <button type="submit" class="btn-action btn-delete" onclick="return confirm('Deseja realmente excluir esta O.S?');">
                   <i class="bi bi-trash"></i>
                 </button>
               </form>
@@ -601,10 +720,84 @@
         </tr>
       {% empty %}
         <tr>
-          <td colspan="7" style="padding:20px; color: var(--muted);">Nenhuma OS encontrada.</td>
+          <td colspan="7" style="padding:20px; color: var(--muted);">
+            Nenhuma OS encontrada.
+          </td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function(){
+    document.querySelectorAll(".multi-dropdown").forEach(function(dropdown){
+      const name = dropdown.dataset.name;
+      const toggle = dropdown.querySelector(".multi-toggle");
+      const selectedBox = dropdown.querySelector(".multi-selected");
+      const options = dropdown.querySelectorAll(".multi-option");
+
+      function updateSelected(){
+        selectedBox.innerHTML = "";
+
+        dropdown.querySelectorAll('input[type="hidden"]').forEach(function(input){
+          input.remove();
+        });
+
+        options.forEach(function(option){
+          if(option.classList.contains("selected")){
+            const value = option.dataset.value;
+
+            const hidden = document.createElement("input");
+            hidden.type = "hidden";
+            hidden.name = name;
+            hidden.value = value;
+            dropdown.appendChild(hidden);
+
+            const chip = document.createElement("span");
+            chip.className = "multi-chip";
+            chip.innerHTML = `${value} <button type="button">×</button>`;
+
+            chip.querySelector("button").addEventListener("click", function(e){
+              e.stopPropagation();
+              option.classList.remove("selected");
+              updateSelected();
+            });
+
+            selectedBox.appendChild(chip);
+          }
+        });
+      }
+
+      toggle.addEventListener("click", function(e){
+        e.stopPropagation();
+
+        document.querySelectorAll(".multi-dropdown").forEach(function(item){
+          if(item !== dropdown){
+            item.classList.remove("open");
+          }
+        });
+
+        dropdown.classList.toggle("open");
+      });
+
+      options.forEach(function(option){
+        option.addEventListener("click", function(e){
+          e.stopPropagation();
+          option.classList.toggle("selected");
+          updateSelected();
+        });
+      });
+
+      document.addEventListener("click", function(e){
+        if(!dropdown.contains(e.target)){
+          dropdown.classList.remove("open");
+        }
+      });
+
+      updateSelected();
+    });
+  });
+</script>
+
 {% endblock %}

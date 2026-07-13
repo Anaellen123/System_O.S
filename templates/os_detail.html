@@ -433,13 +433,14 @@
       </div>
 
       <div class="actions">
-        <a class="btn" href="{% url 'os_list' %}">⬅ Voltar</a>
+        <a class="btn" href="{{ back_url }}">⬅ Voltar</a>
       </div>
     </div>
 
     <div class="content-pad">
       <form method="post" id="osForm">
         {% csrf_token %}
+        <input type="hidden" name="next" value="{{ back_url }}">
 
         <div class="grid">
           
