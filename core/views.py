@@ -1310,6 +1310,55 @@ def dashboard(request):
         for row in bairros_qs
     ]
 
+    # ==========================================================
+    # Gráficos circulares por tipo de demanda
+    # ==========================================================
+    total_solicitacoes = solicitacoes.count()
+
+    demandas_qs = (
+        solicitacoes
+        .exclude(service_type__isnull=True)
+        .exclude(service_type__exact="")
+        .values("service_type")
+        .annotate(
+            total=Count("id"),
+            concluidas=Count(
+                "id",
+                filter=Q(status="DONE")
+            ),
+            andamento=Count(
+                "id",
+                filter=Q(status="IN_PROGRESS")
+            ),
+            pendentes=Count(
+                "id",
+                filter=Q(status="OPEN")
+            ),
+        )
+        .order_by("-total", "service_type")
+    )
+
+    graficos_demandas = []
+
+    for indice, item in enumerate(demandas_qs):
+        total_demanda = item["total"]
+
+        percentual = (
+            round((total_demanda / total_solicitacoes) * 100)
+            if total_solicitacoes
+            else 0
+        )
+
+        graficos_demandas.append({
+            "id": indice + 1,
+            "nome": item["service_type"],
+            "total": total_demanda,
+            "percentual": percentual,
+            "concluidas": item["concluidas"],
+            "andamento": item["andamento"],
+            "pendentes": item["pendentes"],
+        })
+
     os_com_localizacao = (
         solicitacoes
         .exclude(latitude__isnull=True)
@@ -1359,6 +1408,7 @@ def dashboard(request):
         "chart_data": data,
         "bairros_labels": bairros_labels,
         "bairros_data": bairros_data,
+        "graficos_demandas": graficos_demandas,
         "mapa_pontos": mapa_pontos,
     })
 

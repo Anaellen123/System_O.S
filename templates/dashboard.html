@@ -97,6 +97,167 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 
 <style>
+  .demand-charts-card {
+    margin-top: 24px;
+    overflow: hidden;
+  }
+
+  .demand-charts-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .demand-charts-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 11px;
+    border: 1px solid var(--line, #dbe2ea);
+    border-radius: 999px;
+    background: var(--card, #ffffff);
+    color: var(--text, #0f172a);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .demand-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .demand-chart-item {
+    position: relative;
+    min-width: 0;
+    padding: 15px 12px 14px;
+    border: 1px solid var(--line, #e2e8f0);
+    border-radius: 16px;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--demand-color) 8%, transparent),
+        transparent 42%
+      ),
+      var(--card, #ffffff);
+    text-align: center;
+    overflow: hidden;
+    transition:
+      transform .18s ease,
+      border-color .18s ease,
+      box-shadow .18s ease;
+  }
+
+  .demand-chart-item::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: var(--demand-color);
+  }
+
+  .demand-chart-item:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--demand-color) 45%, #cbd5e1);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .07);
+  }
+
+  .demand-chart-wrap {
+    position: relative;
+    width: 92px;
+    height: 92px;
+    margin: 0 auto 10px;
+  }
+
+  .demand-chart-wrap canvas {
+    width: 92px !important;
+    height: 92px !important;
+  }
+
+  .demand-chart-percent {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    color: var(--text, #0f172a);
+    font-size: 17px;
+    font-weight: 900;
+  }
+
+  .demand-chart-name {
+    min-height: 34px;
+    margin: 0;
+    color: var(--text, #0f172a);
+    font-size: 11px;
+    line-height: 1.35;
+    font-weight: 900;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+
+  .demand-chart-total {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 7px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--demand-color) 12%, transparent);
+    color: var(--demand-color);
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .demand-chart-total i {
+    font-size: 11px;
+  }
+
+  .demand-charts-empty {
+    margin-top: 18px;
+    padding: 24px;
+    border: 1px dashed var(--line, #cbd5e1);
+    border-radius: 16px;
+    color: var(--muted, #64748b);
+    text-align: center;
+  }
+
+  body.dark-mode .demand-chart-item {
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--demand-color) 13%, transparent),
+        transparent 42%
+      ),
+      #172033;
+    border-color: #334155;
+  }
+
+  body.dark-mode .demand-chart-percent,
+  body.dark-mode .demand-chart-name {
+    color: #f8fafc;
+  }
+
+  @media (max-width: 520px) {
+    .demand-charts-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .demand-chart-item {
+      padding-inline: 8px;
+    }
+
+    .demand-chart-name {
+      font-size: 10px;
+    }
+  }
+
   .os-map-card {
     margin-top: 24px;
     overflow: hidden;
@@ -121,6 +282,54 @@
     color: var(--text, #0f172a);
     font-size: 13px;
     font-weight: 700;
+  }
+
+  .os-map-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .os-map-filter {
+    min-width: 210px;
+    height: 40px;
+    padding: 0 38px 0 13px;
+    border: 1px solid var(--line, #dbe2ea);
+    border-radius: 12px;
+    background-color: var(--card, #ffffff);
+    color: var(--text, #0f172a);
+    font-size: 13px;
+    font-weight: 700;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .os-map-filter:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .14);
+  }
+
+  body.dark-mode .os-map-filter {
+    background-color: #172033;
+    color: #f8fafc;
+    border-color: #334155;
+  }
+
+  @media (max-width: 620px) {
+    .os-map-actions {
+      width: 100%;
+      justify-content: stretch;
+    }
+
+    .os-map-filter {
+      width: 100%;
+    }
+
+    .os-map-counter {
+      justify-content: center;
+    }
   }
 
   #osRegionMap {
@@ -263,6 +472,60 @@
   }
 </style>
 
+<div class="card demand-charts-card">
+  <div class="card-head demand-charts-head">
+    <div>
+      <h2>Demandas por Tipo de Serviço</h2>
+      <p>
+        Distribuição das ordens de serviço cadastradas por demanda
+      </p>
+    </div>
+
+    <div class="demand-charts-count">
+      <i class="bi bi-pie-chart-fill"></i>
+      <span>
+        {{ graficos_demandas|length }}
+        serviços{{ graficos_demandas|length|pluralize }}
+      </span>
+    </div>
+  </div>
+
+  {% if graficos_demandas %}
+    <div class="demand-charts-grid">
+      {% for demanda in graficos_demandas %}
+        <article class="demand-chart-item" style="--demand-index: {{ forloop.counter0 }};">
+          <div class="demand-chart-wrap">
+            <canvas
+              id="demandChart{{ demanda.id }}"
+              class="demand-chart-canvas"
+              data-percentual="{{ demanda.percentual }}"
+              aria-label="Gráfico da demanda {{ demanda.nome }}"
+            ></canvas>
+
+            <div class="demand-chart-percent">
+              {{ demanda.percentual }}%
+            </div>
+          </div>
+
+          <h3 class="demand-chart-name">
+            {{ demanda.nome }}
+          </h3>
+
+          <div class="demand-chart-total">
+            <i class="bi bi-file-earmark-text-fill"></i>
+            <span>{{ demanda.total }} O.S.</span>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="demand-charts-empty">
+      <i class="bi bi-pie-chart"></i>
+      Nenhum tipo de demanda cadastrado até o momento.
+    </div>
+  {% endif %}
+</div>
+
 <div class="card os-map-card">
   <div class="card-head os-map-head">
     <div>
@@ -273,9 +536,22 @@
       </p>
     </div>
 
-    <div class="os-map-counter">
-      <i class="bi bi-geo-alt-fill"></i>
-      <span id="mapPointsCounter">0 pontos localizados</span>
+    <div class="os-map-actions">
+      <label class="visually-hidden" for="mapStatusFilter">
+        Filtrar O.S. por status
+      </label>
+
+      <select id="mapStatusFilter" class="os-map-filter">
+        <option value="ALL">Todas as O.S.</option>
+        <option value="OPEN">O.S. pendentes</option>
+        <option value="IN_PROGRESS">O.S. em andamento</option>
+        <option value="DONE">O.S. concluídas</option>
+      </select>
+
+      <div class="os-map-counter">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span id="mapPointsCounter">0 pontos localizados</span>
+      </div>
     </div>
   </div>
 
@@ -295,6 +571,93 @@
   {{ mapa_pontos|json_script:"mapa-os-pontos" }}
 </div>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (typeof Chart === "undefined") {
+      console.warn(
+        "Chart.js não foi encontrado. " +
+        "Os gráficos de demandas não puderam ser exibidos."
+      );
+      return;
+    }
+
+    const coresDemandas = [
+      "#2563eb",
+      "#7c3aed",
+      "#db2777",
+      "#ea580c",
+      "#16a34a",
+      "#0891b2",
+      "#ca8a04",
+      "#dc2626",
+      "#4f46e5",
+      "#0d9488",
+      "#9333ea",
+      "#65a30d"
+    ];
+
+    const corRestante =
+      document.body.classList.contains("dark-mode")
+        ? "#334155"
+        : "#e5e7eb";
+
+    document
+      .querySelectorAll(".demand-chart-canvas")
+      .forEach(function (canvas, index) {
+        const percentual = Math.max(
+          0,
+          Math.min(
+            100,
+            Number(canvas.dataset.percentual || 0)
+          )
+        );
+
+        const corDemanda =
+          coresDemandas[index % coresDemandas.length];
+
+        const card = canvas.closest(".demand-chart-item");
+
+        if (card) {
+          card.style.setProperty("--demand-color", corDemanda);
+        }
+
+        new Chart(canvas, {
+          type: "doughnut",
+          data: {
+            datasets: [{
+              data: [
+                percentual,
+                100 - percentual
+              ],
+              backgroundColor: [
+                corDemanda,
+                corRestante
+              ],
+              borderWidth: 0,
+              hoverOffset: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "72%",
+            animation: {
+              duration: 650
+            },
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                enabled: false
+              }
+            }
+          }
+        });
+      });
+  });
+</script>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
@@ -303,6 +666,7 @@
     const mapElement = document.getElementById("osRegionMap");
     const emptyElement = document.getElementById("mapEmptyMessage");
     const counterElement = document.getElementById("mapPointsCounter");
+    const filterElement = document.getElementById("mapStatusFilter");
     const jsonElement = document.getElementById("mapa-os-pontos");
 
     if (!mapElement || !jsonElement || typeof L === "undefined") {
@@ -381,8 +745,6 @@
 
     mapa.addLayer(grupoMarcadores);
 
-    const limitesMarcadores = [];
-
     function escaparHtml(valor) {
       const elemento = document.createElement("div");
       elemento.textContent = valor == null ? "" : String(valor);
@@ -401,100 +763,167 @@
       return "open";
     }
 
-    pontos.forEach(function (ponto) {
-      const latitude = Number(ponto.latitude);
-      const longitude = Number(ponto.longitude);
+    function atualizarContador(total, filtro) {
+      let complemento = "";
 
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      if (filtro === "OPEN") {
+        complemento = " pendente";
+      } else if (filtro === "IN_PROGRESS") {
+        complemento = " em andamento";
+      } else if (filtro === "DONE") {
+        complemento = " concluída";
+      }
+
+      const plural = total !== 1;
+
+      if (complemento) {
+        if (plural && filtro !== "IN_PROGRESS") {
+          complemento += "s";
+        }
+
+        counterElement.textContent =
+          `${total} ${plural ? "pontos" : "ponto"}${complemento}`;
         return;
       }
 
-      const coordenada = L.latLng(latitude, longitude);
+      counterElement.textContent =
+        `${total} ${
+          total === 1 ? "ponto localizado" : "pontos localizados"
+        }`;
+    }
 
-      /*
-       * Não exibe coordenadas que tenham sido geocodificadas fora
-       * da região configurada para Nossa Senhora do Socorro.
-       */
-      if (!limitesSocorro.contains(coordenada)) {
+    function renderizarMarcadores(statusSelecionado = "ALL") {
+      grupoMarcadores.clearLayers();
+
+      const limitesMarcadores = [];
+      let totalExibido = 0;
+
+      pontos.forEach(function (ponto) {
+        const statusPonto = String(ponto.status || "").toUpperCase();
+
+        if (
+          statusSelecionado !== "ALL" &&
+          statusPonto !== statusSelecionado
+        ) {
+          return;
+        }
+
+        const latitude = Number(ponto.latitude);
+        const longitude = Number(ponto.longitude);
+
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          return;
+        }
+
+        const coordenada = L.latLng(latitude, longitude);
+
+        /*
+         * Não exibe coordenadas que tenham sido geocodificadas fora
+         * da região configurada para Nossa Senhora do Socorro.
+         */
+        if (!limitesSocorro.contains(coordenada)) {
+          return;
+        }
+
+        limitesMarcadores.push(coordenada);
+        totalExibido += 1;
+
+        const popup = `
+          <div class="os-map-popup">
+            <div class="os-map-popup-number">
+              ${escaparHtml(ponto.numero)}
+            </div>
+
+            <div class="os-map-popup-row">
+              <strong>Solicitante:</strong>
+              ${escaparHtml(ponto.solicitante)}
+            </div>
+
+            <div class="os-map-popup-row">
+              <strong>Demanda:</strong>
+              ${escaparHtml(ponto.servico)}
+            </div>
+
+            <div class="os-map-popup-row">
+              <strong>Endereço:</strong>
+              ${escaparHtml(ponto.endereco)}
+            </div>
+
+            <div class="os-map-popup-row">
+              <strong>Data:</strong>
+              ${escaparHtml(ponto.data)}
+            </div>
+
+            <span class="os-map-popup-status ${obterClasseStatus(ponto.status)}">
+              ${escaparHtml(ponto.status_label)}
+            </span>
+
+            <a
+              class="os-map-popup-link"
+              href="${escaparHtml(ponto.url)}"
+            >
+              Visualizar O.S.
+            </a>
+          </div>
+        `;
+
+        const marcador = L.marker(coordenada, {
+          icon: iconeLocalizacao,
+          keyboard: true,
+          title: ponto.numero || "Ordem de Serviço"
+        }).bindPopup(popup, {
+          maxWidth: 320,
+          closeButton: true
+        });
+
+        grupoMarcadores.addLayer(marcador);
+      });
+
+      atualizarContador(totalExibido, statusSelecionado);
+
+      if (!limitesMarcadores.length) {
+        mapElement.style.display = "none";
+        emptyElement.style.display = "flex";
+
+        emptyElement.querySelector("strong").textContent =
+          statusSelecionado === "ALL"
+            ? "Nenhuma O.S. com localização encontrada"
+            : "Nenhuma O.S. encontrada para este filtro";
+
+        emptyElement.querySelector("span").textContent =
+          statusSelecionado === "ALL"
+            ? "As O.S. precisam possuir latitude e longitude para aparecerem no mapa."
+            : "Não existem O.S. com localização para o status selecionado.";
+
         return;
       }
 
-      limitesMarcadores.push(coordenada);
+      mapElement.style.display = "block";
+      emptyElement.style.display = "none";
 
-      const popup = `
-        <div class="os-map-popup">
-          <div class="os-map-popup-number">
-            ${escaparHtml(ponto.numero)}
-          </div>
+      setTimeout(function () {
+        mapa.invalidateSize(true);
 
-          <div class="os-map-popup-row">
-            <strong>Solicitante:</strong>
-            ${escaparHtml(ponto.solicitante)}
-          </div>
+        if (limitesMarcadores.length === 1) {
+          mapa.setView(limitesMarcadores[0], 16);
+        } else {
+          const areaMarcadores = L.latLngBounds(limitesMarcadores);
 
-          <div class="os-map-popup-row">
-            <strong>Demanda:</strong>
-            ${escaparHtml(ponto.servico)}
-          </div>
-
-          <div class="os-map-popup-row">
-            <strong>Endereço:</strong>
-            ${escaparHtml(ponto.endereco)}
-          </div>
-
-          <div class="os-map-popup-row">
-            <strong>Data:</strong>
-            ${escaparHtml(ponto.data)}
-          </div>
-
-          <span class="os-map-popup-status ${obterClasseStatus(ponto.status)}">
-            ${escaparHtml(ponto.status_label)}
-          </span>
-
-          <a
-            class="os-map-popup-link"
-            href="${escaparHtml(ponto.url)}"
-          >
-            Visualizar O.S.
-          </a>
-        </div>
-      `;
-
-      const marcador = L.marker(coordenada, {
-        icon: iconeLocalizacao,
-        keyboard: true,
-        title: ponto.numero || "Ordem de Serviço"
-      }).bindPopup(popup, {
-        maxWidth: 320,
-        closeButton: true
-      });
-
-      grupoMarcadores.addLayer(marcador);
-    });
-
-    counterElement.textContent =
-      `${limitesMarcadores.length} ${
-        limitesMarcadores.length === 1
-          ? "ponto localizado"
-          : "pontos localizados"
-      }`;
-
-    if (!limitesMarcadores.length) {
-      mapElement.style.display = "none";
-      emptyElement.style.display = "flex";
-      return;
+          mapa.fitBounds(areaMarcadores, {
+            padding: [45, 45],
+            maxZoom: 16
+          });
+        }
+      }, 50);
     }
 
-    if (limitesMarcadores.length === 1) {
-      mapa.setView(limitesMarcadores[0], 16);
-    } else {
-      const areaMarcadores = L.latLngBounds(limitesMarcadores);
-
-      mapa.fitBounds(areaMarcadores, {
-        padding: [45, 45],
-        maxZoom: 16
+    if (filterElement) {
+      filterElement.addEventListener("change", function () {
+        renderizarMarcadores(this.value);
       });
     }
+
+    renderizarMarcadores("ALL");
 
     /*
      * Recalcula o tamanho depois que o dashboard terminar de montar.
