@@ -199,6 +199,18 @@ class ServiceRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status_updated_at = models.DateTimeField("Atualizado status em", null=True, blank=True)
 
+    started_at = models.DateTimeField(
+        "Início do andamento",
+        null=True,
+        blank=True,
+    )
+
+    completed_at = models.DateTimeField(
+        "Data de conclusão",
+        null=True,
+        blank=True,
+    )
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

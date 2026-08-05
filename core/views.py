@@ -2225,79 +2225,515 @@ def team_my_report(request):
 def os_status_view(request, pk):
     os_obj = get_object_or_404(ServiceRequest, pk=pk)
 
-    if _is_requisitante(request.user) and os_obj.created_by_id != request.user.id:
-        messages.error(request, "Você não tem permissão para acessar esta OS.")
+    # ==========================================================
+    # PERMISSÃO DE ACESSO
+    # ==========================================================
+    if (
+        _is_requisitante(request.user)
+        and os_obj.created_by_id != request.user.id
+    ):
+        messages.error(
+            request,
+            "Você não tem permissão para acessar esta O.S."
+        )
         return redirect("dashboard_requisitante")
 
+    # ==========================================================
+    # FUNÇÃO AUXILIAR PARA CONVERTER DATA DO FORMULÁRIO
+    # ==========================================================
+    def converter_data_formulario(valor, horario_padrao=None):
+        """
+        Converte uma data no formato YYYY-MM-DD para um datetime
+        com o fuso horário atual do Django.
+        """
+        if not valor:
+            return None
+
+        data_convertida = datetime.strptime(
+            valor,
+            "%Y-%m-%d"
+        ).date()
+
+        horario = horario_padrao or time.min
+
+        data_hora = datetime.combine(
+            data_convertida,
+            horario
+        )
+
+        if timezone.is_naive(data_hora):
+            data_hora = timezone.make_aware(
+                data_hora,
+                timezone.get_current_timezone()
+            )
+
+        return data_hora
+
+    # ==========================================================
+    # ALTERAÇÃO DE STATUS
+    # ==========================================================
     if request.method == "POST":
         if _is_requisitante(request.user):
-            messages.error(request, "Você não tem permissão para alterar o status desta OS.")
-            return redirect("os_status_view", pk=os_obj.pk)
-
-        novo_status = (request.POST.get("status") or "").strip()
-        solution_taken = (request.POST.get("solution_taken") or "").strip()
-        finished_in_days = (request.POST.get("finished_in_days") or "").strip()
-
-        status_validos = [item[0] for item in ServiceRequest.STATUS_CHOICES]
-        if novo_status not in status_validos:
-            messages.error(request, "Status inválido.")
-            return redirect("os_status_view", pk=os_obj.pk)
-
-        # ✅ REGRA:
-        # Se a O.S já estiver concluída, somente admin/superuser pode voltar ou alterar o status
-        if os_obj.status == "DONE" and novo_status != "DONE" and not request.user.is_superuser:
             messages.error(
                 request,
-                "Esta O.S já foi concluída. Apenas o administrador pode alterar o status novamente."
+                "Você não tem permissão para alterar o status desta O.S."
             )
-            return redirect("os_status_view", pk=os_obj.pk)
+            return redirect(
+                "os_status_view",
+                pk=os_obj.pk
+            )
 
+        novo_status = (
+            request.POST.get("status") or ""
+        ).strip()
+
+        solution_taken = (
+            request.POST.get("solution_taken") or ""
+        ).strip()
+
+        finished_in_days = (
+            request.POST.get("finished_in_days") or ""
+        ).strip()
+
+        # Datas enviadas separadamente pelo formulário.
+        started_at_raw = (
+            request.POST.get("started_at") or ""
+        ).strip()
+
+        completed_at_raw = (
+            request.POST.get("completed_at") or ""
+        ).strip()
+
+        status_validos = [
+            item[0]
+            for item in ServiceRequest.STATUS_CHOICES
+        ]
+
+        if novo_status not in status_validos:
+            messages.error(
+                request,
+                "Status inválido."
+            )
+            return redirect(
+                "os_status_view",
+                pk=os_obj.pk
+            )
+
+        status_anterior = os_obj.status
+        agora = timezone.now()
+
+        # ======================================================
+        # BLOQUEIO DE REABERTURA
+        # ======================================================
+        if (
+            status_anterior == "DONE"
+            and novo_status != "DONE"
+            and not request.user.is_superuser
+        ):
+            messages.error(
+                request,
+                (
+                    "Esta O.S. já foi concluída. "
+                    "Apenas o administrador pode alterar "
+                    "o status novamente."
+                )
+            )
+            return redirect(
+                "os_status_view",
+                pk=os_obj.pk
+            )
+
+        # ======================================================
+        # STATUS: EM ANDAMENTO
+        # ======================================================
+        if novo_status == "IN_PROGRESS":
+            # Registra somente a primeira entrada em andamento.
+            if not os_obj.started_at:
+                os_obj.started_at = agora
+
+            os_obj.status = "IN_PROGRESS"
+            os_obj.solution_taken = None
+            os_obj.finished_in_days = None
+            os_obj.completed_at = None
+
+            os_obj.save(
+                update_fields=[
+                    "status",
+                    "started_at",
+                    "solution_taken",
+                    "finished_in_days",
+                    "completed_at",
+                    "status_updated_at",
+                ]
+            )
+
+            messages.success(
+                request,
+                (
+                    "O.S. colocada em andamento. "
+                    "A data de início foi registrada automaticamente."
+                )
+            )
+
+            return redirect(
+                "os_status_view",
+                pk=os_obj.pk
+            )
+
+        # ======================================================
+        # STATUS: CONCLUÍDO
+        # ======================================================
         if novo_status == "DONE":
             if not solution_taken:
-                messages.error(request, "Preencha o campo Solução tomada para finalizar a O.S.")
-                return redirect("os_status_view", pk=os_obj.pk)
+                messages.error(
+                    request,
+                    (
+                        "Preencha o campo Solução tomada "
+                        "para finalizar a O.S."
+                    )
+                )
+                return redirect(
+                    "os_status_view",
+                    pk=os_obj.pk
+                )
 
-            if not finished_in_days:
-                messages.error(request, "Preencha em quantos dias a O.S foi finalizada.")
-                return redirect("os_status_view", pk=os_obj.pk)
+            if finished_in_days == "":
+                messages.error(
+                    request,
+                    (
+                        "Informe em quantos dias "
+                        "a O.S. foi finalizada."
+                    )
+                )
+                return redirect(
+                    "os_status_view",
+                    pk=os_obj.pk
+                )
 
             try:
-                finished_in_days_int = int(finished_in_days)
-                if finished_in_days_int < 0:
+                total_dias = int(finished_in_days)
+
+                if total_dias < 0:
                     raise ValueError
+
+            except (TypeError, ValueError):
+                messages.error(
+                    request,
+                    (
+                        "O campo 'Finalizado em quantos dias' "
+                        "deve possuir um número inteiro válido."
+                    )
+                )
+                return redirect(
+                    "os_status_view",
+                    pk=os_obj.pk
+                )
+
+            # ==================================================
+            # CONVERSÃO E VALIDAÇÃO DAS DATAS
+            # ==================================================
+            try:
+                # Mantém o horário anterior quando somente
+                # a data do início for corrigida.
+                horario_inicio = (
+                    timezone.localtime(os_obj.started_at).time()
+                    if os_obj.started_at
+                    else time.min
+                )
+
+                data_inicio_informada = converter_data_formulario(
+                    started_at_raw,
+                    horario_inicio
+                )
+
+                # Mantém o horário anterior da conclusão, quando existir.
+                horario_conclusao = (
+                    timezone.localtime(os_obj.completed_at).time()
+                    if os_obj.completed_at
+                    else time.min
+                )
+
+                data_conclusao_informada = converter_data_formulario(
+                    completed_at_raw,
+                    horario_conclusao
+                )
+
             except ValueError:
-                messages.error(request, "O campo 'em quantos dias finalizou' deve ser um número válido.")
-                return redirect("os_status_view", pk=os_obj.pk)
+                messages.error(
+                    request,
+                    (
+                        "Uma das datas informadas é inválida. "
+                        "Revise a data de início e a data de finalização."
+                    )
+                )
+                return redirect(
+                    "os_status_view",
+                    pk=os_obj.pk
+                )
 
-            os_obj.status = novo_status
+            # Usa exatamente a data de início enviada pelo formulário.
+            if data_inicio_informada:
+                data_inicio = data_inicio_informada
+
+            elif os_obj.started_at:
+                data_inicio = os_obj.started_at
+
+            else:
+                # Compatibilidade com O.S. antiga.
+                data_inicio = os_obj.created_at
+
+            # A data de início não pode ser anterior à abertura.
+            abertura_local = timezone.localtime(
+                os_obj.created_at
+            )
+
+            if data_inicio.date() < abertura_local.date():
+                messages.error(
+                    request,
+                    (
+                        "A data de início do andamento não pode ser "
+                        "anterior à data de abertura da O.S."
+                    )
+                )
+                return redirect(
+                    "os_status_view",
+                    pk=os_obj.pk
+                )
+
+            # Usa exatamente a conclusão enviada pelo formulário.
+            if data_conclusao_informada:
+                data_conclusao = data_conclusao_informada
+            else:
+                # Somente calcula quando a conclusão não foi informada.
+                data_conclusao = (
+                    data_inicio
+                    + timedelta(days=total_dias)
+                )
+
+            if data_conclusao.date() < data_inicio.date():
+                messages.error(
+                    request,
+                    (
+                        "A data de finalização não pode ser "
+                        "anterior à data de início do andamento."
+                    )
+                )
+                return redirect(
+                    "os_status_view",
+                    pk=os_obj.pk
+                )
+
+            # Calcula novamente os dias usando as duas datas efetivas.
+            total_dias_calculado = max(
+                (
+                    data_conclusao.date()
+                    - data_inicio.date()
+                ).days,
+                0
+            )
+
+            os_obj.status = "DONE"
             os_obj.solution_taken = solution_taken
-            os_obj.finished_in_days = finished_in_days_int
-            os_obj.save(update_fields=["status", "solution_taken", "finished_in_days"])
+            os_obj.started_at = data_inicio
+            os_obj.completed_at = data_conclusao
+            os_obj.finished_in_days = total_dias_calculado
 
-            messages.success(request, "Status da OS atualizado com sucesso!")
-            return redirect("os_status_view", pk=os_obj.pk)
+            os_obj.save(
+                update_fields=[
+                    "status",
+                    "solution_taken",
+                    "finished_in_days",
+                    "started_at",
+                    "completed_at",
+                    "status_updated_at",
+                ]
+            )
 
-        os_obj.status = novo_status
+            messages.success(
+                request,
+                (
+                    "O.S. concluída com sucesso! "
+                    f"Tempo de execução: {total_dias_calculado} "
+                    f"{'dia' if total_dias_calculado == 1 else 'dias'}."
+                )
+            )
+
+            return redirect(
+                "os_status_view",
+                pk=os_obj.pk
+            )
+
+        # ======================================================
+        # STATUS: PENDENTE
+        # ======================================================
+        os_obj.status = "OPEN"
         os_obj.solution_taken = None
         os_obj.finished_in_days = None
-        os_obj.save(update_fields=["status", "solution_taken", "finished_in_days"])
+        os_obj.completed_at = None
 
-        messages.success(request, "Status da OS atualizado com sucesso!")
-        return redirect("os_status_view", pk=os_obj.pk)
+        # O started_at é preservado para manter o histórico
+        # da primeira entrada em andamento.
+        os_obj.save(
+            update_fields=[
+                "status",
+                "solution_taken",
+                "finished_in_days",
+                "completed_at",
+                "status_updated_at",
+            ]
+        )
 
-    prazo_formatado = _formatar_prazo_data(os_obj.created_at, os_obj.due_at)
+        messages.success(
+            request,
+            "Status da O.S. atualizado com sucesso!"
+        )
+
+        return redirect(
+            "os_status_view",
+            pk=os_obj.pk
+        )
+
+    # ==========================================================
+    # DADOS PARA EXIBIÇÃO
+    # ==========================================================
+    prazo_formatado = _formatar_prazo_data(
+        os_obj.created_at,
+        os_obj.due_at,
+    )
+
     endereco_completo = _montar_endereco_os(os_obj)
     anexos = _obter_anexos_os(os_obj)
     observacoes = _obter_observacoes_os(os_obj)
 
-    return render(request, "os/os_status_view.html", {
-        "os": os_obj,
-        "prazo_formatado": prazo_formatado or "—",
-        "endereco_completo": endereco_completo or "—",
-        "anexos": anexos,
-        "observacoes": observacoes or "—",
-        "status_choices": ServiceRequest.STATUS_CHOICES,
-    })
+    agora = timezone.now()
+
+    # Data original de abertura da O.S.
+    data_abertura_calendario = timezone.localtime(
+        os_obj.created_at
+    )
+
+    # Para O.S. antiga sem started_at, a data de início visual
+    # será a mesma data da abertura.
+    if os_obj.started_at:
+        data_inicio_calendario = timezone.localtime(
+            os_obj.started_at
+        )
+        inicio_foi_estimado = False
+    else:
+        data_inicio_calendario = data_abertura_calendario
+        inicio_foi_estimado = True
+
+    data_fim_calendario = None
+
+    # Prioridade para a data de conclusão realmente salva.
+    if os_obj.completed_at:
+        data_fim_calendario = timezone.localtime(
+            os_obj.completed_at
+        )
+
+    # Compatibilidade com O.S. antiga que já possui
+    # finished_in_days, mas ainda não possui completed_at.
+    elif (
+        os_obj.status == "DONE"
+        and os_obj.finished_in_days is not None
+    ):
+        data_fim_calendario = (
+            data_inicio_calendario
+            + timedelta(
+                days=int(os_obj.finished_in_days)
+            )
+        )
+
+    # Quando está em andamento, o calendário mostra até hoje.
+    elif os_obj.status == "IN_PROGRESS":
+        data_fim_calendario = timezone.localtime(agora)
+
+    dias_calculados = None
+
+    if (
+        os_obj.status == "DONE"
+        and data_inicio_calendario
+        and data_fim_calendario
+    ):
+        dias_calculados = max(
+            (
+                data_fim_calendario.date()
+                - data_inicio_calendario.date()
+            ).days,
+            0
+        )
+
+    elif os_obj.finished_in_days is not None:
+        dias_calculados = int(
+            os_obj.finished_in_days
+        )
+
+    # ==========================================================
+    # TEMPLATE
+    # ==========================================================
+    return render(
+        request,
+        "os/os_status_view.html",
+        {
+            "os": os_obj,
+            "prazo_formatado": prazo_formatado or "—",
+            "endereco_completo": endereco_completo or "—",
+            "anexos": anexos,
+            "observacoes": observacoes or "—",
+            "status_choices": ServiceRequest.STATUS_CHOICES,
+
+            # Data de abertura
+            "data_abertura_iso": (
+                data_abertura_calendario
+                .date()
+                .isoformat()
+            ),
+
+            "data_abertura_formatada": (
+                data_abertura_calendario
+                .strftime("%d/%m/%Y às %H:%M")
+            ),
+
+            # Data de início do andamento
+            "data_inicio_iso": (
+                data_inicio_calendario
+                .date()
+                .isoformat()
+            ),
+
+            "data_inicio_formatada": (
+                (
+                    data_inicio_calendario
+                    .strftime("%d/%m/%Y às %H:%M")
+                    + " — mesmo dia da abertura"
+                )
+                if inicio_foi_estimado
+                else data_inicio_calendario.strftime(
+                    "%d/%m/%Y às %H:%M"
+                )
+            ),
+
+            # Data de conclusão
+            "data_fim_iso": (
+                data_fim_calendario
+                .date()
+                .isoformat()
+                if data_fim_calendario
+                else ""
+            ),
+
+            "data_conclusao_formatada": (
+                data_fim_calendario.strftime(
+                    "%d/%m/%Y às %H:%M"
+                )
+                if data_fim_calendario
+                else "Ainda não concluído"
+            ),
+
+            "dias_calculados": dias_calculados,
+            "inicio_foi_estimado": inicio_foi_estimado,
+        },
+    )
 
 
 def _service_type_deadlines_file():
