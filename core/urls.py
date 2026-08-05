@@ -63,6 +63,11 @@ urlpatterns = [
     path("relatorios/servicos/", views.report_services_search, name="report_services_search"),
     path("relatorios/servicos/download/", views.report_services_download, name="report_services_download"),
     path("tipos-servico/<int:pk>/editar/", views.service_type_update, name="service_type_update"),
+    path(
+    "api/mapa-os/",
+    views.api_mapa_os,
+    name="api_mapa_os"
+),
 
     # ===== APIS =====
     path("api/cep/<str:cep>/", views.api_cep, name="api_cep"),
@@ -70,6 +75,7 @@ urlpatterns = [
     path("api/os-status/<str:os_number>/", views.api_os_status, name="api_os_status"),
     path("api/check-cpf/", views.api_check_cpf_exists, name="api_check_cpf_exists"),
     path("api/check-cpf-exists/", views.api_check_cpf_exists, name="api_check_cpf_exists"),
+    
 
     # ===== USERS PERMISSIONS =====
     path("usuarios/<int:user_id>/editar/", views.user_role_update, name="user_role_update"),

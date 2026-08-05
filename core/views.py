@@ -37,6 +37,7 @@ from django.db.models import Count, Avg, Q
 from django.views.decorators.http import require_GET, require_POST
 from .models import NotificationHidden
 from decimal import Decimal, InvalidOperation
+import time as time_module
 
 from .forms import (
     ServiceRequestForm,
@@ -158,7 +159,11 @@ def _create_pending_notification_for_os(os_obj, created_by=None):
 
 def _geocodificar_endereco_os(os_obj):
     """
-    Converte o endereço da O.S. em latitude e longitude usando Nominatim.
+    Converte o endereço da O.S. em latitude e longitude usando
+    o Nominatim/OpenStreetMap.
+
+    Realiza diferentes tentativas para aumentar a chance de localizar
+    endereços que estejam incompletos ou escritos de formas diferentes.
 
     Retorna:
         (latitude, longitude) quando encontrar;
@@ -168,62 +173,220 @@ def _geocodificar_endereco_os(os_obj):
     if not os_obj:
         return None, None
 
-    partes = [
-        os_obj.street,
-        os_obj.number,
-        os_obj.neighborhood,
-        os_obj.city or "Nossa Senhora do Socorro",
-        "Sergipe",
-        "Brasil",
-        os_obj.cep,
-    ]
+    def limpar_valor(valor):
+        if valor is None:
+            return ""
 
-    endereco = ", ".join(
-        str(parte).strip()
-        for parte in partes
-        if parte and str(parte).strip()
+        return str(valor).strip()
+
+    rua = limpar_valor(getattr(os_obj, "street", ""))
+    numero = limpar_valor(getattr(os_obj, "number", ""))
+    bairro = limpar_valor(getattr(os_obj, "neighborhood", ""))
+    cidade = limpar_valor(getattr(os_obj, "city", ""))
+    cep = limpar_valor(getattr(os_obj, "cep", ""))
+
+    if not cidade:
+        cidade = "Nossa Senhora do Socorro"
+
+    estado = "Sergipe"
+    pais = "Brasil"
+
+    tentativas = []
+
+    def adicionar_tentativa(partes):
+        endereco = ", ".join(
+            parte
+            for parte in partes
+            if parte
+        )
+
+        if endereco and endereco not in tentativas:
+            tentativas.append(endereco)
+
+    # Endereço completo.
+    adicionar_tentativa([
+        rua,
+        numero,
+        bairro,
+        cidade,
+        estado,
+        pais,
+        cep,
+    ])
+
+    # Endereço completo sem CEP.
+    adicionar_tentativa([
+        rua,
+        numero,
+        bairro,
+        cidade,
+        estado,
+        pais,
+    ])
+
+    # Endereço sem número.
+    adicionar_tentativa([
+        rua,
+        bairro,
+        cidade,
+        estado,
+        pais,
+    ])
+
+    # Somente rua, cidade e estado.
+    adicionar_tentativa([
+        rua,
+        cidade,
+        estado,
+        pais,
+    ])
+
+    # Busca pelo CEP acompanhado da cidade.
+    adicionar_tentativa([
+        cep,
+        cidade,
+        estado,
+        pais,
+    ])
+
+    # Busca somente pelo CEP.
+    adicionar_tentativa([
+        cep,
+        pais,
+    ])
+
+    # Última alternativa: bairro e cidade.
+    adicionar_tentativa([
+        bairro,
+        cidade,
+        estado,
+        pais,
+    ])
+
+    for indice, endereco in enumerate(tentativas):
+        parametros = urlencode({
+            "q": endereco,
+            "format": "jsonv2",
+            "limit": 1,
+            "countrycodes": "br",
+            "addressdetails": 1,
+        })
+
+        url = (
+            "https://nominatim.openstreetmap.org/search?"
+            f"{parametros}"
+        )
+
+        requisicao = Request(
+            url,
+            headers={
+                "User-Agent": (
+                    "PortalServicosUrbanos/1.0 "
+                    "(servicosurbanossocorro@gmail.com)"
+                ),
+                "Accept-Language": "pt-BR,pt;q=0.9",
+            },
+        )
+
+        try:
+            with urlopen(requisicao, timeout=20) as resposta:
+                dados = json.loads(
+                    resposta.read().decode("utf-8")
+                )
+
+            if dados:
+                latitude = Decimal(str(dados[0]["lat"]))
+                longitude = Decimal(str(dados[0]["lon"]))
+
+                return latitude, longitude
+
+        except (
+            OSError,
+            ValueError,
+            KeyError,
+            IndexError,
+            InvalidOperation,
+            json.JSONDecodeError,
+        ) as erro:
+            print(
+                "Erro ao geocodificar endereço "
+                f"'{endereco}': {erro}"
+            )
+
+        # Respeita o intervalo entre consultas ao Nominatim.
+        if indice < len(tentativas) - 1:
+            time_module.sleep(1)
+
+    return None, None
+
+def _montar_pontos_mapa(queryset=None):
+    """
+    Monta os dados das O.S. que possuem latitude e longitude
+    para serem utilizados pelo mapa do dashboard.
+    """
+
+    if queryset is None:
+        queryset = ServiceRequest.objects.all()
+
+    os_com_localizacao = (
+        queryset
+        .exclude(latitude__isnull=True)
+        .exclude(longitude__isnull=True)
+        .order_by("-created_at")
     )
 
-    if not endereco:
-        return None, None
+    pontos = []
 
-    parametros = urlencode({
-        "q": endereco,
-        "format": "jsonv2",
-        "limit": 1,
-        "countrycodes": "br",
-    })
+    for os_obj in os_com_localizacao:
+        endereco_partes = [
+            os_obj.street,
+            os_obj.number,
+            os_obj.neighborhood,
+            os_obj.city,
+        ]
 
-    url = f"https://nominatim.openstreetmap.org/search?{parametros}"
+        endereco = ", ".join(
+            str(parte).strip()
+            for parte in endereco_partes
+            if parte and str(parte).strip()
+        )
 
-    requisicao = Request(
-        url,
-        headers={
-            "User-Agent": "PortalServicosUrbanos/1.0"
-        }
-    )
+        pontos.append({
+            "id": os_obj.pk,
+            "numero": os_obj.os_number,
+            "solicitante": (
+                os_obj.full_name
+                or "Não informado"
+            ),
+            "servico": (
+                os_obj.service_type
+                or "Não informado"
+            ),
+            "bairro": (
+                os_obj.neighborhood
+                or "Não informado"
+            ),
+            "endereco": (
+                endereco
+                or "Endereço não informado"
+            ),
+            "status": os_obj.status,
+            "status_label": os_obj.get_status_display(),
+            "data": (
+                timezone.localtime(os_obj.created_at)
+                .strftime("%d/%m/%Y %H:%M")
+                if os_obj.created_at
+                else ""
+            ),
+            "latitude": float(os_obj.latitude),
+            "longitude": float(os_obj.longitude),
+            "url": reverse(
+                "os_detail",
+                kwargs={"pk": os_obj.pk},
+            ),
+        })
 
-    try:
-        with urlopen(requisicao, timeout=10) as resposta:
-            dados = json.loads(resposta.read().decode("utf-8"))
-
-        if not dados:
-            return None, None
-
-        latitude = Decimal(str(dados[0]["lat"]))
-        longitude = Decimal(str(dados[0]["lon"]))
-
-        return latitude, longitude
-
-    except (
-        OSError,
-        ValueError,
-        KeyError,
-        IndexError,
-        InvalidOperation,
-        json.JSONDecodeError,
-    ):
-        return None, None
+    return pontos
 
 class LoginForm(forms.Form):
     username = forms.EmailField(
@@ -1257,7 +1420,9 @@ def dashboard(request):
 
     stats = {
         "abertos": solicitacoes.filter(status="OPEN").count(),
-        "andamento": solicitacoes.filter(status="IN_PROGRESS").count(),
+        "andamento": solicitacoes.filter(
+            status="IN_PROGRESS"
+        ).count(),
         "concluidos": solicitacoes.filter(status="DONE").count(),
         "total": solicitacoes.count(),
     }
@@ -1269,7 +1434,7 @@ def dashboard(request):
         solicitacoes
         .filter(
             created_at__date__gte=start,
-            created_at__date__lte=today
+            created_at__date__lte=today,
         )
         .annotate(d=TruncDate("created_at"))
         .values("d")
@@ -1287,8 +1452,14 @@ def dashboard(request):
 
     for i in range(90):
         day = start + timedelta(days=i)
-        labels.append(day.strftime("%d/%m"))
-        data.append(counts_by_day.get(day, 0))
+
+        labels.append(
+            day.strftime("%d/%m")
+        )
+
+        data.append(
+            counts_by_day.get(day, 0)
+        )
 
     bairros_qs = (
         solicitacoes
@@ -1311,9 +1482,9 @@ def dashboard(request):
     ]
 
     # ==========================================================
-    # Gráficos circulares por tipo de demanda
+    # GRÁFICOS CIRCULARES POR TIPO DE DEMANDA
     # ==========================================================
-    total_solicitacoes = solicitacoes.count()
+    total_solicitacoes = stats["total"]
 
     demandas_qs = (
         solicitacoes
@@ -1324,85 +1495,65 @@ def dashboard(request):
             total=Count("id"),
             concluidas=Count(
                 "id",
-                filter=Q(status="DONE")
+                filter=Q(status="DONE"),
             ),
             andamento=Count(
                 "id",
-                filter=Q(status="IN_PROGRESS")
+                filter=Q(status="IN_PROGRESS"),
             ),
             pendentes=Count(
                 "id",
-                filter=Q(status="OPEN")
+                filter=Q(status="OPEN"),
             ),
         )
-        .order_by("-total", "service_type")
+        .order_by(
+            "-total",
+            "service_type",
+        )
     )
 
     graficos_demandas = []
 
-    for indice, item in enumerate(demandas_qs):
+    for indice, item in enumerate(
+        demandas_qs,
+        start=1,
+    ):
         total_demanda = item["total"]
 
         percentual = (
-            round((total_demanda / total_solicitacoes) * 100)
+            round(
+                (
+                    total_demanda
+                    / total_solicitacoes
+                ) * 100
+            )
             if total_solicitacoes
             else 0
         )
 
-        graficos_demandas.append({
-            "id": indice + 1,
-            "nome": item["service_type"],
-            "total": total_demanda,
-            "percentual": percentual,
-            "concluidas": item["concluidas"],
-            "andamento": item["andamento"],
-            "pendentes": item["pendentes"],
-        })
-
-    os_com_localizacao = (
-        solicitacoes
-        .exclude(latitude__isnull=True)
-        .exclude(longitude__isnull=True)
-        .order_by("-created_at")
-    )
-
-    mapa_pontos = []
-
-    for os_obj in os_com_localizacao:
-        endereco_partes = [
-            os_obj.street,
-            os_obj.number,
-            os_obj.neighborhood,
-            os_obj.city,
-        ]
-
-        endereco = ", ".join(
-            str(parte).strip()
-            for parte in endereco_partes
-            if parte and str(parte).strip()
+        graficos_demandas.append(
+            {
+                "id": indice,
+                "nome": (
+                    item["service_type"]
+                    or "Não informado"
+                ),
+                "total": total_demanda,
+                "percentual": percentual,
+                "concluidas": item["concluidas"],
+                "andamento": item["andamento"],
+                "pendentes": item["pendentes"],
+            }
         )
 
-        mapa_pontos.append({
-            "id": os_obj.pk,
-            "numero": os_obj.os_number,
-            "solicitante": os_obj.full_name or "Não informado",
-            "servico": os_obj.service_type or "Não informado",
-            "bairro": os_obj.neighborhood or "Não informado",
-            "endereco": endereco or "Endereço não informado",
-            "status": os_obj.status,
-            "status_label": os_obj.get_status_display(),
-            "data": timezone.localtime(
-                os_obj.created_at
-            ).strftime("%d/%m/%Y %H:%M"),
-            "latitude": float(os_obj.latitude),
-            "longitude": float(os_obj.longitude),
-            "url": reverse(
-                "os_detail",
-                kwargs={"pk": os_obj.pk}
-            ),
-        })
+    # ==========================================================
+    # PONTOS INICIAIS DO MAPA
+    # ==========================================================
+    mapa_pontos = _montar_pontos_mapa(
+        solicitacoes
+    )
 
-    return render(request, "dashboard.html", {
+    context = {
         "stats": stats,
         "chart_labels": labels,
         "chart_data": data,
@@ -1410,6 +1561,38 @@ def dashboard(request):
         "bairros_data": bairros_data,
         "graficos_demandas": graficos_demandas,
         "mapa_pontos": mapa_pontos,
+    }
+
+    return render(
+        request,
+        "dashboard.html",
+        context,
+    )
+
+@login_required(login_url="login_admin")
+@require_GET
+def api_mapa_os(request):
+    if _is_requisitante(request.user):
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": (
+                    "Você não possui permissão para acessar "
+                    "o mapa administrativo."
+                ),
+            },
+            status=403,
+        )
+
+    pontos = _montar_pontos_mapa()
+
+    return JsonResponse({
+        "ok": True,
+        "total": len(pontos),
+        "pontos": pontos,
+        "atualizado_em": timezone.localtime().strftime(
+            "%d/%m/%Y %H:%M:%S"
+        ),
     })
 
 

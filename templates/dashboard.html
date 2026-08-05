@@ -673,19 +673,24 @@
       return;
     }
 
+    const apiMapaUrl = "{% url 'api_mapa_os' %}";
+    const intervaloAtualizacao = 30000;
+
     let pontos = [];
+    let atualizacaoEmAndamento = false;
+    let primeiraRenderizacao = true;
 
     try {
       pontos = JSON.parse(jsonElement.textContent || "[]");
     } catch (error) {
-      console.error("Não foi possível carregar os pontos do mapa.", error);
+      console.error(
+        "Não foi possível carregar os pontos iniciais do mapa.",
+        error
+      );
+
       pontos = [];
     }
 
-    /*
-     * Limites aproximados de Nossa Senhora do Socorro/SE.
-     * O usuário não consegue arrastar o mapa para fora dessa região.
-     */
     const limitesSocorro = L.latLngBounds(
       L.latLng(-10.9650, -37.2250),
       L.latLng(-10.7350, -36.9950)
@@ -730,10 +735,6 @@
       popupAnchor: [0, -38]
     });
 
-    /*
-     * Agrupa marcadores próximos. Quando várias O.S. possuem exatamente
-     * a mesma coordenada, o clique no grupo abre os marcadores em leque.
-     */
     const grupoMarcadores = L.markerClusterGroup({
       showCoverageOnHover: false,
       zoomToBoundsOnClick: true,
@@ -747,7 +748,12 @@
 
     function escaparHtml(valor) {
       const elemento = document.createElement("div");
-      elemento.textContent = valor == null ? "" : String(valor);
+
+      elemento.textContent =
+        valor == null
+          ? ""
+          : String(valor);
+
       return elemento.innerHTML;
     }
 
@@ -763,7 +769,19 @@
       return "open";
     }
 
+    function obterStatusSelecionado() {
+      if (!filterElement) {
+        return "ALL";
+      }
+
+      return filterElement.value || "ALL";
+    }
+
     function atualizarContador(total, filtro) {
+      if (!counterElement) {
+        return;
+      }
+
       let complemento = "";
 
       if (filtro === "OPEN") {
@@ -783,23 +801,59 @@
 
         counterElement.textContent =
           `${total} ${plural ? "pontos" : "ponto"}${complemento}`;
+
         return;
       }
 
       counterElement.textContent =
         `${total} ${
-          total === 1 ? "ponto localizado" : "pontos localizados"
+          total === 1
+            ? "ponto localizado"
+            : "pontos localizados"
         }`;
     }
 
-    function renderizarMarcadores(statusSelecionado = "ALL") {
+    function exibirMensagemVazia(statusSelecionado) {
+      mapElement.style.display = "none";
+      emptyElement.style.display = "flex";
+
+      const titulo = emptyElement.querySelector("strong");
+      const descricao = emptyElement.querySelector("span");
+
+      if (titulo) {
+        titulo.textContent =
+          statusSelecionado === "ALL"
+            ? "Nenhuma O.S. com localização encontrada"
+            : "Nenhuma O.S. encontrada para este filtro";
+      }
+
+      if (descricao) {
+        descricao.textContent =
+          statusSelecionado === "ALL"
+            ? (
+                "As O.S. precisam possuir latitude e longitude " +
+                "para aparecerem no mapa."
+              )
+            : (
+                "Não existem O.S. com localização para o " +
+                "status selecionado."
+              );
+      }
+    }
+
+    function renderizarMarcadores(
+      statusSelecionado = "ALL",
+      ajustarVisao = false
+    ) {
       grupoMarcadores.clearLayers();
 
       const limitesMarcadores = [];
       let totalExibido = 0;
 
       pontos.forEach(function (ponto) {
-        const statusPonto = String(ponto.status || "").toUpperCase();
+        const statusPonto = String(
+          ponto.status || ""
+        ).toUpperCase();
 
         if (
           statusSelecionado !== "ALL" &&
@@ -811,16 +865,18 @@
         const latitude = Number(ponto.latitude);
         const longitude = Number(ponto.longitude);
 
-        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        if (
+          !Number.isFinite(latitude) ||
+          !Number.isFinite(longitude)
+        ) {
           return;
         }
 
-        const coordenada = L.latLng(latitude, longitude);
+        const coordenada = L.latLng(
+          latitude,
+          longitude
+        );
 
-        /*
-         * Não exibe coordenadas que tenham sido geocodificadas fora
-         * da região configurada para Nossa Senhora do Socorro.
-         */
         if (!limitesSocorro.contains(coordenada)) {
           return;
         }
@@ -854,7 +910,11 @@
               ${escaparHtml(ponto.data)}
             </div>
 
-            <span class="os-map-popup-status ${obterClasseStatus(ponto.status)}">
+            <span
+              class="os-map-popup-status ${
+                obterClasseStatus(ponto.status)
+              }"
+            >
               ${escaparHtml(ponto.status_label)}
             </span>
 
@@ -867,34 +927,34 @@
           </div>
         `;
 
-        const marcador = L.marker(coordenada, {
-          icon: iconeLocalizacao,
-          keyboard: true,
-          title: ponto.numero || "Ordem de Serviço"
-        }).bindPopup(popup, {
-          maxWidth: 320,
-          closeButton: true
-        });
+        const marcador = L.marker(
+          coordenada,
+          {
+            icon: iconeLocalizacao,
+            keyboard: true,
+            title: (
+              ponto.numero ||
+              "Ordem de Serviço"
+            )
+          }
+        ).bindPopup(
+          popup,
+          {
+            maxWidth: 320,
+            closeButton: true
+          }
+        );
 
         grupoMarcadores.addLayer(marcador);
       });
 
-      atualizarContador(totalExibido, statusSelecionado);
+      atualizarContador(
+        totalExibido,
+        statusSelecionado
+      );
 
       if (!limitesMarcadores.length) {
-        mapElement.style.display = "none";
-        emptyElement.style.display = "flex";
-
-        emptyElement.querySelector("strong").textContent =
-          statusSelecionado === "ALL"
-            ? "Nenhuma O.S. com localização encontrada"
-            : "Nenhuma O.S. encontrada para este filtro";
-
-        emptyElement.querySelector("span").textContent =
-          statusSelecionado === "ALL"
-            ? "As O.S. precisam possuir latitude e longitude para aparecerem no mapa."
-            : "Não existem O.S. com localização para o status selecionado.";
-
+        exibirMensagemVazia(statusSelecionado);
         return;
       }
 
@@ -904,31 +964,146 @@
       setTimeout(function () {
         mapa.invalidateSize(true);
 
-        if (limitesMarcadores.length === 1) {
-          mapa.setView(limitesMarcadores[0], 16);
-        } else {
-          const areaMarcadores = L.latLngBounds(limitesMarcadores);
+        if (!ajustarVisao) {
+          return;
+        }
 
-          mapa.fitBounds(areaMarcadores, {
+        if (limitesMarcadores.length === 1) {
+          mapa.setView(
+            limitesMarcadores[0],
+            16
+          );
+
+          return;
+        }
+
+        const areaMarcadores = L.latLngBounds(
+          limitesMarcadores
+        );
+
+        mapa.fitBounds(
+          areaMarcadores,
+          {
             padding: [45, 45],
             maxZoom: 16
-          });
-        }
+          }
+        );
       }, 50);
     }
 
-    if (filterElement) {
-      filterElement.addEventListener("change", function () {
-        renderizarMarcadores(this.value);
-      });
+    async function atualizarPontosDoMapa() {
+      if (atualizacaoEmAndamento) {
+        return;
+      }
+
+      atualizacaoEmAndamento = true;
+
+      try {
+        const separador = apiMapaUrl.includes("?")
+          ? "&"
+          : "?";
+
+        const resposta = await fetch(
+          `${apiMapaUrl}${separador}_=${Date.now()}`,
+          {
+            method: "GET",
+            credentials: "same-origin",
+            cache: "no-store",
+            headers: {
+              "X-Requested-With": "XMLHttpRequest",
+              "Accept": "application/json"
+            }
+          }
+        );
+
+        if (!resposta.ok) {
+          throw new Error(
+            `Erro HTTP ${resposta.status}`
+          );
+        }
+
+        const dados = await resposta.json();
+
+        if (
+          !dados.ok ||
+          !Array.isArray(dados.pontos)
+        ) {
+          throw new Error(
+            dados.message ||
+            "Resposta inválida recebida da API."
+          );
+        }
+
+        pontos = dados.pontos;
+
+        renderizarMarcadores(
+          obterStatusSelecionado(),
+          primeiraRenderizacao
+        );
+
+        primeiraRenderizacao = false;
+      } catch (error) {
+        console.error(
+          "Não foi possível atualizar os pontos do mapa.",
+          error
+        );
+      } finally {
+        atualizacaoEmAndamento = false;
+      }
     }
 
-    renderizarMarcadores("ALL");
+    if (filterElement) {
+      filterElement.addEventListener(
+        "change",
+        function () {
+          renderizarMarcadores(
+            this.value,
+            true
+          );
+        }
+      );
+    }
 
     /*
-     * Recalcula o tamanho depois que o dashboard terminar de montar.
-     * Isso evita os blocos do mapa desalinhados ou sobrepostos.
+     * Exibe imediatamente os dados enviados pelo Django
+     * junto com o carregamento inicial da página.
      */
+    renderizarMarcadores(
+      obterStatusSelecionado(),
+      true
+    );
+
+    primeiraRenderizacao = false;
+
+    /*
+     * Consulta novamente o banco logo após abrir o mapa.
+     */
+    atualizarPontosDoMapa();
+
+    /*
+     * Atualiza os pontos a cada 30 segundos.
+     */
+    const temporizadorMapa = window.setInterval(
+      function () {
+        if (!document.hidden) {
+          atualizarPontosDoMapa();
+        }
+      },
+      intervaloAtualizacao
+    );
+
+    /*
+     * Atualiza imediatamente quando o usuário volta para a aba.
+     */
+    document.addEventListener(
+      "visibilitychange",
+      function () {
+        if (!document.hidden) {
+          atualizarPontosDoMapa();
+        }
+      }
+    );
+
     requestAnimationFrame(function () {
       mapa.invalidateSize(true);
     });
@@ -937,9 +1112,19 @@
       mapa.invalidateSize(true);
     }, 300);
 
-    window.addEventListener("resize", function () {
-      mapa.invalidateSize(false);
-    });
+    window.addEventListener(
+      "resize",
+      function () {
+        mapa.invalidateSize(false);
+      }
+    );
+
+    window.addEventListener(
+      "beforeunload",
+      function () {
+        window.clearInterval(temporizadorMapa);
+      }
+    );
   });
 </script>
 
