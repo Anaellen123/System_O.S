@@ -668,7 +668,7 @@
         <th>Demandas</th>
         <th>Bairro</th>
         <th>Status</th>
-        <th>Criação</th>
+        <th>Data</th>
         <th>Ações</th>
       </tr>
     </thead>
@@ -701,7 +701,21 @@
             {% endif %}
           </td>
 
-          <td>{{ os.created_at|date:"d/m/Y" }}</td>
+          <td>
+              {% if os.status == "OPEN" %}
+                <b>Criação:</b><br>
+                {{ os.created_at|date:"d/m/Y" }}
+
+              {% elif os.status == "IN_PROGRESS" %}
+                <b>Andamento:</b><br>
+                {{ os.started_at|date:"d/m/Y" }}
+
+              {% elif os.status == "DONE" %}
+                <b>Conclusão:</b><br>
+                {{ os.completed_at|date:"d/m/Y" }}
+
+              {% endif %}
+            </td>
 
           <td>
             <div class="os-actions">
