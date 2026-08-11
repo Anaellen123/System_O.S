@@ -97,5 +97,12 @@ urlpatterns = [
 
     # ===== AJUDA =====
     path("ajuda/", views.help_page, name="help_page"),
+
+    # ===== BACKUP =====
+    path("backup/", views.backup_page, name="backup_page"),
+    path("backup/banco/", views.backup_database, name="backup_database"),
+    path("backup/media/", views.backup_media, name="backup_media"),
+    path("backup/download/<str:filename>/", views.backup_download, name="backup_download"),
+    path("backup/excluir/<str:filename>/", views.backup_delete, name="backup_delete"),
     
 ]

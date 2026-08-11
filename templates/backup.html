@@ -1,0 +1,1132 @@
+html
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+Backup | Portal de Serviços
+{% endblock %}
+
+{% block page_title %}
+Backup do Sistema
+{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ============================================
+     BACKUP - CONTAINER
+     ============================================ */
+  .backup-page {
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+
+
+  /* ============================================
+     MENSAGENS
+     ============================================ */
+  .backup-messages {
+    margin-bottom: 1.5rem;
+  }
+
+  .backup-message {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 12px;
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    font-size: 0.92rem;
+  }
+
+  .backup-message i {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+
+  /* ============================================
+     INTRODUÇÃO
+     ============================================ */
+  .backup-intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.4rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 16px;
+    background: var(--bs-body-bg, #fff);
+  }
+
+  .backup-intro-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .backup-intro-icon {
+    width: 54px;
+    height: 54px;
+    min-width: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(13, 110, 253, 0.1);
+    color: var(--bs-primary, #0d6efd);
+    font-size: 1.55rem;
+  }
+
+  .backup-intro h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .backup-intro p {
+    margin: 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .backup-security {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(25, 135, 84, 0.1);
+    color: var(--bs-success, #198754);
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+
+  /* ============================================
+     CARDS
+     ============================================ */
+  .backup-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .backup-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 1.5rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 18px;
+    background: var(--bs-body-bg, #fff);
+    overflow: hidden;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .backup-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--bs-primary, #0d6efd);
+  }
+
+  .backup-card.backup-card-media::before {
+    background: var(--bs-success, #198754);
+  }
+
+  .backup-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
+  }
+
+  .backup-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .backup-icon {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(13, 110, 253, 0.1);
+    color: var(--bs-primary, #0d6efd);
+    font-size: 1.45rem;
+  }
+
+  .backup-icon.media {
+    background: rgba(25, 135, 84, 0.1);
+    color: var(--bs-success, #198754);
+  }
+
+  .backup-card-title {
+    min-width: 0;
+  }
+
+  .backup-card h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--bs-body-color, #212529);
+  }
+
+  .backup-card p {
+    margin: 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .backup-card-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    min-height: 54px;
+    margin: 0.3rem 0 1.25rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 10px;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .backup-card-info i {
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .backup-card form {
+    margin-top: auto;
+  }
+
+  .backup-btn {
+    width: 100%;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .backup-btn:hover {
+    transform: translateY(-1px);
+  }
+
+
+  /* ============================================
+     HISTÓRICO
+     ============================================ */
+  .backup-history {
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: 18px;
+    background: var(--bs-body-bg, #fff);
+    overflow: hidden;
+  }
+
+  .backup-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.15rem 1.35rem;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+  }
+
+  .backup-table-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 0;
+  }
+
+  .backup-table-header-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    color: var(--bs-primary, #0d6efd);
+    font-size: 1rem;
+  }
+
+  .backup-table-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--bs-body-color, #212529);
+  }
+
+  .backup-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+
+  /* ============================================
+     TABELA
+     ============================================ */
+  .backup-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .backup-table {
+    width: 100%;
+    min-width: 900px;
+    margin: 0;
+  }
+
+  .backup-table thead th {
+    padding: 0.85rem 1.2rem;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.035em;
+    white-space: nowrap;
+  }
+
+  .backup-table tbody td {
+    padding: 0.95rem 1.2rem;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    color: var(--bs-body-color, #212529);
+    font-size: 0.86rem;
+    vertical-align: middle;
+  }
+
+  .backup-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .backup-table tbody tr {
+    transition: background-color 0.15s ease;
+  }
+
+  .backup-name {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+    font-weight: 500;
+  }
+
+  .backup-name-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: rgba(13, 110, 253, 0.08);
+    color: var(--bs-primary, #0d6efd);
+    font-size: 1rem;
+  }
+
+  .backup-name-icon.media {
+    background: rgba(25, 135, 84, 0.08);
+    color: var(--bs-success, #198754);
+  }
+
+  .backup-file-name {
+    max-width: 380px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .backup-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.38rem 0.62rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .backup-type-badge.database {
+    background: rgba(13, 110, 253, 0.1);
+    color: var(--bs-primary, #0d6efd);
+  }
+
+  .backup-type-badge.media {
+    background: rgba(25, 135, 84, 0.1);
+    color: var(--bs-success, #198754);
+  }
+
+  /* ============================================
+     USUÁRIO QUE GEROU O BACKUP
+     ============================================ */
+  .backup-user {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .backup-user-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(108, 117, 125, 0.1);
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.9rem;
+  }
+
+  .backup-user-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .backup-user-name {
+    color: var(--bs-body-color, #212529);
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .backup-user-info small {
+    display: block;
+    max-width: 190px;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.7rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+
+  .backup-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    min-height: 36px;
+  }
+
+  /* O botão de excluir fica dentro de um <form>.
+     Zeramos margens e usamos flex para que ele tenha
+     exatamente o mesmo alinhamento vertical do link de download. */
+  .backup-actions form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .backup-action-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: middle;
+    border-radius: 9px;
+  }
+
+  .backup-action-btn i {
+    display: block;
+    margin: 0;
+    line-height: 1;
+  }
+
+
+  /* ============================================
+     ESTADO VAZIO
+     ============================================ */
+  .backup-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    min-height: 240px;
+    padding: 2rem;
+    text-align: center;
+    color: var(--bs-secondary-color, #6c757d);
+  }
+
+  .backup-empty-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 1.8rem;
+  }
+
+  .backup-empty h4 {
+    margin: 0;
+    color: var(--bs-body-color, #212529);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .backup-empty p {
+    max-width: 400px;
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+
+  /* ============================================
+     MODO ESCURO
+     ============================================ */
+  [data-bs-theme="dark"] .backup-intro,
+  [data-bs-theme="dark"] .backup-card,
+  [data-bs-theme="dark"] .backup-history,
+  .dark-mode .backup-intro,
+  .dark-mode .backup-card,
+  .dark-mode .backup-history {
+    background: var(--bs-body-bg);
+    border-color: var(--bs-border-color);
+  }
+
+  [data-bs-theme="dark"] .backup-card-info,
+  [data-bs-theme="dark"] .backup-table thead th,
+  [data-bs-theme="dark"] .backup-table-header-icon,
+  [data-bs-theme="dark"] .backup-count,
+  [data-bs-theme="dark"] .backup-empty-icon,
+  .dark-mode .backup-card-info,
+  .dark-mode .backup-table thead th,
+  .dark-mode .backup-table-header-icon,
+  .dark-mode .backup-count,
+  .dark-mode .backup-empty-icon {
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+
+  /* ============================================
+     RESPONSIVIDADE
+     ============================================ */
+  @media (max-width: 991.98px) {
+    .backup-cards {
+      gap: 1rem;
+    }
+
+    .backup-card {
+      padding: 1.25rem;
+    }
+
+    .backup-file-name {
+      max-width: 260px;
+    }
+  }
+
+
+  @media (max-width: 767.98px) {
+    .backup-intro {
+      align-items: flex-start;
+      flex-direction: column;
+      padding: 1.15rem;
+    }
+
+    .backup-security {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .backup-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .backup-card {
+      min-height: auto;
+    }
+
+    .backup-table-header {
+      padding: 1rem;
+    }
+
+    /*
+      No celular a tabela tradicional é transformada
+      em cartões para evitar rolagem horizontal.
+    */
+    .backup-table-wrapper {
+      overflow: visible;
+    }
+
+    .backup-table {
+      min-width: 0;
+    }
+
+    .backup-table thead {
+      display: none;
+    }
+
+    .backup-table,
+    .backup-table tbody,
+    .backup-table tr,
+    .backup-table td {
+      display: block;
+      width: 100%;
+    }
+
+    .backup-table tbody tr {
+      padding: 1rem;
+      border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    }
+
+    .backup-table tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    .backup-table tbody td {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.5rem 0;
+      border: 0;
+      text-align: right !important;
+    }
+
+    .backup-table tbody td::before {
+      content: attr(data-label);
+      flex-shrink: 0;
+      color: var(--bs-secondary-color, #6c757d);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      text-align: left;
+    }
+
+    .backup-table tbody td:first-child {
+      display: block;
+      padding-top: 0;
+      padding-bottom: 0.8rem;
+      margin-bottom: 0.4rem;
+      border-bottom: 1px dashed var(--bs-border-color, #dee2e6);
+      text-align: left !important;
+    }
+
+    .backup-table tbody td:first-child::before {
+      display: none;
+    }
+
+    .backup-file-name {
+      max-width: calc(100vw - 145px);
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .backup-user {
+      justify-content: flex-end;
+    }
+
+    .backup-user-info {
+      align-items: flex-end;
+      text-align: right;
+    }
+
+    .backup-actions {
+      justify-content: flex-end;
+    }
+  }
+
+
+  @media (max-width: 575.98px) {
+    .backup-intro-content {
+      align-items: flex-start;
+    }
+
+    .backup-intro-icon {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      font-size: 1.3rem;
+    }
+
+    .backup-intro h2 {
+      font-size: 1rem;
+    }
+
+    .backup-intro p {
+      font-size: 0.82rem;
+    }
+
+    .backup-card {
+      padding: 1.1rem;
+      border-radius: 14px;
+    }
+
+    .backup-card-top {
+      gap: 0.8rem;
+    }
+
+    .backup-icon {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      font-size: 1.25rem;
+    }
+
+    .backup-table-header {
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .backup-table-header-icon {
+      display: none;
+    }
+
+    .backup-table tbody tr {
+      padding: 0.9rem;
+    }
+
+    .backup-table tbody td {
+      align-items: flex-start;
+    }
+
+    .backup-file-name {
+      max-width: calc(100vw - 105px);
+    }
+
+    .backup-action-btn {
+      width: 38px;
+      height: 38px;
+    }
+  }
+</style>
+
+
+<div class="backup-page">
+
+  <!-- =========================================
+       MENSAGENS DO DJANGO
+       ========================================= -->
+  {% if messages %}
+    <div class="backup-messages">
+      {% for message in messages %}
+        <div class="backup-message">
+          {% if message.tags == "success" %}
+            <i class="bi bi-check-circle-fill text-success"></i>
+
+          {% elif message.tags == "error" or message.tags == "danger" %}
+            <i class="bi bi-exclamation-circle-fill text-danger"></i>
+
+          {% elif message.tags == "warning" %}
+            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+
+          {% else %}
+            <i class="bi bi-info-circle-fill text-primary"></i>
+          {% endif %}
+
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+
+  <!-- =========================================
+       APRESENTAÇÃO
+       ========================================= -->
+  <div class="backup-intro">
+
+    <div class="backup-intro-content">
+
+      <div class="backup-intro-icon">
+        <i class="bi bi-shield-check"></i>
+      </div>
+
+      <div>
+        <h2>Gerenciamento de backups</h2>
+
+        <p>
+          Crie e gerencie cópias de segurança dos dados e arquivos
+          armazenados no sistema.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="backup-security">
+      <i class="bi bi-shield-lock"></i>
+      Segurança dos dados
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       CARDS DE BACKUP
+       ========================================= -->
+  <div class="backup-cards">
+
+    <!-- BACKUP DO BANCO -->
+    <div class="backup-card">
+
+      <div class="backup-card-top">
+
+        <div class="backup-icon">
+          <i class="bi bi-database"></i>
+        </div>
+
+        <div class="backup-card-title">
+          <h3>Backup do banco de dados</h3>
+
+          <p>
+            Crie uma cópia de segurança de todas as informações
+            armazenadas no banco de dados.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div class="backup-card-info">
+        <i class="bi bi-info-circle"></i>
+
+        <span>
+          Inclui solicitações, usuários, equipes, configurações
+          e demais registros cadastrados no sistema.
+        </span>
+      </div>
+
+
+      <form method="post" action="{% url 'backup_database' %}">
+        {% csrf_token %}
+
+        <button
+          type="submit"
+          class="backup-btn btn btn-primary"
+          onclick="return confirm('Deseja gerar um novo backup do banco de dados?');"
+        >
+          <i class="bi bi-database-down"></i>
+          Gerar backup do banco
+        </button>
+      </form>
+
+    </div>
+
+
+    <!-- BACKUP DOS ARQUIVOS -->
+    <div class="backup-card backup-card-media">
+
+      <div class="backup-card-top">
+
+        <div class="backup-icon media">
+          <i class="bi bi-images"></i>
+        </div>
+
+        <div class="backup-card-title">
+          <h3>Backup dos arquivos</h3>
+
+          <p>
+            Crie uma cópia compactada dos anexos e demais arquivos
+            armazenados na pasta de mídia.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div class="backup-card-info">
+        <i class="bi bi-info-circle"></i>
+
+        <span>
+          Inclui imagens, documentos e outros anexos enviados
+          durante o uso do sistema.
+        </span>
+      </div>
+
+
+      <form method="post" action="{% url 'backup_media' %}">
+        {% csrf_token %}
+
+        <button
+          type="submit"
+          class="backup-btn btn btn-success"
+          onclick="return confirm('Deseja gerar um novo backup dos arquivos?');"
+        >
+          <i class="bi bi-file-earmark-zip"></i>
+          Gerar backup dos arquivos
+        </button>
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================
+       HISTÓRICO
+       ========================================= -->
+  <section class="backup-history">
+
+    <div class="backup-table-header">
+
+      <div class="backup-table-header-title">
+
+        <div class="backup-table-header-icon">
+          <i class="bi bi-clock-history"></i>
+        </div>
+
+        <h3>Histórico de backups</h3>
+
+      </div>
+
+
+      <span class="backup-count">
+        <i class="bi bi-archive"></i>
+        {{ backups|length }}
+        arquivo{{ backups|length|pluralize }}
+      </span>
+
+    </div>
+
+
+    {% if backups %}
+
+      <div class="backup-table-wrapper">
+
+        <table class="table table-hover align-middle backup-table">
+
+          <thead>
+            <tr>
+              <th>Arquivo</th>
+              <th>Tipo</th>
+              <th>Tamanho</th>
+              <th>Gerado por</th>
+              <th>Data</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+
+
+          <tbody>
+
+            {% for backup in backups %}
+
+              <tr>
+
+                <!-- ARQUIVO -->
+                <td data-label="Arquivo">
+
+                  <div class="backup-name">
+
+                    {% if backup.tipo == "Banco de dados" %}
+
+                      <span class="backup-name-icon">
+                        <i class="bi bi-database"></i>
+                      </span>
+
+                    {% else %}
+
+                      <span class="backup-name-icon media">
+                        <i class="bi bi-file-earmark-zip"></i>
+                      </span>
+
+                    {% endif %}
+
+
+                    <span
+                      class="backup-file-name"
+                      title="{{ backup.nome }}"
+                    >
+                      {{ backup.nome }}
+                    </span>
+
+                  </div>
+
+                </td>
+
+
+                <!-- TIPO -->
+                <td data-label="Tipo">
+
+                  {% if backup.tipo == "Banco de dados" %}
+
+                    <span class="backup-type-badge database">
+                      <i class="bi bi-database"></i>
+                      Banco de dados
+                    </span>
+
+                  {% else %}
+
+                    <span class="backup-type-badge media">
+                      <i class="bi bi-folder2-open"></i>
+                      Arquivos
+                    </span>
+
+                  {% endif %}
+
+                </td>
+
+
+                <!-- TAMANHO -->
+                <td data-label="Tamanho">
+                  {{ backup.tamanho }}
+                </td>
+
+
+                <!-- GERADO POR -->
+                <td data-label="Gerado por">
+                  <div class="backup-user">
+                    <span class="backup-user-icon">
+                      <i class="bi bi-person"></i>
+                    </span>
+
+                    <div class="backup-user-info">
+                      <span class="backup-user-name">
+                        {{ backup.gerado_por }}
+                      </span>
+
+                      {% if backup.gerado_por_email %}
+                        <small title="{{ backup.gerado_por_email }}">
+                          {{ backup.gerado_por_email }}
+                        </small>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+
+
+                <!-- DATA -->
+                <td data-label="Data">
+                  {{ backup.data }}
+                </td>
+
+
+                <!-- AÇÕES -->
+                <td
+                  data-label="Ações"
+                  class="text-end"
+                >
+
+                  <div class="backup-actions">
+
+                    <a
+                      href="{% url 'backup_download' backup.nome %}"
+                      class="btn btn-sm btn-outline-primary backup-action-btn"
+                      title="Baixar backup"
+                      aria-label="Baixar backup"
+                    >
+                      <i class="bi bi-download"></i>
+                    </a>
+
+
+                    <form
+                      method="post"
+                      action="{% url 'backup_delete' backup.nome %}"
+                    >
+                      {% csrf_token %}
+
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-outline-danger backup-action-btn"
+                        title="Excluir backup"
+                        aria-label="Excluir backup"
+                        onclick="return confirm('Tem certeza que deseja excluir este backup?');"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </button>
+
+                    </form>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+    {% else %}
+
+      <!-- =========================================
+           NENHUM BACKUP
+           ========================================= -->
+      <div class="backup-empty">
+
+        <div class="backup-empty-icon">
+          <i class="bi bi-hdd-stack"></i>
+        </div>
+
+        <h4>Nenhum backup encontrado</h4>
+
+        <p>
+          Você ainda não possui backups salvos.
+          Utilize uma das opções acima para criar a primeira
+          cópia de segurança do sistema.
+        </p>
+
+      </div>
+
+    {% endif %}
+
+  </section>
+
+</div>
+
+{% endblock %}

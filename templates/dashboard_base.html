@@ -156,6 +156,28 @@
       </a>
       {% endif %}
 
+      {% if request.user.is_superuser %}
+
+      <a class="menu-item" href="#">
+        <i class="bi bi-shop"></i>
+        <span>Ambulantes</span>
+      </a>
+
+      <a
+          class="menu-item {% if request.resolver_match.url_name == 'backup_page' %}active{% endif %}"
+          href="{% url 'backup_page' %}"
+      >
+          <i class="bi bi-hdd-stack"></i>
+          <span>Backup</span>
+      </a>
+
+      <a class="menu-item" href="#">
+        <i class="bi bi-journal-text"></i>
+        <span>Logs</span>
+      </a>
+
+      {% endif %}
+
       {% if perms.core.tab_reports %}
       <div class="menu-accordion">
         <button class="menu-item menu-toggle">

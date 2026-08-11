@@ -38,6 +38,12 @@ from django.views.decorators.http import require_GET, require_POST
 from .models import NotificationHidden
 from decimal import Decimal, InvalidOperation
 import time as time_module
+import subprocess
+import gzip
+import shutil
+from pathlib import Path
+from django.http import FileResponse, Http404
+from django.views.decorators.http import require_POST
 
 from .forms import (
     ServiceRequestForm,
@@ -4302,3 +4308,498 @@ def help_page(request):
     return render(request, "help_page.html", {
         "whatsapp_number": whatsapp_number,
     })
+
+def _backup_superuser_required(request):
+    return request.user.is_authenticated and request.user.is_superuser
+
+
+def _backup_dir():
+    pasta = Path(settings.BASE_DIR) / "backups"
+    pasta.mkdir(parents=True, exist_ok=True)
+    return pasta
+
+
+def _backup_metadata_file():
+    """
+    Arquivo usado para guardar informações administrativas
+    sobre os backups, como o usuário que realizou a geração.
+    """
+    return _backup_dir() / "backup_metadata.json"
+
+
+def _load_backup_metadata():
+    """
+    Carrega os metadados dos backups.
+
+    Caso o arquivo ainda não exista ou esteja corrompido,
+    retorna um dicionário vazio.
+    """
+    caminho = _backup_metadata_file()
+
+    if not caminho.exists():
+        return {}
+
+    try:
+        with open(caminho, "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+
+        if isinstance(dados, dict):
+            return dados
+
+    except (
+        OSError,
+        ValueError,
+        json.JSONDecodeError,
+    ):
+        pass
+
+    return {}
+
+
+def _save_backup_metadata(metadata):
+    """
+    Salva os metadados dos backups.
+    """
+    caminho = _backup_metadata_file()
+
+    with open(caminho, "w", encoding="utf-8") as arquivo:
+        json.dump(
+            metadata,
+            arquivo,
+            ensure_ascii=False,
+            indent=4,
+        )
+
+
+def _get_backup_user_name(user):
+    """
+    Retorna o melhor nome disponível para identificar
+    quem realizou o backup.
+    """
+    if not user or not user.is_authenticated:
+        return "Não identificado"
+
+    nome_completo = (
+        user.get_full_name()
+        or user.username
+        or user.email
+        or f"Usuário #{user.pk}"
+    )
+
+    return str(nome_completo).strip()
+
+
+def _register_backup_creator(filename, user):
+    """
+    Registra quem gerou determinado backup.
+    """
+    metadata = _load_backup_metadata()
+
+    metadata[filename] = {
+        "usuario_id": user.pk if user and user.is_authenticated else None,
+        "usuario": _get_backup_user_name(user),
+        "username": (
+            user.username
+            if user and user.is_authenticated
+            else ""
+        ),
+        "email": (
+            user.email
+            if user and user.is_authenticated
+            else ""
+        ),
+        "gerado_em": timezone.localtime().isoformat(),
+    }
+
+    _save_backup_metadata(metadata)
+
+
+def _remove_backup_metadata(filename):
+    """
+    Remove o registro de metadados quando o backup
+    físico for excluído.
+    """
+    metadata = _load_backup_metadata()
+
+    if filename in metadata:
+        del metadata[filename]
+        _save_backup_metadata(metadata)
+
+
+def _formatar_tamanho(bytes_size):
+    tamanho = float(bytes_size)
+
+    for unidade in ["B", "KB", "MB", "GB", "TB"]:
+        if tamanho < 1024:
+            return f"{tamanho:.1f} {unidade}"
+
+        tamanho /= 1024
+
+    return f"{tamanho:.1f} PB"
+
+
+@login_required(login_url="login_admin")
+def backup_page(request):
+    if not _backup_superuser_required(request):
+        messages.error(
+            request,
+            "Você não tem permissão para acessar a área de backups."
+        )
+        return redirect("dashboard")
+
+    pasta = _backup_dir()
+    metadata = _load_backup_metadata()
+
+    backups = []
+
+    for arquivo in pasta.iterdir():
+
+        if not arquivo.is_file():
+            continue
+
+        nome = arquivo.name
+
+        if nome.startswith("backup_banco_"):
+            tipo = "Banco de dados"
+
+        elif nome.startswith("backup_media_"):
+            tipo = "Arquivos"
+
+        else:
+            continue
+
+        stat = arquivo.stat()
+
+        data = datetime.fromtimestamp(stat.st_mtime)
+
+        if timezone.is_naive(data):
+            data = timezone.make_aware(
+                data,
+                timezone.get_current_timezone()
+            )
+
+        dados_backup = metadata.get(nome, {})
+
+        gerado_por = (
+            dados_backup.get("usuario")
+            or "Não registrado"
+        )
+
+        gerado_por_email = (
+            dados_backup.get("email")
+            or ""
+        )
+
+        backups.append({
+            "nome": nome,
+            "tipo": tipo,
+            "tamanho": _formatar_tamanho(stat.st_size),
+            "data": timezone.localtime(data).strftime(
+                "%d/%m/%Y %H:%M:%S"
+            ),
+            "timestamp": stat.st_mtime,
+            "gerado_por": gerado_por,
+            "gerado_por_email": gerado_por_email,
+        })
+
+    backups.sort(
+        key=lambda item: item["timestamp"],
+        reverse=True
+    )
+
+    return render(
+        request,
+        "backup.html",
+        {
+            "backups": backups,
+        },
+    )
+
+
+@login_required(login_url="login_admin")
+@require_POST
+def backup_database(request):
+    if not request.user.is_superuser:
+        messages.error(
+            request,
+            "Você não tem permissão para realizar backups."
+        )
+        return redirect("dashboard")
+
+    db = settings.DATABASES["default"]
+
+    if db.get("ENGINE") != "django.db.backends.mysql":
+        messages.error(
+            request,
+            "O backup automático está configurado para MySQL."
+        )
+        return redirect("backup_page")
+
+    pasta = _backup_dir()
+
+    data = timezone.localtime().strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
+
+    nome_arquivo = f"backup_banco_{data}.sql.gz"
+    caminho = pasta / nome_arquivo
+
+    database = db.get("NAME")
+    usuario = db.get("USER")
+    senha = db.get("PASSWORD")
+    host = db.get("HOST") or "localhost"
+    porta = str(db.get("PORT") or "3306")
+
+    # ==========================================================
+    # LOCALIZA O MYSQLDUMP
+    # ==========================================================
+
+    mysqldump = shutil.which("mysqldump")
+
+    if not mysqldump:
+        caminhos_possiveis = [
+            "/usr/bin/mysqldump",
+            "/usr/local/bin/mysqldump",
+            r"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe",
+            r"C:\Program Files\MySQL\MySQL Server 8.4\bin\mysqldump.exe",
+            r"C:\xampp\mysql\bin\mysqldump.exe",
+            r"C:\wamp64\bin\mysql\mysql8.0.31\bin\mysqldump.exe",
+        ]
+
+        for caminho_mysql in caminhos_possiveis:
+            if os.path.exists(caminho_mysql):
+                mysqldump = caminho_mysql
+                break
+
+    if not mysqldump:
+        messages.error(
+            request,
+            (
+                "Não foi possível localizar o mysqldump no computador. "
+                "Verifique se o MySQL está instalado ou configure o caminho "
+                "do mysqldump."
+            )
+        )
+        return redirect("backup_page")
+
+    comando = [
+        mysqldump,
+        "--single-transaction",
+        "--no-tablespaces",
+        "-h",
+        host,
+        "-P",
+        porta,
+        "-u",
+        usuario,
+        database,
+    ]
+
+    ambiente = os.environ.copy()
+
+    if senha:
+        ambiente["MYSQL_PWD"] = senha
+
+    try:
+        processo = subprocess.run(
+            comando,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=ambiente,
+            check=False,
+        )
+
+        if processo.returncode != 0:
+
+            erro = processo.stderr.decode(
+                "utf-8",
+                errors="ignore"
+            )
+
+            if caminho.exists():
+                caminho.unlink()
+
+            messages.error(
+                request,
+                f"Não foi possível gerar o backup do banco: {erro}"
+            )
+
+            return redirect("backup_page")
+
+        # ==========================================================
+        # COMPACTA O SQL EM GZIP
+        # ==========================================================
+
+        with gzip.open(caminho, "wb") as arquivo_saida:
+            arquivo_saida.write(processo.stdout)
+
+        # ==========================================================
+        # REGISTRA QUEM GEROU O BACKUP
+        # ==========================================================
+
+        _register_backup_creator(
+            nome_arquivo,
+            request.user
+        )
+
+        messages.success(
+            request,
+            (
+                f"Backup do banco criado com sucesso: "
+                f"{nome_arquivo}"
+            )
+        )
+
+    except Exception as erro:
+
+        if caminho.exists():
+            caminho.unlink()
+
+        messages.error(
+            request,
+            f"Erro ao gerar backup do banco: {erro}"
+        )
+
+    return redirect("backup_page")
+
+
+@login_required(login_url="login_admin")
+@require_POST
+def backup_media(request):
+    if not request.user.is_superuser:
+        messages.error(
+            request,
+            "Você não tem permissão para realizar backups."
+        )
+        return redirect("dashboard")
+
+    media_root = Path(settings.MEDIA_ROOT)
+
+    if not media_root.exists():
+        messages.error(
+            request,
+            "A pasta MEDIA não foi encontrada."
+        )
+        return redirect("backup_page")
+
+    pasta = _backup_dir()
+
+    data = timezone.localtime().strftime(
+        "%Y-%m-%d_%H-%M-%S"
+    )
+
+    nome_base = f"backup_media_{data}"
+
+    try:
+        arquivo_criado = shutil.make_archive(
+            str(pasta / nome_base),
+            "gztar",
+            root_dir=str(media_root),
+        )
+
+        caminho = Path(arquivo_criado)
+
+        # ==========================================================
+        # REGISTRA QUEM GEROU O BACKUP
+        # ==========================================================
+
+        _register_backup_creator(
+            caminho.name,
+            request.user
+        )
+
+        return FileResponse(
+            open(caminho, "rb"),
+            as_attachment=True,
+            filename=caminho.name,
+            content_type="application/gzip",
+        )
+
+    except Exception as erro:
+        messages.error(
+            request,
+            f"Erro ao gerar backup dos arquivos: {erro}"
+        )
+
+        return redirect("backup_page")
+
+
+@login_required(login_url="login_admin")
+def backup_download(request, filename):
+    if not _backup_superuser_required(request):
+        messages.error(
+            request,
+            "Acesso não autorizado."
+        )
+        return redirect("dashboard")
+
+    # Impede tentativa de acessar arquivos fora da pasta de backup.
+    filename = Path(filename).name
+
+    caminho = _backup_dir() / filename
+
+    if not caminho.exists() or not caminho.is_file():
+        raise Http404("Backup não encontrado.")
+
+    if not (
+        filename.startswith("backup_banco_")
+        or filename.startswith("backup_media_")
+    ):
+        raise Http404("Arquivo inválido.")
+
+    return FileResponse(
+        open(caminho, "rb"),
+        as_attachment=True,
+        filename=filename,
+    )
+
+
+@login_required(login_url="login_admin")
+@require_POST
+def backup_delete(request, filename):
+    if not _backup_superuser_required(request):
+        messages.error(
+            request,
+            "Acesso não autorizado."
+        )
+        return redirect("dashboard")
+
+    filename = Path(filename).name
+
+    caminho = _backup_dir() / filename
+
+    if not (
+        filename.startswith("backup_banco_")
+        or filename.startswith("backup_media_")
+    ):
+        messages.error(
+            request,
+            "Arquivo de backup inválido."
+        )
+        return redirect("backup_page")
+
+    if not caminho.exists() or not caminho.is_file():
+        messages.error(
+            request,
+            "Backup não encontrado."
+        )
+        return redirect("backup_page")
+
+    try:
+        caminho.unlink()
+
+        # Remove também o metadado correspondente ao arquivo.
+        _remove_backup_metadata(filename)
+
+        messages.success(
+            request,
+            f"Backup {filename} excluído com sucesso."
+        )
+
+    except Exception as erro:
+        messages.error(
+            request,
+            f"Não foi possível excluir o backup: {erro}"
+        )
+
+    return redirect("backup_page")
